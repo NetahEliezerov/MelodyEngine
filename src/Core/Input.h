@@ -1,0 +1,27 @@
+#pragma once
+
+#include <GLFW/glfw3.h>
+
+class InputState
+{
+public:
+	bool keys[GLFW_KEY_LAST];
+
+	double mouseX;
+	double mouseY;
+	double prevMouseX;
+	double prevMouseY;
+	double mouseDeltaX;
+	double mouseDeltaY;
+
+	InputState();
+	~InputState();
+};
+
+class Input
+{
+public:
+	static InputState inputState;
+	static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
+	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+};
