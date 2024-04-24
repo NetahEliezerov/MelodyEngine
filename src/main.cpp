@@ -17,39 +17,27 @@
 #include "Core/Model3D.h"
 #include "Player/Player.h"
 #include "Core/TextRenderer.hpp"
+#include "Core/LightPoint.h"
 
+#include "Levels/Level1.h"
 
 std::string readShaderSource(const std::string& filename) {
     std::ifstream file(filename);
     std::stringstream buffer;
     buffer << file.rdbuf();
     return buffer.str();
-}
+};
 
 int main(void) {
     GLFWwindow* window = Engine::Run();
-    if (!window) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
     Renderer _renderer;
-    Player thePlayer;
-    thePlayer.Init(_renderer, false);
 
+    Level1 _level1;
+    Player character;
 
+    character.Init(_renderer, false);
 
-    glEnable(GL_DEPTH_TEST);
-
-    Model3D pistol;
-    pistol.Init("assets/meshes/Pistol/1.obj", "assets/textures/2.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.8, 0.8, 0.8), glm::vec3(0, 0, 0), true, thePlayer.shader);
-
-
-    Model3D cube;
-    cube.Init("assets/meshes/cube.obj", "assets/textures/2.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(15, 0.2, 15), glm::vec3(0, -4, 0), true, thePlayer.shader);
-
-    // Model3D hand;
-    // hand.Init("assets/meshes/boobies/11084_WomanRunning_v3.obj", true, glm::vec4(.3f, .4f, .6f, 1.f), glm::vec3(8, 8, 8), false, thePlayer.shader);
+    _level1.Init(_renderer, &character);
 
     float lastFrame = 0.0f;
     float deltaTime = 0.0f;
@@ -67,12 +55,8 @@ int main(void) {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        thePlayer.Update(deltaTime);
-
-        pistol.SetPosition(thePlayer.movement.position, thePlayer.movement.lookingAngle, thePlayer.movement.cameraUp, 1.8f, .5f);
-
-        cube.Update(thePlayer.movement.position, glm::vec3(4.f, 5.f, 4.5f), glm::vec3(1.f, 1.f, 1.f));
-        pistol.Update(thePlayer.movement.position, glm::vec3(4.f, 5.f, 4.5f), glm::vec3(1.f, 1.f, 1.f));
+        character.Update(deltaTime);
+        _level1.Update(deltaTime);
 
         if (Input::inputState.keys[GLFW_KEY_F])
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -88,7 +72,7 @@ int main(void) {
 
 
     textRenderer.Cleanup();
-    glDeleteProgram(thePlayer.shader);
+    glDeleteProgram(character.shader);
     glfwTerminate();
     return 0;
 }

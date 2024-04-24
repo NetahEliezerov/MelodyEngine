@@ -1,16 +1,13 @@
 #pragma once
 #include <string>
 #include <glm/glm.hpp>
-#include "LightPoint.h"
 #include "../Types.h"
 
-class Model3D
+class LightPoint
 {
 public:
-	void Init(ObjectSettings settings);
-	void Update(glm::vec3 cameraPos, LightPoint light);
-	void SetPosition(const glm::vec3& cameraPos, const glm::vec3& cameraFront, const glm::vec3& cameraUp, float distance, float rightOffset, float upOffset);
-
+	void Init(LightSettings settings);
+	void Update(glm::vec3 cameraPos);
 private:
 	unsigned int modelLoc;
 	unsigned int colorLoc;
@@ -26,18 +23,13 @@ private:
 	unsigned int VBO, VAO;
 	glm::mat4 model = glm::mat4(1.0f);
 	unsigned int shader;
-	bool isDynamic;
 	float* vertices;
 	int numVertices;
-	bool isAttached = false;
 	bool isLight;
 
 	unsigned int textureID;
 
 public:
 	glm::vec3 transform;
-	glm::vec3 scale;
-	glm::vec3 rotation;
 	glm::vec4 color;
 };
-

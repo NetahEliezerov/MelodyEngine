@@ -1,4 +1,4 @@
-#include "Model3D.h"
+#include "LightPoint.h"
 #include <GLAD/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -6,15 +6,11 @@
 #include <stb/stb_image.h>
 #include "LoadFromVertices.h"
 
-void Model3D::Init(ObjectSettings settings)
+void LightPoint::Init(LightSettings settings)
 {
     transform = settings.recTransform;
-    scale = settings.recScale;
-    rotation = settings.recRotation;
     shader = settings.recShader;
-    isDynamic = settings.isDynamicRec;
     color = settings.recColor;
-    isLight = settings.recIsLight;
 
     std::pair<int, float*> things = loadVerticesFromFile(settings.fileName, numIndices, indices, settings.recScale);
 
@@ -61,15 +57,7 @@ void Model3D::Init(ObjectSettings settings)
         std::cout << "Failed to load texture: " << settings.texturePath << std::endl;
     }
 
-    glm::mat4 scaleMatrix = glm::mat4(1.0f);
-    scaleMatrix = glm::scale(scaleMatrix, settings.recScale); // Scale by a factor of 0.5 on all axes
-
-    glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(settings.recRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(settings.recRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(settings.recRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    model = glm::translate(model, transform) * rotationMatrix * scaleMatrix;
+    model = glm::translate(model, transform);
 
     modelLoc = glGetUniformLocation(shader, "model");
     colorLoc = glGetUniformLocation(shader, "objectColor");
@@ -80,27 +68,7 @@ void Model3D::Init(ObjectSettings settings)
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 }
 
-void Model3D::SetPosition(const glm::vec3& cameraPos, const glm::vec3& cameraFront, const glm::vec3& cameraUp, float distance, float rightOffset, float upOffset)
-{
-    isAttached = true;
-    // Calculate the camera's right vector
-    glm::vec3 right = glm::normalize(glm::cross(cameraFront, cameraUp));
-
-    // Calculate the position of the cube relative to the camera
-    glm::vec3 cubePos = cameraPos + cameraFront * distance + right * rightOffset + cameraUp * upOffset;
-
-    // Calculate the rotation matrix based on the camera's orientation
-    glm::vec3 up = glm::normalize(glm::cross(right, cameraFront));
-    glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    rotationMatrix[0] = glm::vec4(right, 0.0f);
-    rotationMatrix[1] = glm::vec4(up, 0.0f);
-    rotationMatrix[2] = glm::vec4(-cameraFront, 0.0f);
-
-    // Set the model matrix based on the cube's position and rotation
-    model = glm::translate(glm::mat4(1.0f), cubePos) * rotationMatrix;
-}
-
-void Model3D::Update(glm::vec3 cameraPos, LightPoint light)
+void LightPoint::Update(glm::vec3 cameraPos)
 {
     // model = glm::translate(model, transform);
     glLinkProgram(shader);
@@ -109,22 +77,13 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint light)
     float green = color.g;
     float blue = color.b;
     float alpha = color.a;
-
-    glm::mat4 scaleMatrix = glm::mat4(1.0f);
-    scaleMatrix = glm::scale(scaleMatrix, scale); // Scale by a factor of 0.5 on all axes
-
-    glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    if (isAttached)
-        model = glm::translate(model, transform) * rotationMatrix * scaleMatrix;
-
+    glm::vec3 lightPos = transform;
+    glm::vec3 lightColor = color;
     glUniform3f(colorLoc, red, green, blue);
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform3fv(lightPosLoc, 1, glm::value_ptr(light.transform));
-    glUniform3fv(lightColorLoc, 1, glm::value_ptr(light.color));
+
+    glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
+    glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
     glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
 
     glActiveTexture(GL_TEXTURE0);
