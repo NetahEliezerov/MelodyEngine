@@ -12,7 +12,7 @@ void LightPoint::Init(LightSettings settings)
     shader = settings.recShader;
     color = settings.recColor;
 
-    std::pair<int, float*> things = loadVerticesFromFile(settings.fileName, numIndices, indices, settings.recScale);
+    std::pair<int, float*> things = loadVerticesFromFile(settings.fileName, numIndices, indices);
 
     numVertices = things.first;
     vertices = things.second;

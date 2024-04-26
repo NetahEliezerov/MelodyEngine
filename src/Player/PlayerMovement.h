@@ -12,6 +12,8 @@ public:
 
 	float sensitivity = 0.4f;
 	float cameraSpeed = 2.5f;
+	float walkSpeed = 2.5f;
+	float sprintSpeed = 4.5f;
 	float yaw = -90.0f;
 	float pitch = 0.0f;
 

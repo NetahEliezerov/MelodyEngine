@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\World\SkyBox.cpp" />
     <ClCompile Include="src\Levels\Level1.cpp" />
     <ClCompile Include="src\Core\LightPoint.cpp" />
     <ClCompile Include="src\Core\Model3D.cpp" />
@@ -149,9 +150,17 @@
     <ClCompile Include="src\Core\Renderer.cpp" />
     <ClCompile Include="src\glad.c" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Utils\imgui.cpp" />
+    <ClCompile Include="src\Utils\imgui_demo.cpp" />
+    <ClCompile Include="src\Utils\imgui_draw.cpp" />
+    <ClCompile Include="src\Utils\imgui_impl_glfw.cpp" />
+    <ClCompile Include="src\Utils\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="src\Utils\imgui_tables.cpp" />
+    <ClCompile Include="src\Utils\imgui_widgets.cpp" />
     <ClCompile Include="src\Utils\stb_image.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\World\SkyBox.h" />
     <ClInclude Include="src\Levels\Level1.h" />
     <ClInclude Include="src\Core\LightPoint.h" />
     <ClInclude Include="src\Core\LoadFromVertices.h" />
@@ -169,14 +178,15 @@
     <ClInclude Include="vendor\GLFW\include\GLFW\glfw3.h" />
     <ClInclude Include="vendor\GLFW\include\GLFW\glfw3native.h" />
     <ClInclude Include="vendor\KHR\khrplatform.h" />
+    <ClInclude Include="src\World\WorldLevel.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment_core.glsl" />
     <None Include="shaders\fragment_texture.glsl" />
     <None Include="shaders\lights\frag.glsl" />
     <None Include="shaders\lights\vertex.glsl" />
-    <None Include="shaders\text\fragment.glsl" />
-    <None Include="shaders\text\vertex.glsl" />
+    <None Include="shaders\SkyBox\frag.glsl" />
+    <None Include="shaders\SkyBox\vertex.glsl" />
     <None Include="shaders\vertex_core.glsl" />
     <None Include="shaders\vertex_texture.glsl" />
     <None Include="src\Levels\Test.LEVEL" />

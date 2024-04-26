@@ -21,6 +21,12 @@
 
 #include "Levels/Level1.h"
 
+#include <imgui_impl_glfw.h>
+#include <imgui.h>
+#include <imgui_impl_opengl3.h>
+
+#include "World/SkyBox.h"
+
 std::string readShaderSource(const std::string& filename) {
     std::ifstream file(filename);
     std::stringstream buffer;
@@ -43,35 +49,54 @@ int main(void) {
     float deltaTime = 0.0f;
 
     float fps = 0;
-    TextRenderer textRenderer;
-    textRenderer.Init("assets/fonts/typewriter.ttf", 24);
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    const char* glsl_version = "#version 130";
+    ImGui_ImplOpenGL3_Init(glsl_version);
+    bool show_demo_window = true;
+
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         fps = 1000 / deltaTime / 1000;
-        // std::cout << fps << " FPS" << std::endl;
 
+        // Clear the color and depth buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Render your OpenGL content
         character.Update(deltaTime);
         _level1.Update(deltaTime);
 
         if (Input::inputState.keys[GLFW_KEY_F])
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
         if (Input::inputState.keys[GLFW_KEY_G])
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        
-        // hand.Update(thePlayer.movement.position, glm::vec3(4.f, 5.f, 4.5f), glm::vec3(1.f, 1.f, 1.f));
+
+        glDepthFunc(GL_LESS);
+
+
+        // Render the ImGui draw data
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
 
-    textRenderer.Cleanup();
     glDeleteProgram(character.shader);
     glfwTerminate();
     return 0;

@@ -26,7 +26,7 @@ private:
 	unsigned int VBO, VAO;
 	glm::mat4 model = glm::mat4(1.0f);
 	unsigned int shader;
-	bool isDynamic;
+	bool isDynamic = false;
 	float* vertices;
 	int numVertices;
 	bool isAttached = false;
@@ -35,9 +35,12 @@ private:
 	unsigned int textureID;
 
 public:
+	std::string label;
 	glm::vec3 transform;
 	glm::vec3 scale;
 	glm::vec3 rotation;
 	glm::vec4 color;
+	bool visibility = true;
+	float radius = 1.f;
 };
 

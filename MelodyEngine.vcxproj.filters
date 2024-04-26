@@ -48,6 +48,30 @@
     <ClCompile Include="src\Levels\Level1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utils\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\imgui_impl_glfw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\imgui_impl_opengl3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\SkyBox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\glad\glad.h">
@@ -101,6 +125,12 @@
     <ClInclude Include="src\Parser\Parser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\World\SkyBox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\WorldLevel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\fragment_core.glsl">
@@ -113,8 +143,8 @@
     <None Include="shaders\lights\vertex.glsl" />
     <None Include="shaders\fragment_texture.glsl" />
     <None Include="shaders\vertex_texture.glsl" />
-    <None Include="shaders\text\fragment.glsl" />
-    <None Include="shaders\text\vertex.glsl" />
     <None Include="src\Levels\Test.LEVEL" />
+    <None Include="shaders\SkyBox\vertex.glsl" />
+    <None Include="shaders\SkyBox\frag.glsl" />
   </ItemGroup>
 </Project>

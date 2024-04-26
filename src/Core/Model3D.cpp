@@ -6,8 +6,12 @@
 #include <stb/stb_image.h>
 #include "LoadFromVertices.h"
 
+#include <chrono>
+#include <thread>
+
 void Model3D::Init(ObjectSettings settings)
 {
+    label = settings.label;
     transform = settings.recTransform;
     scale = settings.recScale;
     rotation = settings.recRotation;
@@ -16,7 +20,7 @@ void Model3D::Init(ObjectSettings settings)
     color = settings.recColor;
     isLight = settings.recIsLight;
 
-    std::pair<int, float*> things = loadVerticesFromFile(settings.fileName, numIndices, indices, settings.recScale);
+    std::pair<int, float*> things = loadVerticesFromFile(settings.fileName, numIndices, indices);
 
     numVertices = things.first;
     vertices = things.second;
@@ -102,35 +106,40 @@ void Model3D::SetPosition(const glm::vec3& cameraPos, const glm::vec3& cameraFro
 
 void Model3D::Update(glm::vec3 cameraPos, LightPoint light)
 {
-    // model = glm::translate(model, transform);
-    glLinkProgram(shader);
+    if (visibility)
+    {
+        glUseProgram(shader);
+        glLinkProgram(shader);
 
-    float red = color.r;
-    float green = color.g;
-    float blue = color.b;
-    float alpha = color.a;
+        float red = color.r;
+        float green = color.g;
+        float blue = color.b;
+        float alpha = color.a;
 
-    glm::mat4 scaleMatrix = glm::mat4(1.0f);
-    scaleMatrix = glm::scale(scaleMatrix, scale); // Scale by a factor of 0.5 on all axes
+        glm::mat4 scaleMatrix = glm::mat4(1.0f);
+        scaleMatrix = glm::scale(scaleMatrix, scale); // Scale by a factor of 0.5 on all axes
 
-    glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+        glm::mat4 rotationMatrix = glm::mat4(1.0f);
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+        rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-    if (isAttached)
-        model = glm::translate(model, transform) * rotationMatrix * scaleMatrix;
+        if (isAttached)
+            model = glm::translate(model, transform) * rotationMatrix * scaleMatrix;
+        else
+            model = glm::translate(glm::mat4(1.0f), transform) * rotationMatrix * scaleMatrix;
 
-    glUniform3f(colorLoc, red, green, blue);
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform3fv(lightPosLoc, 1, glm::value_ptr(light.transform));
-    glUniform3fv(lightColorLoc, 1, glm::value_ptr(light.color));
-    glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
+        glUniform3f(colorLoc, red, green, blue);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform3fv(lightPosLoc, 1, glm::value_ptr(light.transform));
+        glUniform3fv(lightColorLoc, 1, glm::value_ptr(light.color));
+        glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureID);
 
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+    }
 }

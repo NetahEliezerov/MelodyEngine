@@ -5,6 +5,7 @@
 
 struct ObjectSettings
 {
+    std::string label;
     std::string fileName;
     std::string texturePath;
     bool recIsLight;

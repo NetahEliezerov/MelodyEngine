@@ -39,12 +39,13 @@ GLFWwindow* Engine::Run()
 
     std::cout << glGetString(GL_VERSION) << std::endl;
 
+    glfwSetMouseButtonCallback(window, Input::mouse_button_callback);
     glfwSetCursorPosCallback(window, Input::cursor_position_callback);
     glfwSetKeyCallback(window, Input::key_callback);
 
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glEnable(GL_DEPTH_TEST);
-
+    // glEnable(GL_CULL_FACE);
     return window;
 }

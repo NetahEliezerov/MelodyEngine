@@ -31,3 +31,11 @@ void Input::key_callback(GLFWwindow* window, int key, int scancode, int action, 
     else if (action == GLFW_RELEASE)
         Input::inputState.keys[key] = false;
 }
+
+void Input::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+    if (action == GLFW_PRESS)
+        Input::inputState.keys[button] = true;
+    else if (action == GLFW_RELEASE)
+        Input::inputState.keys[button] = false;
+}

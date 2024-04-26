@@ -1,0 +1,16 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl arms1
+Ns 278.576168
+Ka 1.000000 1.000000 1.000000
+Kd 1.000000 1.000000 1.000000
+Ks 1.000000 1.000000 1.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 3
+map_Bump -o 0.000000 -1.000000 0.000000 C:\\Users\\chann\\Downloads\\arm\\Documents\\Projects\\multiplayergame\\arms1Normal.png
+map_Kd -o 0.000000 -1.000000 0.000000 G:\\SDL-Projects\\1\\MelodyEngine\\assets\\textures\\arms1Color.jpg
+map_Ks -o 0.000000 -1.000000 0.000000 C:\\Users\\chann\\Downloads\\arm\\Documents\\Projects\\multiplayergame\\arms1Specular.png
+refl -o 0.000000 -1.000000 0.000000 C:\\Users\\chann\\Downloads\\arm\\Documents\\Projects\\multiplayergame\\arms1Specular.png
