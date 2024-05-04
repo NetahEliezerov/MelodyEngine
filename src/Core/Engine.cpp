@@ -1,5 +1,10 @@
 #include "Engine.h"
 
+GLFWwindow* g_OpenGLWindow = nullptr;
+
+GLFWwindow* Engine::GetOpenGLWindow() {
+    return g_OpenGLWindow;
+}
 GLFWwindow* Engine::Run()
 {
     GLFWwindow* window;
@@ -39,13 +44,14 @@ GLFWwindow* Engine::Run()
 
     std::cout << glGetString(GL_VERSION) << std::endl;
 
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     glfwSetMouseButtonCallback(window, Input::mouse_button_callback);
     glfwSetCursorPosCallback(window, Input::cursor_position_callback);
     glfwSetKeyCallback(window, Input::key_callback);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
     glEnable(GL_DEPTH_TEST);
+    g_OpenGLWindow = window;
     // glEnable(GL_CULL_FACE);
     return window;
 }

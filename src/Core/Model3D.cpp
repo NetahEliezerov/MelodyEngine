@@ -20,13 +20,10 @@ void Model3D::Init(ObjectSettings settings)
     color = settings.recColor;
     isLight = settings.recIsLight;
 
-    std::pair<int, float*> things = loadVerticesFromFile(settings.fileName, numIndices, indices);
-
-    numVertices = things.first;
-    vertices = things.second;
-
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    
+    std::pair<int, float*> verticesData = loadVerticesFromFileOld(settings.fileName, numIndices, indices);
+    numVertices = verticesData.first;
+    vertices = verticesData.second;
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -46,27 +43,33 @@ void Model3D::Init(ObjectSettings settings)
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load(settings.texturePath.c_str(), &width, &height, &nrChannels, 0);
-    if (data)
+
+    for (const std::string& texturePath : settings.texturePaths)
     {
-        glGenTextures(1, &textureID);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Failed to load texture: " << settings.texturePath << std::endl;
+        int width, height, nrChannels;
+        unsigned char* data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            unsigned int textureID;
+            glGenTextures(1, &textureID);
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            textureIDs.push_back(textureID);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Failed to load texture: " << texturePath << std::endl;
+        }
     }
 
     glm::mat4 scaleMatrix = glm::mat4(1.0f);
-    scaleMatrix = glm::scale(scaleMatrix, settings.recScale); // Scale by a factor of 0.5 on all axes
+    scaleMatrix = glm::scale(scaleMatrix, settings.recScale);
 
     glm::mat4 rotationMatrix = glm::mat4(1.0f);
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(settings.recRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -117,7 +120,7 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint light)
         float alpha = color.a;
 
         glm::mat4 scaleMatrix = glm::mat4(1.0f);
-        scaleMatrix = glm::scale(scaleMatrix, scale); // Scale by a factor of 0.5 on all axes
+        scaleMatrix = glm::scale(scaleMatrix, scale);
 
         glm::mat4 rotationMatrix = glm::mat4(1.0f);
         rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -135,8 +138,12 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint light)
         glUniform3fv(lightColorLoc, 1, glm::value_ptr(light.color));
         glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureID);
+
+        for (unsigned int i = 0; i < textureIDs.size(); i++)
+        {
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, textureIDs[i]);
+        }
 
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);

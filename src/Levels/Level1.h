@@ -20,6 +20,8 @@
 #include "../Player/Player.h"
 #include "../Core/LightPoint.h"
 
+#include "../AI/CharacterNPC.h"
+
 #include "../World/WorldLevel.h"
 
 class Level1 : public WorldLevel
@@ -41,8 +43,12 @@ private:
 	Model3D wall4;
 	Model3D targetCube;
 	Model3D targetCube2;
-	Model3D targetCube3;
+	CharacterNPC npc;
 	Model3D skybox;
+
+	bool lightOn = true;
+	float flickerTimer = 0.0f;
+	float flickerInterval = 0.2f; // Adjust this value to control the flickering speed
 
 	LightPoint light;
 };

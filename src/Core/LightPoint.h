@@ -27,6 +27,8 @@ private:
 	int numVertices;
 	bool isLight;
 
+	bool isAttached = false;
+
 	unsigned int textureID;
 
 public:

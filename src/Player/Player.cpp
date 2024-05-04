@@ -10,6 +10,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../Core/AudioManager.hpp"
+
+AudioManager audioManager;
 
 struct Ray {
     glm::vec3 origin;
@@ -58,101 +61,138 @@ static std::string readShaderSource(const std::string& filename) {
 
 void Player::Update(float deltaTime)
 {
+    bool isMoving = false;
+
+
     glUseProgram(shader);
-    if (Input::inputState.keys[GLFW_KEY_LEFT_SHIFT])
-        Sprint(true);
-    else
-        Sprint(false);
-    // Apply pitch and yaw rotation
-    movement.yaw += Input::inputState.mouseDeltaX * movement.sensitivity;
-    movement.pitch -= Input::inputState.mouseDeltaY * movement.sensitivity;
-
-    // Limit the pitch angle to prevent flipping
-    const float pitchLimit = 89.0f; // Adjust this value as needed
-    movement.pitch = glm::clamp(movement.pitch, -pitchLimit, pitchLimit);
-
-    // Calculate the direction vector based on the pitch and yaw angles
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(movement.yaw)) * cos(glm::radians(movement.pitch));
-    direction.y = sin(glm::radians(movement.pitch));
-    direction.z = sin(glm::radians(movement.yaw)) * cos(glm::radians(movement.pitch));
-    movement.lookingAngle = glm::normalize(direction);
-
-    // Reset the mouse movement
-    Input::inputState.mouseDeltaX = 0;
-    Input::inputState.mouseDeltaY = 0;
-    
-    // pistolle jumping
-    if (Input::inputState.keys[GLFW_KEY_SPACE] && !isJumping) {
-        isJumping = true;
-        velocity.y = jumpForce;
-    }
-
-    // Apply gravity
-    velocity.y += gravity * deltaTime;
-
-    // Update player position based on velocity
-    movement.position += velocity * deltaTime;
-
-    // Check if the player has landed on the ground
-    float groundLevel = 0.0f; // Adjust this value according to your ground level
-    if (isJumping && movement.position.y <= groundLevel) {
-        isJumping = false;
-        movement.position.y = groundLevel;
-        velocity.y = 0.0f;
-    }
-
-    if (!isJumping)
+    if (glfwGetCurrentContext() == Engine::GetOpenGLWindow())
     {
-        movement.position.y = groundLevel;
+        if (Input::inputState.keys[GLFW_KEY_LEFT_SHIFT])
+            Sprint(true);
+        else
+            Sprint(false);
+
+        // Apply pitch and yaw rotation
+        movement.yaw += Input::inputState.mouseDeltaX * movement.sensitivity;
+        movement.pitch -= Input::inputState.mouseDeltaY * movement.sensitivity;
+
+        // Limit the pitch angle to prevent flipping
+        const float pitchLimit = 89.0f; // Adjust this value as needed
+        movement.pitch = glm::clamp(movement.pitch, -pitchLimit, pitchLimit);
+
+        // Calculate the direction vector based on the pitch and yaw angles
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(movement.yaw)) * cos(glm::radians(movement.pitch));
+        direction.y = sin(glm::radians(movement.pitch));
+        direction.z = sin(glm::radians(movement.yaw)) * cos(glm::radians(movement.pitch));
+        movement.lookingAngle = glm::normalize(direction);
+
+        // Reset the mouse movement
+        Input::inputState.mouseDeltaX = 0;
+        Input::inputState.mouseDeltaY = 0;
+
+
+        // pistolle jumping
+        if (Input::inputState.keys[GLFW_KEY_SPACE] && !isJumping) {
+            isJumping = true;
+            velocity.y = jumpForce;
+        }
+
+        // Apply gravity
+        velocity.y += gravity * deltaTime;
+
+        // Update player position based on velocity
+        movement.position += velocity * deltaTime;
+
+        // Check if the player has landed on the ground
+        float groundLevel = 0.0f; // Adjust this value according to your ground level
+        if (isJumping && movement.position.y <= groundLevel) {
+            isJumping = false;
+            movement.position.y = groundLevel;
+            velocity.y = 0.0f;
+        }
+
+        if (!isJumping)
+        {
+            movement.position.y = groundLevel;
+        }
+
+        // Update camera position based on keyboard input
+        float velocity = movement.cameraSpeed * deltaTime;
+        if (isGodMode)
+        {
+            if (Input::inputState.keys[GLFW_KEY_W])
+                movement.position += movement.lookingAngle * velocity;
+            if (Input::inputState.keys[GLFW_KEY_S])
+                movement.position -= movement.lookingAngle * velocity;
+            if (Input::inputState.keys[GLFW_KEY_A])
+                movement.position -= glm::normalize(glm::cross(movement.lookingAngle, movement.cameraUp)) * velocity;
+            if (Input::inputState.keys[GLFW_KEY_D])
+                movement.position += glm::normalize(glm::cross(movement.lookingAngle, movement.cameraUp)) * velocity;
+        }
+        else
+        {
+            glm::vec3 forward = movement.lookingAngle;
+            forward.y = 0.0f; // Ignore vertical component of the looking direction
+            forward = glm::normalize(forward);
+
+            glm::vec3 right = glm::normalize(glm::cross(forward, movement.cameraUp));
+
+            glm::vec3 moveDirection = glm::vec3(0.0f);
+
+            if (Input::inputState.keys[GLFW_KEY_W])
+                moveDirection += forward;
+            if (Input::inputState.keys[GLFW_KEY_S])
+                moveDirection -= forward;
+            if (Input::inputState.keys[GLFW_KEY_A])
+                moveDirection -= right;
+            if (Input::inputState.keys[GLFW_KEY_D])
+                moveDirection += right;
+
+            // Normalize the moveDirection vector to avoid faster diagonal movement
+            if (glm::length(moveDirection) > 0.0f)
+                moveDirection = glm::normalize(moveDirection);
+
+            // Update only the X and Z components of the position
+            movement.position.x += moveDirection.x * velocity;
+            movement.position.z += moveDirection.z * velocity;
+        }
     }
-
-    // Update camera position based on keyboard input
-    float velocity = movement.cameraSpeed * deltaTime;
-    if (isGodMode)
-    {
-        if (Input::inputState.keys[GLFW_KEY_W])
-            movement.position += movement.lookingAngle * velocity;
-        if (Input::inputState.keys[GLFW_KEY_S])
-            movement.position -= movement.lookingAngle * velocity;
-        if (Input::inputState.keys[GLFW_KEY_A])
-            movement.position -= glm::normalize(glm::cross(movement.lookingAngle, movement.cameraUp)) * velocity;
-        if (Input::inputState.keys[GLFW_KEY_D])
-            movement.position += glm::normalize(glm::cross(movement.lookingAngle, movement.cameraUp)) * velocity;
-    }
-    else
-    {
-        glm::vec3 forward = movement.lookingAngle;
-        forward.y = 0.0f; // Ignore vertical component of the looking direction
-        forward = glm::normalize(forward);
-
-        glm::vec3 right = glm::normalize(glm::cross(forward, movement.cameraUp));
-
-        glm::vec3 moveDirection = glm::vec3(0.0f);
-
-        if (Input::inputState.keys[GLFW_KEY_W])
-            moveDirection += forward;
-        if (Input::inputState.keys[GLFW_KEY_S])
-            moveDirection -= forward;
-        if (Input::inputState.keys[GLFW_KEY_A])
-            moveDirection -= right;
-        if (Input::inputState.keys[GLFW_KEY_D])
-            moveDirection += right;
-
-        // Normalize the moveDirection vector to avoid faster diagonal movement
-        if (glm::length(moveDirection) > 0.0f)
-            moveDirection = glm::normalize(moveDirection);
-
-        // Update only the X and Z components of the position
-        movement.position.x += moveDirection.x * velocity;
-        movement.position.z += moveDirection.z * velocity;
-    }
-
     // Update the view matrix
     view = glm::lookAt(movement.position, movement.position + movement.lookingAngle, movement.cameraUp);
     glUniformMatrix4fv(movement.viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(movement.projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
+    if (!isJumping)
+    {
+        if (Input::inputState.keys[GLFW_KEY_W] || Input::inputState.keys[GLFW_KEY_S] ||
+            Input::inputState.keys[GLFW_KEY_A] || Input::inputState.keys[GLFW_KEY_D])
+        {
+            isMoving = true;
+        }
+    }
+
+    footstepTimer += deltaTime;
+
+    if (isMoving)
+    {
+        // Check if enough time has passed since the last footstep sound
+        if (footstepTimer >= footstepDelay)
+        {
+            // Play the footstep sound
+            audioManager.PlaySound(0); // Assuming footstep sound is loaded at index 0
+
+            // Reset the footstep timer
+            footstepTimer = 0.0f;
+        }
+    }
+    else
+    {
+        // Reset the footstep timer when not moving
+        footstepTimer = 0.0f;
+    }
+
+    audioManager.Update();
 
     //pistol.SetPosition(movement.position, movement.lookingAngle, movement.cameraUp, 1.3f, .75, 0);
     //pistol.Update(movement.position, light);
@@ -168,6 +208,8 @@ void Player::Update(float deltaTime)
 
 void Player::Init(Renderer _renderer, bool recIsGodMode)
 {
+    audioManager.LoadSound("assets/sounds/footstep.wav");
+
     movement.position = glm::vec3(0.0f, 1.0f, 0.0f);
     std::string vertexShader = readShaderSource("shaders/vertex_texture.glsl");
     std::string fragmentShader = readShaderSource("shaders/fragment_texture.glsl");
@@ -182,10 +224,10 @@ void Player::Init(Renderer _renderer, bool recIsGodMode)
     glUniformMatrix4fv(movement.viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(movement.projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-    ObjectSettings pistolSettings = { "Pistol", "assets/meshes/pistol.obj", "assets/textures/sp226-color-2.jpeg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(-0.2f, -0.2f, 0), glm::vec3(0,270,0), true, shader };
-    ObjectSettings handSettings = { "Hand", "assets/meshes/hand.obj", "assets/textures/aga.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(-0.1f, -0.3, 1.2f), glm::vec3(270,180,0), true, shader };
-    pistol.Init(pistolSettings);
-    hand.Init(handSettings);
+    //ObjectSettings pistolSettings = { "Pistol", "assets/meshes/pistol.obj", "assets/textures/sp226-color-2.jpeg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(-0.2f, -0.2f, 0), glm::vec3(0,270,0), true, shader };
+    //ObjectSettings handSettings = { "Hand", "assets/meshes/hand.obj", "assets/textures/aga.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(-0.1f, -0.3, 1.2f), glm::vec3(270,180,0), true, shader };
+    //pistol.Init(pistolSettings);
+    //hand.Init(handSettings);
     timeSinceShoot = std::chrono::steady_clock::now(); // Initialize lastShotTime
 }
 

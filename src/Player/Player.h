@@ -33,6 +33,9 @@ public:
 
 	unsigned int shader;
 
+	float footstepTimer = 0.0f;
+	float footstepDelay = 0.5f; // Adjust the delay as needed (in seconds)
+
 	glm::mat4 view = glm::lookAt(
 		glm::vec3(2.0f, 2.0f, 2.0f),  // Camera position
 		glm::vec3(0.0f, 0.0f, 0.0f),  // Look at the origin
@@ -42,7 +45,7 @@ public:
 
 	bool isJumping = false;
 	LightPoint light;
-	float jumpForce = 5.0f;
+	float jumpForce = 25.0f;
 	float gravity = -13.8f;
 	bool isSprinting = false;
 	glm::vec3 velocity = glm::vec3(0.0f);

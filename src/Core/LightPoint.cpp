@@ -12,12 +12,12 @@ void LightPoint::Init(LightSettings settings)
     shader = settings.recShader;
     color = settings.recColor;
 
-    std::pair<int, float*> things = loadVerticesFromFile(settings.fileName, numIndices, indices);
+    std::pair<int, float*> things = loadVerticesFromFileOld(settings.fileName, numIndices, indices);
 
     numVertices = things.first;
     vertices = things.second;
 
-    glEnable(GL_CULL_FACE);
+    /*glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
     glGenVertexArrays(1, &VAO);
@@ -55,41 +55,41 @@ void LightPoint::Init(LightSettings settings)
     else
     {
         std::cout << "Failed to load texture: " << settings.texturePath << std::endl;
-    }
+    }*/
 
-    model = glm::translate(model, transform);
+    //model = glm::translate(model, transform);
 
-    modelLoc = glGetUniformLocation(shader, "model");
-    colorLoc = glGetUniformLocation(shader, "objectColor");
+    //modelLoc = glGetUniformLocation(shader, "model");
+    //colorLoc = glGetUniformLocation(shader, "objectColor");
 
-    lightPosLoc = glGetUniformLocation(shader, "lightPos");
-    lightColorLoc = glGetUniformLocation(shader, "lightColor");
-    viewPosLoc = glGetUniformLocation(shader, "viewPos");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    //lightPosLoc = glGetUniformLocation(shader, "lightPos");
+    //lightColorLoc = glGetUniformLocation(shader, "lightColor");
+    //viewPosLoc = glGetUniformLocation(shader, "viewPos");
+    //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 }
 
 void LightPoint::Update(glm::vec3 cameraPos)
 {
     // model = glm::translate(model, transform);
-    glLinkProgram(shader);
+    //glLinkProgram(shader);
 
-    float red = color.r;
-    float green = color.g;
-    float blue = color.b;
-    float alpha = color.a;
-    glm::vec3 lightPos = transform;
-    glm::vec3 lightColor = color;
-    glUniform3f(colorLoc, red, green, blue);
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    //float red = color.r;
+    //float green = color.g;
+    //float blue = color.b;
+    //float alpha = color.a;
+    //glm::vec3 lightPos = transform;
+    //glm::vec3 lightColor = color;
+    //glUniform3f(colorLoc, red, green, blue);
+    //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-    glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
-    glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
-    glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
+    //glUniform3fv(lightPosLoc, 1, glm::value_ptr(lightPos));
+    //glUniform3fv(lightColorLoc, 1, glm::value_ptr(lightColor));
+    //glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, textureID);
 
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+    //glBindVertexArray(VAO);
+    //glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+    //glBindVertexArray(0);
 }

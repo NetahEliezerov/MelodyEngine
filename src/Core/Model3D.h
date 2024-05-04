@@ -18,6 +18,7 @@ private:
 	unsigned int lightColorLoc;
 	unsigned int viewPosLoc;
 
+	std::vector<unsigned int> textureIDs;
 
 	int numIndices;
 	unsigned int* indices;

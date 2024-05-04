@@ -1,50 +1,74 @@
 #include "Level1.h"
 #include <thread>
+#include <random>
 
 void Level1::Init(Renderer renderer, Player* playerPointer)
 {
-	character = playerPointer;
+    character = playerPointer;
     playerPointer->level = this;
-	ObjectSettings cubeSettings = { "Ground", "assets/meshes/cube.obj", "assets/textures/2.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(10, 0.2, 10), glm::vec3(0, -4, 0), glm::vec3(0,0,0), false, character->shader };
+    ObjectSettings cubeSettings = { "Ground", "assets/meshes/cube.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(10, 0.2, 10), glm::vec3(0, -4, 0), glm::vec3(0,0,0), false, character->shader };
+
+    ObjectSettings wall1Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(8, 0, 1), glm::vec3(90,0,90), true, character->shader };
+    ObjectSettings wall2Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(8, 2, 4), glm::vec3(-6, 0, 0), glm::vec3(90,0,270), true, character->shader };
+    ObjectSettings wall3Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(1, 0, 8), glm::vec3(90,0,180), true, character->shader };
+    ObjectSettings wall4Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(8, 2, 4), glm::vec3(0, 0, -6), glm::vec3(90,0,0), true, character->shader };
+
+    ObjectSettings targetCubeSettings = { "Something", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(0, 0, 0), glm::vec3(0,0,0), true, character->shader };
+    ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/pistol.obj", {"assets/textures/sp226-color-2.jpeg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(2.5, 0, 0), glm::vec3(0,0,0), true, character->shader };
     
-    // ObjectSettings skyBoxSettings = { "Skybox", "assets/meshes/plane.obj", "assets/textures/zizim.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(270,0,90), false, character->shader };
-    ObjectSettings wall1Settings = { "Wall", "assets/meshes/plane.obj", "assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(8, 0, 0), glm::vec3(90,0,90), true, character->shader };
-    ObjectSettings wall2Settings = { "Wall", "assets/meshes/plane.obj", "assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(-8, 0, 0), glm::vec3(90,0,270), true, character->shader};
-    ObjectSettings wall3Settings = { "Wall", "assets/meshes/plane.obj", "assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(0, 0, 8), glm::vec3(90,0,180), true, character->shader };
-    ObjectSettings wall4Settings = { "Wall", "assets/meshes/plane.obj", "assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(0, 0, -4), glm::vec3(90,0,0), true, character->shader };
+    
 
-    ObjectSettings targetCubeSettings = { "Something", "assets/meshes/hand.obj", "assets/textures/aga.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(0, 0, 0), glm::vec3(0,0,0), true, character->shader };
-    ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/pistol.obj", "assets/textures/sp226-color-2.jpeg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(2.5, 0, 0), glm::vec3(0,0,0), true, character->shader };
-    ObjectSettings targetCube3Settings = { "Target Cube", "assets/meshes/cube.obj", "assets/textures/2.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(5, 0, 0), glm::vec3(0,0,0), true, character->shader };
+    LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1.f, 1.f, 1.f, 0.f), glm::vec3(1, 1, 1), glm::vec3(0, 5, 2), character->shader };
 
-	LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1, 1, 1), glm::vec3(0, 5, 2), character->shader };
-	
     wall.Init(wall1Settings);
     wall2.Init(wall2Settings);
     wall3.Init(wall3Settings);
     wall4.Init(wall4Settings);
+    npc.Init(renderer, character);
 
-	cube.Init(cubeSettings);
+    cube.Init(cubeSettings);
     targetCube.Init(targetCubeSettings);
     targetCube2.Init(targetCube2Settings);
-    targetCube3.Init(targetCube3Settings);
-	light.Init(lightSettings);
+    light.Init(lightSettings);
     playerPointer->light = light;
     // skybox.Init(skyBoxSettings);
     sceneModels.push_back(&cube);
     sceneModels.push_back(&targetCube);
     sceneModels.push_back(&targetCube2);
-    sceneModels.push_back(&targetCube3);
     sceneModels.push_back(&skybox);
+
+    std::cout << "Character: " << &npc << std::endl;
 }
 
 
 void Level1::Update(float deltaTime)
 {
+    // Update the flicker timer
+    flickerTimer += deltaTime;
+
+    // Check if it's time to toggle the light state
+    if (flickerTimer >= flickerInterval)
+    {
+        flickerTimer = 0.0f;
+        lightOn = !lightOn;
+
+        // Set the light color based on the flickering state
+        if (lightOn)
+            light.color = glm::vec4(0.5f, 0.5f, 0.5f, 0.5f); // White color when the light is on
+        else
+            light.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); // Black color when the light is off
+
+        // Generate a new random flicker interval
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<> dis(0.1f, 0.5f); // Adjust the range as needed
+        flickerInterval = dis(gen);
+    }
+
     targetCube.Update(character->movement.position, light);
     wall.Update(character->movement.position, light);
     targetCube2.Update(character->movement.position, light);
-    targetCube3.Update(character->movement.position, light);
+    npc.Update(deltaTime, light);
     wall2.Update(character->movement.position, light);
     wall3.Update(character->movement.position, light);
     wall4.Update(character->movement.position, light);

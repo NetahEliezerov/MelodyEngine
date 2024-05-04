@@ -1,13 +1,14 @@
 #pragma once
 #include <string>
 #include <glm/glm.hpp>
+#include <vector>
 
 
 struct ObjectSettings
 {
     std::string label;
     std::string fileName;
-    std::string texturePath;
+    std::vector<std::string> texturePaths;
     bool recIsLight;
     glm::vec4 recColor;
     glm::vec3 recScale;
