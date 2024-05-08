@@ -139,8 +139,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Core\ShadowMap.cpp" />
     <ClCompile Include="src\AI\CharacterNPC.cpp" />
-    <ClCompile Include="src\World\SkyBox.cpp" />
     <ClCompile Include="src\Levels\Level1.cpp" />
     <ClCompile Include="src\Core\LightPoint.cpp" />
     <ClCompile Include="src\Core\Model3D.cpp" />
@@ -159,11 +159,14 @@
     <ClCompile Include="src\Utils\imgui_tables.cpp" />
     <ClCompile Include="src\Utils\imgui_widgets.cpp" />
     <ClCompile Include="src\Utils\stb_image.c" />
+    <ClCompile Include="src\World\TriggerBox.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Core\ShadowMap.h" />
     <ClInclude Include="src\AI\CharacterNPC.h" />
     <ClInclude Include="src\Core\AudioManager.hpp" />
-    <ClInclude Include="src\World\SkyBox.h" />
+    <ClInclude Include="src\Core\Shader.hpp" />
+    <ClInclude Include="src\Game\Game.hpp" />
     <ClInclude Include="src\Levels\Level1.h" />
     <ClInclude Include="src\Core\LightPoint.h" />
     <ClInclude Include="src\Core\LoadFromVertices.h" />
@@ -176,7 +179,7 @@
     <ClInclude Include="src\Core\Renderer.h" />
     <ClInclude Include="src\Types.h" />
     <ClInclude Include="src\Utils\OBJ_Loader.h" />
-    <ClInclude Include="src\Core\TextRenderer.hpp" />
+    <ClInclude Include="src\World\TriggerBox.h" />
     <ClInclude Include="vendor\glad\glad.h" />
     <ClInclude Include="vendor\GLFW\include\GLFW\glfw3.h" />
     <ClInclude Include="vendor\GLFW\include\GLFW\glfw3native.h" />
@@ -192,6 +195,8 @@
     <None Include="shaders\SkyBox\vertex.glsl" />
     <None Include="shaders\vertex_core.glsl" />
     <None Include="shaders\vertex_texture.glsl" />
+    <None Include="shaders\vignette\frag.glsl" />
+    <None Include="shaders\vignette\vertex.glsl" />
     <None Include="src\Levels\Test.LEVEL" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

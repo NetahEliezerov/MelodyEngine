@@ -1,10 +1,6 @@
 #include "Renderer.h"
 #include <vector>
 
-void Renderer::GameLoop()
-{
-    
-}
 
 unsigned int Renderer::CompileShader(unsigned int type, const std::string& source)
 {

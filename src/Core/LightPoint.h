@@ -8,6 +8,8 @@ class LightPoint
 public:
 	void Init(LightSettings settings);
 	void Update(glm::vec3 cameraPos);
+
+	bool flickLight = false;
 private:
 	unsigned int modelLoc;
 	unsigned int colorLoc;

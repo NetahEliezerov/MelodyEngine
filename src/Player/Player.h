@@ -34,7 +34,7 @@ public:
 	unsigned int shader;
 
 	float footstepTimer = 0.0f;
-	float footstepDelay = 0.5f; // Adjust the delay as needed (in seconds)
+	float footstepDelay = 0.5f;
 
 	glm::mat4 view = glm::lookAt(
 		glm::vec3(2.0f, 2.0f, 2.0f),  // Camera position
@@ -45,13 +45,24 @@ public:
 
 	bool isJumping = false;
 	LightPoint light;
-	float jumpForce = 25.0f;
+	float jumpForce = 5.0f;
 	float gravity = -13.8f;
 	bool isSprinting = false;
+
+	float fogDensity = 0.06f;
+	glm::vec3 fogColor;
+	
+
+	bool isCrouching = false;
+	float crouchSpeed = 2.0f;
+	float crouchHeight = -1.f;
+	float standingHeight = 1.0f;
+
 	glm::vec3 velocity = glm::vec3(0.0f);
 
 private:
 	void Sprint(bool value);
+	void Crouch(bool value);
 	bool isGodMode;
 	Model3D hand;
 	Model3D pistol;

@@ -63,6 +63,9 @@ void Player::Update(float deltaTime)
 {
     bool isMoving = false;
 
+    // Set uniform variables
+    glUniform1f(glGetUniformLocation(shader, "fogDensity"), fogDensity);
+    glUniform3fv(glGetUniformLocation(shader, "fogColor"), 1, glm::value_ptr(fogColor));
 
     glUseProgram(shader);
     if (glfwGetCurrentContext() == Engine::GetOpenGLWindow())
@@ -72,40 +75,40 @@ void Player::Update(float deltaTime)
         else
             Sprint(false);
 
-        // Apply pitch and yaw rotation
+
         movement.yaw += Input::inputState.mouseDeltaX * movement.sensitivity;
         movement.pitch -= Input::inputState.mouseDeltaY * movement.sensitivity;
 
-        // Limit the pitch angle to prevent flipping
-        const float pitchLimit = 89.0f; // Adjust this value as needed
+
+        const float pitchLimit = 89.0f;
         movement.pitch = glm::clamp(movement.pitch, -pitchLimit, pitchLimit);
 
-        // Calculate the direction vector based on the pitch and yaw angles
+
         glm::vec3 direction;
         direction.x = cos(glm::radians(movement.yaw)) * cos(glm::radians(movement.pitch));
         direction.y = sin(glm::radians(movement.pitch));
         direction.z = sin(glm::radians(movement.yaw)) * cos(glm::radians(movement.pitch));
         movement.lookingAngle = glm::normalize(direction);
 
-        // Reset the mouse movement
+
         Input::inputState.mouseDeltaX = 0;
         Input::inputState.mouseDeltaY = 0;
 
 
-        // pistolle jumping
+
         if (Input::inputState.keys[GLFW_KEY_SPACE] && !isJumping) {
             isJumping = true;
             velocity.y = jumpForce;
         }
 
-        // Apply gravity
+
         velocity.y += gravity * deltaTime;
 
-        // Update player position based on velocity
+
         movement.position += velocity * deltaTime;
 
-        // Check if the player has landed on the ground
-        float groundLevel = 0.0f; // Adjust this value according to your ground level
+
+        float groundLevel = 0.0f;
         if (isJumping && movement.position.y <= groundLevel) {
             isJumping = false;
             movement.position.y = groundLevel;
@@ -117,7 +120,7 @@ void Player::Update(float deltaTime)
             movement.position.y = groundLevel;
         }
 
-        // Update camera position based on keyboard input
+
         float velocity = movement.cameraSpeed * deltaTime;
         if (isGodMode)
         {
@@ -133,7 +136,7 @@ void Player::Update(float deltaTime)
         else
         {
             glm::vec3 forward = movement.lookingAngle;
-            forward.y = 0.0f; // Ignore vertical component of the looking direction
+            forward.y = 0.0f;
             forward = glm::normalize(forward);
 
             glm::vec3 right = glm::normalize(glm::cross(forward, movement.cameraUp));
@@ -149,17 +152,21 @@ void Player::Update(float deltaTime)
             if (Input::inputState.keys[GLFW_KEY_D])
                 moveDirection += right;
 
-            // Normalize the moveDirection vector to avoid faster diagonal movement
+
             if (glm::length(moveDirection) > 0.0f)
                 moveDirection = glm::normalize(moveDirection);
 
-            // Update only the X and Z components of the position
+
             movement.position.x += moveDirection.x * velocity;
             movement.position.z += moveDirection.z * velocity;
         }
     }
-    // Update the view matrix
-    view = glm::lookAt(movement.position, movement.position + movement.lookingAngle, movement.cameraUp);
+
+    glm::vec3 cameraPosition = movement.position;
+    if (isCrouching) {
+        cameraPosition.y = crouchHeight;
+    }
+    view = glm::lookAt(cameraPosition, cameraPosition + movement.lookingAngle, movement.cameraUp);
     glUniformMatrix4fv(movement.viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(movement.projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
@@ -176,35 +183,55 @@ void Player::Update(float deltaTime)
 
     if (isMoving)
     {
-        // Check if enough time has passed since the last footstep sound
+
         if (footstepTimer >= footstepDelay)
         {
-            // Play the footstep sound
-            audioManager.PlaySound(0); // Assuming footstep sound is loaded at index 0
 
-            // Reset the footstep timer
+            audioManager.PlaySound(0);
+
             footstepTimer = 0.0f;
         }
     }
     else
     {
-        // Reset the footstep timer when not moving
         footstepTimer = 0.0f;
     }
 
     audioManager.Update();
 
+    if (!isJumping)
+    {
+        if (Input::inputState.keys[GLFW_KEY_LEFT_CONTROL])
+            Crouch(true);
+        else
+            Crouch(false);
+    }
+
     //pistol.SetPosition(movement.position, movement.lookingAngle, movement.cameraUp, 1.3f, .75, 0);
     //pistol.Update(movement.position, light);
 
-    //hand.SetPosition(movement.position, movement.lookingAngle, movement.cameraUp, 1.3f, .75, 0);
-    //hand.Update(movement.position, light);
+    hand.SetPosition(movement.position, movement.lookingAngle, movement.cameraUp, 1.3f, .75, 0);
+    hand.Update(movement.position, light);
 
 
     //if (Input::inputState.keys[GLFW_MOUSE_BUTTON_LEFT]) {
     //    Fire();
     //}
 }
+
+void Player::Crouch(bool value) {
+    if (value) {
+        isCrouching = true;
+        movement.cameraSpeed = crouchSpeed;
+        movement.position.y = crouchHeight;
+    }
+    else {
+        isCrouching = false;
+        movement.cameraSpeed = movement.walkSpeed;
+        movement.position.y = standingHeight;
+    }
+}
+
 
 void Player::Init(Renderer _renderer, bool recIsGodMode)
 {
@@ -223,12 +250,18 @@ void Player::Init(Renderer _renderer, bool recIsGodMode)
     movement.projectionLoc = glGetUniformLocation(shader, "projection");
     glUniformMatrix4fv(movement.viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(movement.projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-
+    
+    ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.007, 0.007, 0.007), glm::vec3(2.5, 0, 0), glm::vec3(0,0,0), true, shader };
+    std::cout << "JOHNNY " << &targetCube2Settings << std::endl;
     //ObjectSettings pistolSettings = { "Pistol", "assets/meshes/pistol.obj", "assets/textures/sp226-color-2.jpeg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(-0.2f, -0.2f, 0), glm::vec3(0,270,0), true, shader };
-    //ObjectSettings handSettings = { "Hand", "assets/meshes/hand.obj", "assets/textures/aga.jpg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(-0.1f, -0.3, 1.2f), glm::vec3(270,180,0), true, shader };
+    //ObjectSettings handSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(-0.1f, -0.3, 1.2f), glm::vec3(270,180,0), true, shader };
     //pistol.Init(pistolSettings);
-    //hand.Init(handSettings);
+    hand.Init(targetCube2Settings);
     timeSinceShoot = std::chrono::steady_clock::now(); // Initialize lastShotTime
+
+    fogColor = { 0.12f, 0.1f, 0.1f };
+
+    std::cout << "PLAYER: " << this << std::endl;
 }
 
 
@@ -237,15 +270,14 @@ void Player::Fire()
     auto currentTime = std::chrono::steady_clock::now();
     auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - timeSinceShoot).count();
 
-    // Set the desired delay between shots in milliseconds
-    const int delayBetweenShots = 200; // 500 milliseconds (0.5 seconds)
+    const int delayBetweenShots = 200;
 
     if (elapsedTime >= delayBetweenShots) {
         FireAnimation(&pistol, 4);
 
         glm::vec3 cameraPos = movement.position;
         glm::vec3 cameraFront = movement.lookingAngle;
-        float shootDistance = 100.0f; // Adjust the shoot distance as needed
+        float shootDistance = 100.0f;
 
         Ray shootRay = calculatePistolTarget(cameraPos, cameraFront, shootDistance);
 
@@ -263,7 +295,7 @@ void Player::Fire()
         }
         level->Fire(hitObject);
 
-        timeSinceShoot = currentTime; // Update the last shot time
+        timeSinceShoot = currentTime;
     }
 }
 
@@ -285,11 +317,10 @@ void Player::Sprint(bool value)
 void Player::FireAnimation(Model3D* whatto, float toHow)
 {
     float targetRotation = toHow;
-    // Start a separate thread to pistolle the smooth rotation
     float startRotation = whatto->rotation.x;
     std::thread([this, targetRotation, whatto]() {
         float startRotation = whatto->rotation.x;
-        float duration = 0.1f; // Duration of the rotation transition in seconds
+        float duration = 0.1f;
 
         auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -300,20 +331,15 @@ void Player::FireAnimation(Model3D* whatto, float toHow)
             if (elapsedTime >= duration)
                 break;
 
-            // Calculate the interpolation factor based on elapsed time
             float t = elapsedTime / duration;
 
-            // Interpolate the rotation value using linear interpolation
             float currentRotation = startRotation + t * (targetRotation - startRotation);
 
-            // Update the pistol model's rotation
             whatto->rotation.x = currentRotation;
         }
 
-        // Ensure the final rotation value is set to the target rotation
         whatto->rotation.x = targetRotation;
 
-        // Wait for a certain duration before starting the rotation back to default
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
         startTime = std::chrono::high_resolution_clock::now();
@@ -330,7 +356,6 @@ void Player::FireAnimation(Model3D* whatto, float toHow)
             whatto->rotation.x = currentRotation;
         }
 
-        // Ensure the final rotation value is set to the default rotation
         whatto->rotation.x = 0.0f;
 
         }).detach();

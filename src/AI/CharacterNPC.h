@@ -24,13 +24,13 @@
 class CharacterNPC
 {
 public:
-	void Update(float deltaTime, LightPoint light);
-	void Init(Renderer renderer, Player* playerPointer);
+	void Update(float deltaTime, LightPoint light, bool followPlayerRec);
+	void Init(Renderer renderer, Player* playerPointer, bool followPlayerRec);
 
 	Player* character;
 	Model3D targetCube3;
 
-	bool followPlayer = true;
+	bool followPlayer = false;
 private:
 	// ...
 	float followDistance = 4.0f;  // Adjust the follow distance as needed

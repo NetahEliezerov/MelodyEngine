@@ -5,6 +5,7 @@
 #include <glm/mat4x4.hpp>
 #include <glm/ext.hpp>
 
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -16,12 +17,11 @@
 #include "Core/Input.h"
 #include "Core/Model3D.h"
 #include "Player/Player.h"
-#include "Core/TextRenderer.hpp"
 #include "Core/LightPoint.h"
 
-#include "Levels/Level1.h"
+#include "Core/Shader.hpp"
 
-#include "World/SkyBox.h"
+#include "Levels/Level1.h"
 
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
@@ -78,9 +78,22 @@ int main(void) {
         glfwSetScrollCallback(imgui_window, ImGui_ImplGlfw_ScrollCallback);
     }
 
-    Model3D* location = nullptr;
+    Model3D* modelLocation = nullptr;
+    TriggerBox* triggerLocation = nullptr;
+    LightPoint* lightLocation = nullptr;
+    Player* playerLocation = nullptr;
+
     static char inputAdd[256] = "";
+    static const char* items[]{ "TriggerBox", "Model3D", "LightPoint", "Fog" };
+    static int Selecteditem = 0;
+
+    static float col1[3] = { 1.f, 1.f, 1.f };
+    static float fog[3] = { 1.f, 1.f, 1.f };
+    bool isLightOn = true;
+    bool isFogOn = true;
+
     // !glfwWindowShouldClose(imgui_window)
+
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
@@ -105,33 +118,109 @@ int main(void) {
             if (show_demo_window)
             {
                 ImGui::Begin("Another Window", &show_another_window);
+                bool check = ImGui::Combo("MyCombo", &Selecteditem, items, IM_ARRAYSIZE(items));
                 std::string asdasad(std::to_string(fps));
                 ImGui::Text(asdasad.c_str());
 
                 ImGui::InputText("Memory Address", inputAdd, 256);
-                if (ImGui::Button("Update Pointer"))
+
+                switch (Selecteditem)
                 {
-                    std::stringstream ss;
-                    ss << std::hex << inputAdd;
-                    ss >> reinterpret_cast<std::uintptr_t&>(location);
-                }
+                case 3:
+                    if (ImGui::Button("Update Pointer"))
+                    {
+                        std::stringstream ss;
+                        ss << std::hex << inputAdd;
+                        ss >> reinterpret_cast<std::uintptr_t&>(playerLocation);
+                    }
 
-                if (location != nullptr)
-                {
-                    ImGui::Text("Transform");
-                    ImGui::SliderFloat("X Transform", &location->transform.x, -10, 10);
-                    ImGui::SliderFloat("Y Transform", &location->transform.y, -10, 10);
-                    ImGui::SliderFloat("Z Transform", &location->transform.z, -10, 10);
+                    if (playerLocation != nullptr)
+                    {
+                        ImGui::DragFloat("Density", &playerLocation->fogDensity);
+                        ImGui::ColorPicker4("Color", fog);
+                        playerLocation->fogColor.x = fog[0];
+                        playerLocation->fogColor.y = fog[1];
+                        playerLocation->fogColor.z = fog[2];
+                    }
 
-                    ImGui::Text("Rotation");
-                    ImGui::SliderFloat("X Rotation", &location->rotation.x, 0, 360);
-                    ImGui::SliderFloat("Y Rotation", &location->rotation.y, 0, 360);
-                    ImGui::SliderFloat("Z Rotation", &location->rotation.z, 0, 360);
+                    break;
+                case 2:
+                    if (ImGui::Button("Update Pointer"))
+                    {
+                        std::stringstream ss;
+                        ss << std::hex << inputAdd;
+                        ss >> reinterpret_cast<std::uintptr_t&>(lightLocation);
+                    }
+                    if (lightLocation != nullptr)
+                    {
 
-                    ImGui::Text("Scale");
-                    ImGui::SliderFloat("X Scale", &location->scale.x, 0, 1);
-                    ImGui::SliderFloat("Y Scale", &location->scale.y, 0, 1);
-                    ImGui::SliderFloat("Z Scale", &location->scale.z, 0, 1);
+                        ImGui::Checkbox("On/Off", &isLightOn);
+                        ImGui::Checkbox("Flicker Light", &lightLocation->flickLight);
+
+                        ImGui::Text("Transform");
+                        ImGui::DragFloat("X Transform", &lightLocation->transform.x);
+                        ImGui::DragFloat("Y Transform", &lightLocation->transform.y);
+                        ImGui::DragFloat("Z Transform", &lightLocation->transform.z);
+                        ImGui::ColorPicker3("Color", col1);
+
+
+                        if (isLightOn)
+                        {
+                            lightLocation->color = glm::vec4(col1[0], col1[1], col1[2], 1.f);
+                        }
+                        else
+                        {
+                            lightLocation->color = glm::vec4(0.f, 0.f, 0.f, 0.f);
+                        }
+                    }
+                    break;
+                case 1:
+                    if (ImGui::Button("Update Pointer"))
+                    {
+                        std::stringstream ss;
+                        ss << std::hex << inputAdd;
+                        ss >> reinterpret_cast<std::uintptr_t&>(modelLocation);
+                    }
+
+                    if (modelLocation != nullptr)
+                    {
+                        ImGui::Text("Transform");
+                        ImGui::InputFloat("X Transform", &modelLocation->transform.x);
+                        ImGui::InputFloat("Y Transform", &modelLocation->transform.y);
+                        ImGui::InputFloat("Z Transform", &modelLocation->transform.z);
+
+                        ImGui::Text("Rotation");
+                        ImGui::SliderFloat("X Rotation", &modelLocation->rotation.x, 0, 360);
+                        ImGui::SliderFloat("Y Rotation", &modelLocation->rotation.y, 0, 360);
+                        ImGui::SliderFloat("Z Rotation", &modelLocation->rotation.z, 0, 360);
+
+                        ImGui::Text("Scale");
+                        ImGui::InputFloat("X Scale", &modelLocation->scale.x);
+                        ImGui::InputFloat("Y Scale", &modelLocation->scale.y);
+                        ImGui::InputFloat("Z Scale", &modelLocation->scale.z);
+                    }
+                    break;
+                case 0:
+                    if (ImGui::Button("Update Pointer"))
+                    {
+                        std::stringstream ss;
+                        ss << std::hex << inputAdd;
+                        ss >> reinterpret_cast<std::uintptr_t&>(triggerLocation);
+                    }
+
+                    if (triggerLocation != nullptr)
+                    {
+                        ImGui::Text("Transform");
+                        ImGui::InputFloat("X Transform", &triggerLocation->position.x);
+                        ImGui::InputFloat("Y Transform", &triggerLocation->position.y);
+                        ImGui::InputFloat("Z Transform", &triggerLocation->position.z);
+
+                        ImGui::Text("Scale");
+                        ImGui::InputFloat("X Scale", &triggerLocation->size.x);
+                        ImGui::InputFloat("Y Scale", &triggerLocation->size.y);
+                        ImGui::InputFloat("Z Scale", &triggerLocation->size.z);
+                    }
+                    break;
                 }
 
                 ImGui::End();
@@ -161,7 +250,6 @@ int main(void) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         glDepthFunc(GL_LESS);
-
         glfwSwapBuffers(window);
     }
     if (show)

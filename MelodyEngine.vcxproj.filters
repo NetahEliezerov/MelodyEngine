@@ -69,10 +69,13 @@
     <ClCompile Include="src\Utils\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\World\SkyBox.cpp">
+    <ClCompile Include="src\AI\CharacterNPC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\AI\CharacterNPC.cpp">
+    <ClCompile Include="src\Core\ShadowMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World\TriggerBox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -110,9 +113,6 @@
     <ClInclude Include="src\Core\Model3D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Core\TextRenderer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Core\LightPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -128,9 +128,6 @@
     <ClInclude Include="src\Parser\Parser.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\World\SkyBox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\World\WorldLevel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -138,6 +135,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\AI\CharacterNPC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\Shader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\ShadowMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Game.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\TriggerBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -155,5 +164,7 @@
     <None Include="src\Levels\Test.LEVEL" />
     <None Include="shaders\SkyBox\vertex.glsl" />
     <None Include="shaders\SkyBox\frag.glsl" />
+    <None Include="shaders\vignette\frag.glsl" />
+    <None Include="shaders\vignette\vertex.glsl" />
   </ItemGroup>
 </Project>
