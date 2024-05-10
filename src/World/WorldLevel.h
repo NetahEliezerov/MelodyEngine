@@ -11,13 +11,17 @@
 #include <string>
 #include <vector>
 #include <chrono>
-#include <map>
 
 #include "../Core/Renderer.h"
 #include "../Core/Input.h"
 #include "../Core/Model3D.h"
 #include "../Player/Player.h"
 #include "../Core/LightPoint.h"
+
+#include "../Core/Shader.hpp"
+
+#include "../Types.h"
+
 class Player;
 
 class WorldLevel

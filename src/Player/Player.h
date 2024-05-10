@@ -25,7 +25,7 @@ class Player
 {
 public:
 	void Update(float deltaTime);
-	void Init(Renderer _renderer, bool recIsGodMode);
+	void Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer);
 
 	PlayerMovement movement;
 

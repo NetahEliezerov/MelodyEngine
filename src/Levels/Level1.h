@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/ext.hpp>
+#include "../Game/Game.h"
 
 #include <iostream>
 #include <fstream>
@@ -12,11 +13,11 @@
 #include <string>
 #include <vector>
 #include <chrono>
-#include <map>
 
 #include "../Core/Renderer.h"
 #include "../Core/Input.h"
 #include "../Core/Model3D.h"
+#include "../Core/Shader.hpp"
 #include "../Player/Player.h"
 #include "../Core/LightPoint.h"
 
@@ -27,16 +28,18 @@
 #include "../World/WorldLevel.h"
 #include "../World/TriggerBox.h"
 
+
 class Level1 : public WorldLevel
 {
 
 public:
+
 	virtual void Init(Renderer renderer, Player* playerPointer) override;
 	virtual void Update(float deltaTime) override;
 
 	virtual void Fire(Model3D* hitObject) override;
 
-	void OnTriggerEntered();
+	void OnRoomExit();
 private:
 	Model3D pistol;
 	Model3D hand;
@@ -48,6 +51,8 @@ private:
 	Model3D wall5;
 	Model3D targetCube;
 	Model3D targetCube2;
+
+
 	CharacterNPC npc;
 
 	TriggerBox triggerBox;

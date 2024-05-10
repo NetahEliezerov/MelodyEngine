@@ -10,6 +10,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <stb/stb_image.h>
+
 #include "../Core/AudioManager.hpp"
 
 AudioManager audioManager;
@@ -18,6 +20,8 @@ struct Ray {
     glm::vec3 origin;
     glm::vec3 direction;
 };
+
+unsigned int lutTexture;
 
 Ray calculatePistolTarget(const glm::vec3& cameraPos, const glm::vec3& cameraFront, float distance)
 {
@@ -61,13 +65,13 @@ static std::string readShaderSource(const std::string& filename) {
 
 void Player::Update(float deltaTime)
 {
+    glUseProgram(shader);
     bool isMoving = false;
 
     // Set uniform variables
     glUniform1f(glGetUniformLocation(shader, "fogDensity"), fogDensity);
     glUniform3fv(glGetUniformLocation(shader, "fogColor"), 1, glm::value_ptr(fogColor));
 
-    glUseProgram(shader);
     if (glfwGetCurrentContext() == Engine::GetOpenGLWindow())
     {
         if (Input::inputState.keys[GLFW_KEY_LEFT_SHIFT])
@@ -232,8 +236,7 @@ void Player::Crouch(bool value) {
     }
 }
 
-
-void Player::Init(Renderer _renderer, bool recIsGodMode)
+void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer)
 {
     audioManager.LoadSound("assets/sounds/footstep.wav");
 
@@ -244,6 +247,7 @@ void Player::Init(Renderer _renderer, bool recIsGodMode)
     isGodMode = recIsGodMode;
 
     shader = _renderer.CreateShader(vertexShader, fragmentShader);
+    shaderPointer = &shader;
     glUseProgram(shader);
 
     movement.viewLoc = glGetUniformLocation(shader, "view");
@@ -261,10 +265,9 @@ void Player::Init(Renderer _renderer, bool recIsGodMode)
 
     fogColor = { 0.12f, 0.1f, 0.1f };
 
+
     std::cout << "PLAYER: " << this << std::endl;
 }
-
-
 void Player::Fire()
 {
     auto currentTime = std::chrono::steady_clock::now();

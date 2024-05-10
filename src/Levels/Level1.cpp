@@ -1,19 +1,23 @@
 #include "Level1.h"
 #include <thread>
 #include <random>
-#include "../Game/Game.hpp"
 
 
 #include "../Core/AudioManager.hpp"
 
 // AudioManager audioSweetHeart;
 
-void Level1::OnTriggerEntered()
+void Level1::OnRoomExit()
 {
     // audioSweetHeart.PlaySound(0);
-    std::cout << "GOT OUT OF ROOM" << std::endl;
-    Game::state.currentSubMission++;
+    if (Game::state.currentSubMission > 0)
+    {
+        std::cout << "GOT OUT OF ROOM" << std::endl;
+        Game::state.currentSubMission++;
+        Game::state.currentObjective = "Great!";
+    }
 }
+
 
 void Level1::Init(Renderer renderer, Player* playerPointer)
 {
@@ -29,11 +33,12 @@ void Level1::Init(Renderer renderer, Player* playerPointer)
     ObjectSettings wall5Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(8, 1, 7), glm::vec3(2, 4, 1.1), glm::vec3(180,0,0), true, character->shader };
 
     ObjectSettings targetCubeSettings = { "Something", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(0, 0, 0), glm::vec3(0,0,0), true, character->shader };
-    // ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/pistol.obj", {"assets/textures/sp226-color-2.jpeg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(2.5, 0, 0), glm::vec3(0,0,0), true, character->shader };
     ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.007, 0.007, 0.007), glm::vec3(2.5, 0, 0), glm::vec3(0,0,0), true, character->shader };
 
 
-    LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(0.15, 0.15, 0.15, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(0, 5, 2), character->shader };
+    LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(0.25, 0.25, 0.25, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(0, 5, 2), character->shader };
+
+
 
     wall.Init(wall1Settings);
     wall2.Init(wall2Settings);
@@ -63,9 +68,10 @@ void Level1::Init(Renderer renderer, Player* playerPointer)
     std::cout << "Flick: " << &light.flickLight << std::endl;
 
     Game::state.currentMission = 0;
-    Game::state.currentMission = 1;
+    Game::state.currentSubMission = 0;
+    Game::state.currentObjective = "Find the way out";
 
-    triggerBox.Init(glm::vec3(-6.f, 0.0f, 7.f), glm::vec3(2.0f, 8.0f, 2.0f), [this]() { OnTriggerEntered(); }, character, true, false);
+    triggerBox.Init(glm::vec3(-6.f, 0.0f, 7.f), glm::vec3(2.0f, 8.0f, 2.0f), [this]() { OnRoomExit(); }, character, false, false);
 }
 
 void Level1::Update(float deltaTime)
@@ -79,7 +85,6 @@ void Level1::Update(float deltaTime)
     // audioSweetHeart.Update();
 
 
-    // Update the trigger box
     triggerBox.Update(character->movement.position, light);
 
     targetCube.Update(character->movement.position, light);
@@ -92,6 +97,7 @@ void Level1::Update(float deltaTime)
     wall5.Update(character->movement.position, light);
 	cube.Update(character->movement.position, light);
     light.Update(character->movement.position);
+
 }
 
 void Level1::Fire(Model3D* hitObject)

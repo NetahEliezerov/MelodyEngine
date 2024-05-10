@@ -14,5 +14,3 @@ class Game
 public:
 	static GameState state;
 };
-
-GameState Game::state;

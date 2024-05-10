@@ -112,7 +112,6 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint light)
     if (visibility)
     {
         glUseProgram(shader);
-        glLinkProgram(shader);
 
         float red = color.r;
         float green = color.g;

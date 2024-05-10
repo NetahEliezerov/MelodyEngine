@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#include "Core/Shader.hpp"
+
 
 struct ObjectSettings
 {
@@ -16,6 +18,25 @@ struct ObjectSettings
     glm::vec3 recRotation;
     bool isDynamicRec;
     unsigned int recShader;
+};
+
+struct Text2DSettings
+{
+    const std::string& text;
+    glm::vec2 transform;
+    float scale;
+    glm::vec3 color;
+    Shader& shader;
+
+    unsigned int VBO;
+    unsigned int VAO;
+};
+
+struct ShaderType
+{
+    Shader* shader;
+    unsigned int VBO;
+    unsigned int VAO;
 };
 
 struct LightSettings

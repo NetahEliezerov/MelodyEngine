@@ -1,11 +1,16 @@
+#pragma once
 #include <string>
 #include <fstream>
 #include <iostream>
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/ext.hpp>
 #include <sstream>
 #include <vector>
 
 class Shader {
+
 public:
     unsigned int ID;
 
@@ -50,6 +55,13 @@ public:
         glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
     }
 
+    void setMat4(const std::string& name, glm::mat4 value) const {
+        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+    }
+
+    void setVec3(const std::string& name, glm::vec3 value) const {
+        glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, glm::value_ptr(value));
+    }
     void setFloat(const std::string& name, float value) const {
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }

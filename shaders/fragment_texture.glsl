@@ -31,7 +31,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 void main()
 {
     // Ambient
-    float ambientStrength = 0.008;
+    float ambientStrength = 0.03;
     vec3 ambient = ambientStrength * vec3(1, 1, 1);
 
     // Diffuse
@@ -58,5 +58,7 @@ void main()
     fogFactor = clamp(fogFactor, 0.0, 1.0);
 
     vec3 result = mix(fogColor, lighting, fogFactor);
+
+
     FragColor = vec4(result, 0.6);
 }

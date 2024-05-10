@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="src\Core\ShadowMap.cpp" />
     <ClCompile Include="src\AI\CharacterNPC.cpp" />
+    <ClCompile Include="src\Game\Game.cpp" />
     <ClCompile Include="src\Levels\Level1.cpp" />
     <ClCompile Include="src\Core\LightPoint.cpp" />
     <ClCompile Include="src\Core\Model3D.cpp" />
@@ -166,7 +167,7 @@
     <ClInclude Include="src\AI\CharacterNPC.h" />
     <ClInclude Include="src\Core\AudioManager.hpp" />
     <ClInclude Include="src\Core\Shader.hpp" />
-    <ClInclude Include="src\Game\Game.hpp" />
+    <ClInclude Include="src\Game\Game.h" />
     <ClInclude Include="src\Levels\Level1.h" />
     <ClInclude Include="src\Core\LightPoint.h" />
     <ClInclude Include="src\Core\LoadFromVertices.h" />
@@ -191,6 +192,8 @@
     <None Include="shaders\fragment_texture.glsl" />
     <None Include="shaders\lights\frag.glsl" />
     <None Include="shaders\lights\vertex.glsl" />
+    <None Include="shaders\postprocess\fragment.glsl" />
+    <None Include="shaders\postprocess\vertex.glsl" />
     <None Include="shaders\SkyBox\frag.glsl" />
     <None Include="shaders\SkyBox\vertex.glsl" />
     <None Include="shaders\vertex_core.glsl" />

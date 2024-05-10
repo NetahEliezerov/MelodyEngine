@@ -10,7 +10,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <map>
 
 #include "Core/Engine.h"
 #include "Core/Renderer.h"
@@ -18,6 +17,7 @@
 #include "Core/Model3D.h"
 #include "Player/Player.h"
 #include "Core/LightPoint.h"
+
 
 #include "Core/Shader.hpp"
 
@@ -27,14 +27,139 @@
 #include <imgui_impl_glfw.h>
 #include <imgui.h>
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+
+unsigned int VBO, VAO;
+
+struct Character {
+    unsigned int textureID;
+    glm::ivec2 size;
+    glm::ivec2 bearing;
+    unsigned int advance;
+};
+
+
+static std::map<char, Character> characters;
+
+void renderText(const std::string& text, float x, float y, float scale, glm::vec3 color, Shader& shader) {
+    shader.use();
+    shader.setVec3("textColor", color);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(VAO);
+
+    float xPos = x;
+    for (const auto& c : text) {
+        Character ch = characters[c];
+
+        float xpos = xPos + ch.bearing.x * scale;
+        float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+        float w = ch.size.x * scale;
+        float h = ch.size.y * scale;
+
+        float vertices[6][4] = {
+            { xpos,     ypos + h,   0.0f, 0.0f },
+            { xpos,     ypos,       0.0f, 1.0f },
+            { xpos + w, ypos,       1.0f, 1.0f },
+            { xpos,     ypos + h,   0.0f, 0.0f },
+            { xpos + w, ypos,       1.0f, 1.0f },
+            { xpos + w, ypos + h,   1.0f, 0.0f }
+        };
+
+        glBindTexture(GL_TEXTURE_2D, ch.textureID);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        xPos += (ch.advance >> 6) * scale;
+    }
+
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void setupTextRendering() {
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void loadFont(const std::string& fontPath, int fontSize) {
+    FT_Library ft;
+    if (FT_Init_FreeType(&ft)) {
+        std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+        return;
+    }
+
+    FT_Face face;
+    if (FT_New_Face(ft, fontPath.c_str(), 0, &face)) {
+        std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
+        return;
+    }
+
+    FT_Set_Pixel_Sizes(face, 0, fontSize);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    for (unsigned char c = 0; c < 128; c++) {
+        if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+            std::cout << "ERROR::FREETYTPE: Failed to load Glyph" << std::endl;
+            continue;
+        }
+
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RED,
+            face->glyph->bitmap.width,
+            face->glyph->bitmap.rows,
+            0,
+            GL_RED,
+            GL_UNSIGNED_BYTE,
+            face->glyph->bitmap.buffer
+        );
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        Character character = {
+            texture,
+            glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            glm::ivec2(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            static_cast<unsigned int>(face->glyph->advance.x)
+        };
+        characters.insert(std::pair<char, Character>(c, character));
+    }
+
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
+}
+
 int main(void) {
     GLFWwindow* window = Engine::Run();
     Renderer _renderer;
     const char* glsl_version = "#version 130";
+
+
     Level1 _level1;
     Player character;
 
-    character.Init(_renderer, false);
+    unsigned int* playerShader = nullptr;
+
+    character.Init(_renderer, false, playerShader);
 
     _level1.Init(_renderer, &character);
 
@@ -52,7 +177,18 @@ int main(void) {
     bool show_demo_window = true;
     bool show_another_window = false;
 
+    Shader textShader("shaders/postprocess/vertex.glsl", "shaders/postprocess/fragment.glsl");
+
+    setupTextRendering();
+    loadFont("assets/fonts/typewriter.ttf", 48);
+
     bool show = true;
+    textShader.use();
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(1920), 0.0f, static_cast<float>(1080));
+    textShader.setMat4("projection", projection);
+    textShader.setVec3("textColor", glm::vec3(1.0f, 1.0f, 1.0f)); // Set text color to white
+
+
 
     if (show)
     {
@@ -82,6 +218,7 @@ int main(void) {
     TriggerBox* triggerLocation = nullptr;
     LightPoint* lightLocation = nullptr;
     Player* playerLocation = nullptr;
+    
 
     static char inputAdd[256] = "";
     static const char* items[]{ "TriggerBox", "Model3D", "LightPoint", "Fog" };
@@ -91,7 +228,6 @@ int main(void) {
     static float fog[3] = { 1.f, 1.f, 1.f };
     bool isLightOn = true;
     bool isFogOn = true;
-
     // !glfwWindowShouldClose(imgui_window)
 
     while (!glfwWindowShouldClose(window)) {
@@ -236,20 +372,38 @@ int main(void) {
 
             glfwPollEvents();
         }
-        
+
         // Clear the color and depth buffers for the main window
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+
         // Render your OpenGL content in the main window
         character.Update(deltaTime);
         _level1.Update(deltaTime);
+
+        glDisable(GL_DEPTH_TEST);
+
+        // Enable blending for text rendering
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // Render the text
+        renderText("Objective: " + Game::state.currentObjective, 50.0f, 50.0f, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+
+        // Disable blending after text rendering
+        glDisable(GL_BLEND);
+
+        // Re-enable depth testing if needed for other rendering
+        glEnable(GL_DEPTH_TEST);
 
         if (Input::inputState.keys[GLFW_KEY_F])
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         if (Input::inputState.keys[GLFW_KEY_G])
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        glDepthFunc(GL_LESS);
+        glUseProgram(character.shader);
         glfwSwapBuffers(window);
     }
     if (show)
@@ -259,7 +413,7 @@ int main(void) {
         ImGui::DestroyContext();
         glfwDestroyWindow(imgui_window);
     }
-
+    glDeleteProgram(textShader.ID);
     glDeleteProgram(character.shader);
     glfwDestroyWindow(window);
     glfwTerminate();

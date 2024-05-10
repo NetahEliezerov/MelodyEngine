@@ -78,6 +78,9 @@
     <ClCompile Include="src\World\TriggerBox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Game\Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vendor\glad\glad.h">
@@ -143,7 +146,7 @@
     <ClInclude Include="src\Core\ShadowMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Game\Game.hpp">
+    <ClInclude Include="src\Game\Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\World\TriggerBox.h">
@@ -166,5 +169,7 @@
     <None Include="shaders\SkyBox\frag.glsl" />
     <None Include="shaders\vignette\frag.glsl" />
     <None Include="shaders\vignette\vertex.glsl" />
+    <None Include="shaders\postprocess\vertex.glsl" />
+    <None Include="shaders\postprocess\fragment.glsl" />
   </ItemGroup>
 </Project>
