@@ -236,9 +236,11 @@ void Player::Crouch(bool value) {
     }
 }
 
-void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer)
+void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionRec)
 {
     audioManager.LoadSound("assets/sounds/footstep.wav");
+
+    isInInteractionZone = isInInteractionRec;
 
     movement.position = glm::vec3(0.0f, 1.0f, 0.0f);
     std::string vertexShader = readShaderSource("shaders/vertex_texture.glsl");

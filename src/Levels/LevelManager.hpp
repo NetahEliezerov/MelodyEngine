@@ -1,40 +1,43 @@
 #pragma once
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/ext.hpp>
 
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <vector>
-#include <chrono>
 
+#include "../Core/Engine.h"
 #include "../Core/Renderer.h"
 #include "../Core/Input.h"
 #include "../Core/Model3D.h"
 #include "../Player/Player.h"
 #include "../Core/LightPoint.h"
 
+
 #include "../Core/Shader.hpp"
 
-#include "../Types.h"
+#include "../Levels/Level1.hpp"
 
-class Player;
-
-class WorldLevel
+struct LevelManager
 {
-public:
-	virtual void Init(Renderer renderer, Player* playerPointer) = 0;
-	virtual void Update(float deltaTime) = 0;
-
-	virtual void Fire(Model3D* hitObject) = 0;
-
-
+	Level1 _level1;
 	Player* character;
 
-	std::vector<Model3D*> sceneModels;
-};
+	void GameStart(Renderer renderer, Player* playerPointer)
+	{
+		character = playerPointer;
+		_level1.Init(renderer, playerPointer);
 
+	}
+
+	void GameUpdate(float deltaTime)
+	{
+		_level1.Update(deltaTime);
+	}
+};

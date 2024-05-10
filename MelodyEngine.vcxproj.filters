@@ -45,9 +45,6 @@
     <ClCompile Include="src\Core\LightPoint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Levels\Level1.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Utils\imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -125,7 +122,7 @@
     <ClInclude Include="src\Types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Levels\Level1.h">
+    <ClInclude Include="src\Levels\Level1.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Parser\Parser.hpp">
@@ -152,14 +149,14 @@
     <ClInclude Include="src\World\TriggerBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Levels\LevelManager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\Interactable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\fragment_core.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="shaders\vertex_core.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
     <None Include="shaders\lights\frag.glsl" />
     <None Include="shaders\lights\vertex.glsl" />
     <None Include="shaders\fragment_texture.glsl" />
@@ -171,5 +168,7 @@
     <None Include="shaders\vignette\vertex.glsl" />
     <None Include="shaders\postprocess\vertex.glsl" />
     <None Include="shaders\postprocess\fragment.glsl" />
+    <None Include="shaders\fbo_vertex.glsl" />
+    <None Include="shaders\fbo_fragment.glsl" />
   </ItemGroup>
 </Project>

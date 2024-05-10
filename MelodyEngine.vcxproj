@@ -142,7 +142,6 @@
     <ClCompile Include="src\Core\ShadowMap.cpp" />
     <ClCompile Include="src\AI\CharacterNPC.cpp" />
     <ClCompile Include="src\Game\Game.cpp" />
-    <ClCompile Include="src\Levels\Level1.cpp" />
     <ClCompile Include="src\Core\LightPoint.cpp" />
     <ClCompile Include="src\Core\Model3D.cpp" />
     <ClCompile Include="src\Player\PlayerMovement.cpp" />
@@ -168,7 +167,8 @@
     <ClInclude Include="src\Core\AudioManager.hpp" />
     <ClInclude Include="src\Core\Shader.hpp" />
     <ClInclude Include="src\Game\Game.h" />
-    <ClInclude Include="src\Levels\Level1.h" />
+    <ClInclude Include="src\Levels\LevelManager.hpp" />
+    <ClInclude Include="src\Levels\Level1.hpp" />
     <ClInclude Include="src\Core\LightPoint.h" />
     <ClInclude Include="src\Core\LoadFromVertices.h" />
     <ClInclude Include="src\Core\Model3D.h" />
@@ -180,6 +180,7 @@
     <ClInclude Include="src\Core\Renderer.h" />
     <ClInclude Include="src\Types.h" />
     <ClInclude Include="src\Utils\OBJ_Loader.h" />
+    <ClInclude Include="src\World\Interactable.hpp" />
     <ClInclude Include="src\World\TriggerBox.h" />
     <ClInclude Include="vendor\glad\glad.h" />
     <ClInclude Include="vendor\GLFW\include\GLFW\glfw3.h" />
@@ -188,7 +189,8 @@
     <ClInclude Include="src\World\WorldLevel.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\fragment_core.glsl" />
+    <None Include="shaders\fbo_fragment.glsl" />
+    <None Include="shaders\fbo_vertex.glsl" />
     <None Include="shaders\fragment_texture.glsl" />
     <None Include="shaders\lights\frag.glsl" />
     <None Include="shaders\lights\vertex.glsl" />
@@ -196,7 +198,6 @@
     <None Include="shaders\postprocess\vertex.glsl" />
     <None Include="shaders\SkyBox\frag.glsl" />
     <None Include="shaders\SkyBox\vertex.glsl" />
-    <None Include="shaders\vertex_core.glsl" />
     <None Include="shaders\vertex_texture.glsl" />
     <None Include="shaders\vignette\frag.glsl" />
     <None Include="shaders\vignette\vertex.glsl" />

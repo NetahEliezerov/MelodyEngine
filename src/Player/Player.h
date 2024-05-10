@@ -25,7 +25,7 @@ class Player
 {
 public:
 	void Update(float deltaTime);
-	void Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer);
+	void Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionZone);
 
 	PlayerMovement movement;
 
@@ -59,6 +59,7 @@ public:
 	float standingHeight = 1.0f;
 
 	glm::vec3 velocity = glm::vec3(0.0f);
+	bool* isInInteractionZone;
 
 private:
 	void Sprint(bool value);

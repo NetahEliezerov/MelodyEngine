@@ -1,4 +1,3 @@
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -21,7 +20,7 @@
 
 #include "Core/Shader.hpp"
 
-#include "Levels/Level1.h"
+#include "Levels/LevelManager.hpp"
 
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
@@ -148,26 +147,61 @@ void loadFont(const std::string& fontPath, int fontSize) {
     FT_Done_FreeType(ft);
 }
 
+
+unsigned int quadVAO, quadVBO;
+
+void setupQuad() {
+    float quadVertices[] = {
+        // positions   // texture Coords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+    };
+
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+}
+
+void renderQuad() {
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
 int main(void) {
     GLFWwindow* window = Engine::Run();
     Renderer _renderer;
     const char* glsl_version = "#version 130";
 
 
-    Level1 _level1;
+    bool isInInteractionZone = false;
+
+    LevelManager levelManager;
     Player character;
 
     unsigned int* playerShader = nullptr;
 
-    character.Init(_renderer, false, playerShader);
+    character.Init(_renderer, false, playerShader, &isInInteractionZone);
 
-    _level1.Init(_renderer, &character);
+    levelManager.GameStart(_renderer, &character);
 
     float lastFrame = 0.0f;
     float deltaTime = 0.0f;
 
     float fps = 0;
 
+    setupQuad();
 
     // glEnable(GL_CULL_FACE);
     // glCullFace(GL_BACK);
@@ -187,7 +221,32 @@ int main(void) {
     glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(1920), 0.0f, static_cast<float>(1080));
     textShader.setMat4("projection", projection);
     textShader.setVec3("textColor", glm::vec3(1.0f, 1.0f, 1.0f)); // Set text color to white
+    
 
+
+
+    // Create FBO
+    unsigned int fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    // Create texture attachment
+    unsigned int fboTexture;
+    glGenTextures(1, &fboTexture);
+    glBindTexture(GL_TEXTURE_2D, fboTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1920, 1080, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
+
+    // Create depth buffer for FBO
+    unsigned int depthBuffer;
+    glGenRenderbuffers(1, &depthBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1920, 1080);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
     if (show)
@@ -221,14 +280,25 @@ int main(void) {
     
 
     static char inputAdd[256] = "";
-    static const char* items[]{ "TriggerBox", "Model3D", "LightPoint", "Fog" };
+    static const char* items[]{ "TriggerBox", "Model3D", "LightPoint", "Fog", "Post Process"};
     static int Selecteditem = 0;
 
+    float vignetteIntensity = 1.5f;
+    float vignetteRadius = 0.3f;
+    float vignetteSmooth = -0.75f;
+
+    float bloomIntensity = .8f;
+    float gammaIntensity = 1.f;
+
+    float grainIntensity = 0.05f;
+    float grainSize = 0.01f;
     static float col1[3] = { 1.f, 1.f, 1.f };
     static float fog[3] = { 1.f, 1.f, 1.f };
     bool isLightOn = true;
     bool isFogOn = true;
     // !glfwWindowShouldClose(imgui_window)
+    Shader vignetteShader("shaders/fbo_vertex.glsl", "shaders/fbo_fragment.glsl");
+    vignetteShader.setVec2("screenSize", glm::vec2(1920.0f, 1080.0f));
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -262,6 +332,22 @@ int main(void) {
 
                 switch (Selecteditem)
                 {
+                case 4:
+                    ImGui::Text("Bloom");
+                    ImGui::DragFloat("Bloom Intensity", &bloomIntensity);
+                    ImGui::DragFloat("Gamma", &gammaIntensity);
+
+                    ImGui::Text("Vignette");
+                    ImGui::DragFloat("Vignette Intensity", &vignetteIntensity);
+                    ImGui::DragFloat("Radius", &vignetteRadius);
+                    ImGui::DragFloat("Smooth", &vignetteSmooth);
+
+                    ImGui::Text("Grain");
+                    ImGui::DragFloat("Grain Intensity", &grainIntensity);
+
+                    ImGui::Text("Chromatic Abberation");
+                    ImGui::DragFloat("Chromatism", &grainSize);
+                    break;
                 case 3:
                     if (ImGui::Button("Update Pointer"))
                     {
@@ -379,19 +465,50 @@ int main(void) {
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
 
-        // Render your OpenGL content in the main window
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+
         character.Update(deltaTime);
-        _level1.Update(deltaTime);
+        levelManager.GameUpdate(deltaTime);
 
         glDisable(GL_DEPTH_TEST);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // Clear the default framebuffer
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Render quad with vignette shader
+        vignetteShader.use();
+        vignetteShader.setInt("screenTexture", 0);
+        vignetteShader.setFloat("vignetteIntensity", vignetteIntensity);
+        vignetteShader.setFloat("vignetteRadius", vignetteRadius);
+        vignetteShader.setFloat("vignetteSmooth", vignetteSmooth);
+        vignetteShader.setFloat("exposure", bloomIntensity);
+        vignetteShader.setFloat("gamma", gammaIntensity);
+        vignetteShader.setFloat("time", glfwGetTime());
+        vignetteShader.setFloat("grainIntensity", grainIntensity);
+        vignetteShader.setFloat("chromaticAberrationOffset", grainSize);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, fboTexture);
+
+        renderQuad();
 
         // Enable blending for text rendering
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        // Render the text
+
         renderText("Objective: " + Game::state.currentObjective, 50.0f, 50.0f, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
 
+        if (isInInteractionZone)
+        {
+            renderText("Press E", 1920/2 - 100, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+        }
         // Disable blending after text rendering
         glDisable(GL_BLEND);
 
@@ -413,6 +530,11 @@ int main(void) {
         ImGui::DestroyContext();
         glfwDestroyWindow(imgui_window);
     }
+    glDeleteFramebuffers(1, &fbo);
+    glDeleteTextures(1, &fboTexture);
+    glDeleteProgram(vignetteShader.ID);
+    glDeleteVertexArrays(1, &quadVAO);
+    glDeleteBuffers(1, &quadVBO);
     glDeleteProgram(textShader.ID);
     glDeleteProgram(character.shader);
     glfwDestroyWindow(window);
