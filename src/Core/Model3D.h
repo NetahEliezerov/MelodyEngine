@@ -23,23 +23,10 @@ private:
 
 	std::vector<unsigned int> textureIDs;
 
-	int numIndices;
-	unsigned int* indices;
-	unsigned int EBO;
 
 	std::vector<BoneInfo> boneInfos;
 	std::map<std::string, unsigned int> boneMapping;
 	int numBones;
-
-	unsigned int VBO, VAO;
-	glm::mat4 model = glm::mat4(1.0f);
-	unsigned int shader;
-	bool isDynamic = false;
-	float* vertices;
-	int numVertices;
-	bool isAttached = false;
-	bool isLight;
-
 	unsigned int textureID;
 
 public:
@@ -51,5 +38,18 @@ public:
 	bool visibility = true;
 	float radius = 1.f;
 	float collisionRadius;
+
+	unsigned int VBO, VAO;
+	glm::mat4 model = glm::mat4(1.0f);
+	unsigned int shader;
+	bool isDynamic = false;
+	float* vertices;
+	int numVertices;
+	bool isAttached = false;
+	bool isLight;
+
+	int numIndices;
+	unsigned int* indices;
+	unsigned int EBO;
 };
 

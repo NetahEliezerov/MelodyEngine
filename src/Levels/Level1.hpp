@@ -39,33 +39,36 @@ class Level1 : public WorldLevel
 
 public:
 
-	virtual void Init(Renderer renderer, Player* playerPointer, float* timeScaleRec) override
+    virtual void Init(Renderer renderer, Player* playerPointer, float* timeScaleRec) override
     {
         character = playerPointer;
         playerPointer->level = this;
         ObjectSettings cubeSettings = { "Ground", "assets/meshes/cube.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(10, 0.2, 10), glm::vec3(0, -4, 0), glm::vec3(0,0,0), false, character->shader };
 
-        ObjectSettings wall1Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(8, 0, 1), glm::vec3(90,0,90), true, character->shader };
-        ObjectSettings wall2Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 2, 4), glm::vec3(-6, 0, 0), glm::vec3(90,0,270), true, character->shader };
-        ObjectSettings wall3Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(1, 0, 8), glm::vec3(90,0,180), true, character->shader };
-        ObjectSettings wall4Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(8, 2, 4), glm::vec3(0, 0, -6), glm::vec3(90,0,0), true, character->shader };
+        ObjectSettings wall1Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/Wall/pngtree-wood-grain-texture-wooden-flooring-design-with-wooden-floor-textures-image_13051712.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(8, 0, 1), glm::vec3(90,0,90), true, character->shader };
+        ObjectSettings wall2Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/Wall/pngtree-wood-grain-texture-wooden-flooring-design-with-wooden-floor-textures-image_13051712.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 2, 4), glm::vec3(-6, 0, 0), glm::vec3(90,0,270), true, character->shader };
+        ObjectSettings wall3Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/Wall/pngtree-wood-grain-texture-wooden-flooring-design-with-wooden-floor-textures-image_13051712.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(7, 2, 4), glm::vec3(1, 0, 8), glm::vec3(90,0,180), true, character->shader };
+        ObjectSettings wall4Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/Wall/pngtree-wood-grain-texture-wooden-flooring-design-with-wooden-floor-textures-image_13051712.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(8, 2, 4), glm::vec3(0, 0, -6), glm::vec3(90,0,0), true, character->shader };
 
-        ObjectSettings wall5Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(8, 1, 7), glm::vec3(2, 4, 1.1), glm::vec3(180,0,0), true, character->shader };
+        ObjectSettings wall5Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/Wall/pngtree-wood-grain-texture-wooden-flooring-design-with-wooden-floor-textures-image_13051712.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(8, 1, 7), glm::vec3(2, 3, 0.1), glm::vec3(180,0,0), true, character->shader };
 
-        ObjectSettings targetCubeSettings = { "Something", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(-2, 0, -2), glm::vec3(0,0,0), true, character->shader };
+        ObjectSettings wall6Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(8, 1, 7), glm::vec3(2, -4, 1.1), glm::vec3(180,0,0), true, character->shader };
+
+        ObjectSettings targetCubeSettings = { "Something", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(2, -0.5, -5), glm::vec3(87, 165,98), true, character->shader };
         ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.004, 0.004, 0.004), glm::vec3(4, -1.5, -5.1), glm::vec3(0,327,270), true, character->shader };
-        
+
 
         ObjectSettings tableSettings = { "Target Cube", "assets/meshes/Table/MechanicalTable.fbx", {"assets/meshes/Table/BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.007, 0.012, 0.009), glm::vec3(1.5, -4, -5.2), glm::vec3(0,0,0), true, character->shader };
 
 
-        LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(0.25, 0.25, 0.25, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(0, 5, 2), character->shader };
+        LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(0, 0, 1), character->shader };
 
         wall.Init(wall1Settings);
         wall2.Init(wall2Settings);
         wall3.Init(wall3Settings);
         wall4.Init(wall4Settings);
         wall5.Init(wall5Settings);
+        wall6.Init(wall6Settings);
 
         // npc.Init(renderer, character, true);
 
@@ -75,13 +78,16 @@ public:
         table.Init(tableSettings);
 
         light.Init(lightSettings);
-        playerPointer->light = light;
+        playerPointer->light = &light;
 
         // audioSweetHeart.LoadSound("assets/sounds/sweetheart.wav");
 
         std::cout << "Wall 1: " << &wall << std::endl;
         std::cout << "Wall 2: " << &wall2 << std::endl;
         std::cout << "Wall 3: " << &wall3 << std::endl;
+        std::cout << "Wall 4: " << &wall4 << std::endl;
+        std::cout << "Wall 5: " << &wall5 << std::endl;
+        std::cout << "Hand: " << &targetCube << std::endl;
         std::cout << "Gun: " << &targetCube2 << std::endl;
         std::cout << "Letter Model: " << &letter.interactable1 << std::endl;
         std::cout << "TABLE 1: " << &table << std::endl;
@@ -97,11 +103,18 @@ public:
         triggerBox.Init(glm::vec3(-6.f, 0.0f, 7.f), glm::vec3(2.0f, 8.0f, 2.0f), [this]() { OnRoomExit(); }, character, false, false);
 
         // sceneModels.push_back(&cube);
+        sceneModels.push_back(&wall);
+        sceneModels.push_back(&wall3);
+        sceneModels.push_back(&table);
+        sceneModels.push_back(&wall6);
+        sceneModels.push_back(&wall2);
+        sceneModels.push_back(&wall4);
+        sceneModels.push_back(&wall5);
         sceneModels.push_back(&targetCube);
         sceneModels.push_back(&targetCube2);
     };
 
-	virtual void Update(float deltaTime) override
+    virtual void Update(float deltaTime) override
     {
         if (light.flickLight)
         {
@@ -113,7 +126,7 @@ public:
 
 
         triggerBox.Update(character->movement.position, light, deltaTime);
-        
+
         letter.Update(deltaTime);
 
         targetCube.Update(character->movement.position, light, deltaTime);
@@ -126,6 +139,7 @@ public:
         wall3.Update(character->movement.position, light, deltaTime);
         wall4.Update(character->movement.position, light, deltaTime);
         wall5.Update(character->movement.position, light, deltaTime);
+        wall6.Update(character->movement.position, light, deltaTime);
         light.Update(character->movement.position);
     };
 
@@ -142,44 +156,45 @@ public:
         }
     }
 
-	void OnRoomExit()
-	{
-		// audioSweetHeart.PlaySound(0);
-		if (Game::state.currentSubMission == 1)
-		{
-			std::cout << "GOT OUT OF ROOM" << std::endl;
-			Game::state.currentSubMission++;
-			Game::state.currentObjective = "Great!";
-		}
+    void OnRoomExit()
+    {
+        // audioSweetHeart.PlaySound(0);
+        if (Game::state.currentSubMission == 1)
+        {
+            std::cout << "GOT OUT OF ROOM" << std::endl;
+            Game::state.currentSubMission++;
+            Game::state.currentObjective = "Great!";
+        }
     };
 private:
-	Model3D pistol;
-	Model3D hand;
-	Model3D cube;
-	Model3D wall;
-	Model3D wall2;
-	Model3D wall3;
-	Model3D wall4;
-	Model3D wall5;
-	Model3D targetCube;
-	Model3D targetCube2;
+    Model3D pistol;
+    Model3D hand;
+    Model3D cube;
+    Model3D wall;
+    Model3D wall2;
+    Model3D wall3;
+    Model3D wall4;
+    Model3D wall5;
+    Model3D wall6;
+    Model3D targetCube;
+    Model3D targetCube2;
 
 
     Model3D table;
     Letter letter;
 
-	CharacterNPC npc;
+    CharacterNPC npc;
 
-	TriggerBox triggerBox;
+    TriggerBox triggerBox;
 
 
-	bool lightOn = true;
-	float flickerTimer = 0.0f;
-	float flickerInterval = 0.2f; // Adjust this value to control the flickering speed
+    bool lightOn = true;
+    float flickerTimer = 0.0f;
+    float flickerInterval = 0.2f; // Adjust this value to control the flickering speed
 
-	LightPoint light;
+    LightPoint light;
 
-	void FlickLight(float deltaTime)
+    void FlickLight(float deltaTime)
     {
         flickerTimer += deltaTime;
 
@@ -201,4 +216,3 @@ private:
     }
     ;
 };
-

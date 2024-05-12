@@ -192,16 +192,16 @@ int main(void) {
 
     bool isInInteractionZone = false;
 
-    LevelManager levelManager;
     Player character;
+    LevelManager levelManager;
 
     unsigned int* playerShader = nullptr;
 
     bool hideHudButLetter = false;
 
-    character.Init(_renderer, false, playerShader, &isInInteractionZone, &hideHudButLetter);
     float timeScale = 1.f;
 
+    character.Init(_renderer, false, playerShader, &isInInteractionZone, &hideHudButLetter);
     levelManager.GameStart(_renderer, &character, &timeScale);
 
     float lastFrame = 0.0f;
@@ -220,6 +220,8 @@ int main(void) {
     bool show_another_window = false;
 
     Shader textShader("shaders/postprocess/vertex.glsl", "shaders/postprocess/fragment.glsl");
+
+    Shader shadowShader("shaders/postprocess/shadow.glsl", "shaders/postprocess/shadowfrag.glsl");
 
     setupTextRendering();
     loadFont("assets/fonts/typewriter.ttf", 48);
@@ -329,6 +331,30 @@ int main(void) {
     Shader vignetteShader("shaders/fbo_vertex.glsl", "shaders/fbo_fragment.glsl");
     vignetteShader.setVec2("screenSize", glm::vec2(1920.0f, 1080.0f));
 
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+
+    const unsigned int SHADOW_WIDTH = 1920, SHADOW_HEIGHT = 1080;
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    float near_plane = 1.0f, far_plane = 10.0f;
+
+    glm::vec3 something1 = glm::vec3(0);
+    glm::vec3 something2 = glm::vec3(0);
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -437,10 +463,24 @@ int main(void) {
                         ImGui::Checkbox("On/Off", &isLightOn);
                         ImGui::Checkbox("Flicker Light", &lightLocation->flickLight);
 
+                        ImGui::DragFloat("Far clip", &far_plane);
+
+                        ImGui::DragFloat("Near clip", &near_plane);
+
                         ImGui::Text("Transform");
                         ImGui::DragFloat("X Transform", &lightLocation->transform.x);
                         ImGui::DragFloat("Y Transform", &lightLocation->transform.y);
                         ImGui::DragFloat("Z Transform", &lightLocation->transform.z);
+
+                        ImGui::Text("Something 1");
+                        ImGui::DragFloat("1X 1", &something1.x);
+                        ImGui::DragFloat("1Y 6", &something1.y);
+                        ImGui::DragFloat("1Z 2", &something1.z);
+
+                        ImGui::Text("Something 2");
+                        ImGui::DragFloat("2X b", &something2.x);
+                        ImGui::DragFloat("2Y f", &something2.y);
+                        ImGui::DragFloat("2Z a", &something2.z);
                         ImGui::ColorPicker3("Color", col1);
 
 
@@ -516,21 +556,42 @@ int main(void) {
 
             glfwPollEvents();
         }
-
-        // Clear the color and depth buffers for the main window
+        // Clear the default framebuffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
+        // Set up light's view-projection matrix
+        glm::mat4 lightProjection = glm::ortho(-10.f, 10.f, -10.0f, 10.0f, near_plane, far_plane);
+        glm::mat4 lightView = glm::lookAt(character.light->transform, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
+        // Render scene from light's perspective to generate depth map
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        // Use the shadow shader
+        shadowShader.use();
+        glUniformMatrix4fv(glGetUniformLocation(shadowShader.ID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+
+        // Render scene objects for depth map generation
+        levelManager.RenderShadows(shadowShader);
+
+        // Render scene normally
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glViewport(0, 0, 1920, 1080);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
 
         character.Update(deltaTime);
         levelManager.GameUpdate(deltaTime);
+
+        // Use the main shader
+        glUseProgram(character.shader);
+        glUniformMatrix4fv(glGetUniformLocation(character.shader, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+
+        // Bind the depth map texture to the correct texture unit
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glUniform1i(glGetUniformLocation(character.shader, "shadowMap"), 2);
 
         glDisable(GL_DEPTH_TEST);
 
@@ -542,7 +603,6 @@ int main(void) {
         // Render quad with vignette shader
         vignetteShader.use();
         vignetteShader.setInt("screenTexture", 0);
-
         vignetteShader.setInt("colorGradingLUT", 1);
         vignetteShader.setFloat("vignetteIntensity", vignetteIntensity);
         vignetteShader.setFloat("colorGradingIntensity", colorGradingIntensity);
@@ -566,10 +626,8 @@ int main(void) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
         if (!hideHudButLetter)
         {
-
             if (isInInteractionZone)
             {
                 renderText("Press E", 1920 / 2 - 100, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
@@ -577,16 +635,24 @@ int main(void) {
 
             renderText("Objective: " + Game::state.currentObjective, 50.0f, 50.0f, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
             renderText(asdasad + " FPS", 50.0f, 1000, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
-
         }
 
         if (Game::state.currentLetter != nullptr)
         {
+            vignetteIntensity = 50.05;
+            vignetteRadius = 1;
+            vignetteSmooth = -6;
             renderText("[ESCAPE]", 1920 / 2 - 140, 1080 / 2 + 300, 1.f, glm::vec3(1.0f, 0.4f, 0.4f), textShader);
-
-            renderText(Game::state.currentLetter->title, 1920 / 2 - 100, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
-            renderText(Game::state.currentLetter->content, 1920 / 2 - 350, 1080 / 2 - 150, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+            renderText("From: " + Game::state.currentLetter->title, 1920 / 2 - 200, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+            renderText(Game::state.currentLetter->content, 1920 / 2 - 350, 1080 / 2 - 150, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
         }
+        else
+        {
+            vignetteIntensity = 1.05f;
+            vignetteRadius = 0.3f;
+            vignetteSmooth = -0.75;
+        }
+
         // Disable blending after text rendering
         glDisable(GL_BLEND);
 
@@ -598,7 +664,6 @@ int main(void) {
         if (Input::inputState.keys[GLFW_KEY_G])
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        glUseProgram(character.shader);
         glfwSwapBuffers(window);
     }
     if (show)

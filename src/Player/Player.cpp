@@ -168,7 +168,7 @@ void Player::Update(float deltaTime)
         }
 
     }
-;
+    ;
 
     glm::vec3 cameraPosition = movement.position;
     if (isCrouching) {
@@ -218,8 +218,8 @@ void Player::Update(float deltaTime)
     //pistol.SetPosition(movement.position, movement.lookingAngle, movement.cameraUp, 1.3f, .75, 0);
     //pistol.Update(movement.position, light);
 
-    hand.SetPosition(movement.position, movement.lookingAngle, movement.cameraUp, 1.3f, .75, 0);
-    hand.Update(movement.position, light, deltaTime);
+    //hand.SetPosition(movement.position, movement.lookingAngle, movement.cameraUp, 1.3f, .75, 0);
+    //hand.Update(movement.position, *light, deltaTime);
 
 
     //if (Input::inputState.keys[GLFW_MOUSE_BUTTON_LEFT]) {
@@ -261,7 +261,7 @@ void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPoi
     movement.projectionLoc = glGetUniformLocation(shader, "projection");
     glUniformMatrix4fv(movement.viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(movement.projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-    
+
     ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.007, 0.007, 0.007), glm::vec3(2.5, 0, 0), glm::vec3(0,0,0), true, shader };
     std::cout << "JOHNNY " << &targetCube2Settings << std::endl;
     //ObjectSettings pistolSettings = { "Pistol", "assets/meshes/pistol.obj", "assets/textures/sp226-color-2.jpeg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(-0.2f, -0.2f, 0), glm::vec3(0,270,0), true, shader };

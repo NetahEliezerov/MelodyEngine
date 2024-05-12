@@ -44,7 +44,7 @@ public:
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
 	bool isJumping = false;
-	LightPoint light;
+	LightPoint* light;
 	float jumpForce = 5.0f;
 	float gravity = -13.8f;
 	bool isSprinting = false;
@@ -76,4 +76,3 @@ private:
 	void Fire();
 	std::chrono::steady_clock::time_point timeSinceShoot;
 };
-

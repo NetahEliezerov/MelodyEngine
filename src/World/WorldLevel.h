@@ -32,7 +32,6 @@ public:
 
 	virtual void Fire(Model3D* hitObject) = 0;
 
-
 	Player* character;
 
 	std::vector<Model3D*> sceneModels;
