@@ -25,7 +25,7 @@ class Player
 {
 public:
 	void Update(float deltaTime);
-	void Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionZone);
+	void Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionZone, bool* hideHudButLetterRec);
 
 	PlayerMovement movement;
 
@@ -49,9 +49,12 @@ public:
 	float gravity = -13.8f;
 	bool isSprinting = false;
 
+	float collisionRadius = 0.5f;
+
 	float fogDensity = 0.06f;
 	glm::vec3 fogColor;
-	
+
+	bool ableToLook = true;
 
 	bool isCrouching = false;
 	float crouchSpeed = 2.0f;
@@ -59,7 +62,9 @@ public:
 	float standingHeight = 1.0f;
 
 	glm::vec3 velocity = glm::vec3(0.0f);
+
 	bool* isInInteractionZone;
+	bool* hideHudButLetter;
 
 private:
 	void Sprint(bool value);

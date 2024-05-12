@@ -139,7 +139,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Core\ShadowMap.cpp" />
     <ClCompile Include="src\AI\CharacterNPC.cpp" />
     <ClCompile Include="src\Game\Game.cpp" />
     <ClCompile Include="src\Core\LightPoint.cpp" />
@@ -162,11 +161,11 @@
     <ClCompile Include="src\World\TriggerBox.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Core\ShadowMap.h" />
     <ClInclude Include="src\AI\CharacterNPC.h" />
     <ClInclude Include="src\Core\AudioManager.hpp" />
     <ClInclude Include="src\Core\Shader.hpp" />
     <ClInclude Include="src\Game\Game.h" />
+    <ClInclude Include="src\Levels\Components\Letter.hpp" />
     <ClInclude Include="src\Levels\LevelManager.hpp" />
     <ClInclude Include="src\Levels\Level1.hpp" />
     <ClInclude Include="src\Core\LightPoint.h" />
@@ -195,6 +194,8 @@
     <None Include="shaders\lights\frag.glsl" />
     <None Include="shaders\lights\vertex.glsl" />
     <None Include="shaders\postprocess\fragment.glsl" />
+    <None Include="shaders\postprocess\shadow.glsl" />
+    <None Include="shaders\postprocess\shadowfrag.glsl" />
     <None Include="shaders\postprocess\vertex.glsl" />
     <None Include="shaders\SkyBox\frag.glsl" />
     <None Include="shaders\SkyBox\vertex.glsl" />

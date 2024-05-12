@@ -13,8 +13,11 @@ class Interactable {
 public:
     glm::vec3 position;
     glm::vec3 size;
+    glm::vec3 rotation;
     bool* isInInteractionZone;
     bool interactable = true;
+
+    float yOffset;
 
     bool isTriggered;
     bool canBeReTriggered;
@@ -32,12 +35,14 @@ public:
         *isInInteractionZone = false;
     }
 
-    void Init(ObjectSettings objectSettings, std::function<void()> func, Player* characterRec, float multiplierRadiusRec)
+    void Init(ObjectSettings objectSettings, std::function<void()> func, Player* characterRec, float multiplierRadiusRec, float yOffsetRec)
     {
         position = objectSettings.recTransform;
         size = objectSettings.recScale;
+        rotation = objectSettings.recRotation;
         interactFunction = func;
         radiusMultiplier = multiplierRadiusRec;
+        yOffset = yOffsetRec;
         isInInteractionZone = characterRec->isInInteractionZone;
 
         ObjectSettings cubeSettings = {
@@ -58,7 +63,7 @@ public:
         std::cout << "Interactable: " << this << std::endl;
     }
 
-    void Update(const glm::vec3& playerPosition, LightPoint light) {
+    void Update(const glm::vec3& playerPosition, LightPoint light, float deltaTime) {
         if (interactable)
         {
             if (IsPlayerInside(playerPosition)) {
@@ -86,7 +91,8 @@ public:
 
         model.transform = position;
         model.scale = size * 0.35f;
-        model.Update(playerPosition, light);
+        model.rotation = rotation;
+        model.Update(playerPosition, light, deltaTime);
     }
 
     bool IsPlayerInside(const glm::vec3& playerPosition) {
@@ -94,7 +100,7 @@ public:
         //float halfHeight = size.y / 2.0f;
         //float halfDepth = size.z / 2.0f;
         float halfWidth = size.x / 2.0f * radiusMultiplier;
-        float halfHeight = size.y / 2.0f * radiusMultiplier;
+        float halfHeight = (size.y / 2.0f * radiusMultiplier) * yOffset;
         float halfDepth = size.z / 2.0f * radiusMultiplier;
 
         return (playerPosition.x >= position.x - halfWidth && playerPosition.x <= position.x + halfWidth &&

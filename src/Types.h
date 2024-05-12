@@ -20,6 +20,12 @@ struct ObjectSettings
     unsigned int recShader;
 };
 
+struct LetterSettings
+{
+    std::string title;
+    std::string content;
+};
+
 struct Text2DSettings
 {
     const std::string& text;

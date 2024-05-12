@@ -20,8 +20,7 @@ void Model3D::Init(ObjectSettings settings)
     color = settings.recColor;
     isLight = settings.recIsLight;
 
-    
-    std::pair<int, float*> verticesData = loadVerticesFromFileOld(settings.fileName, numIndices, indices);
+    std::pair<int, float*> verticesData = loadVerticesFromFileOld(settings.fileName, numIndices, indices, boneInfos, boneMapping, numBones);
     numVertices = verticesData.first;
     vertices = verticesData.second;
 
@@ -42,7 +41,6 @@ void Model3D::Init(ObjectSettings settings)
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
-
 
     for (const std::string& texturePath : settings.texturePaths)
     {
@@ -78,6 +76,8 @@ void Model3D::Init(ObjectSettings settings)
 
     model = glm::translate(model, transform) * rotationMatrix * scaleMatrix;
 
+    collisionRadius = std::max(scale.x, std::max(scale.y, scale.z)) * 0.5f;
+
     modelLoc = glGetUniformLocation(shader, "model");
     colorLoc = glGetUniformLocation(shader, "objectColor");
 
@@ -85,7 +85,12 @@ void Model3D::Init(ObjectSettings settings)
     lightColorLoc = glGetUniformLocation(shader, "lightColor");
     viewPosLoc = glGetUniformLocation(shader, "viewPos");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+    // Set up bone information
+    boneTransformsLoc = glGetUniformLocation(shader, "boneTransforms");
+    glUniform1i(glGetUniformLocation(shader, "numBones"), numBones);
 }
+
 
 void Model3D::SetPosition(const glm::vec3& cameraPos, const glm::vec3& cameraFront, const glm::vec3& cameraUp, float distance, float rightOffset, float upOffset)
 {
@@ -107,7 +112,7 @@ void Model3D::SetPosition(const glm::vec3& cameraPos, const glm::vec3& cameraFro
     model = glm::translate(glm::mat4(1.0f), cubePos) * rotationMatrix;
 }
 
-void Model3D::Update(glm::vec3 cameraPos, LightPoint light)
+void Model3D::Update(glm::vec3 cameraPos, LightPoint light, float deltaTime)
 {
     if (visibility)
     {
@@ -137,6 +142,17 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint light)
         glUniform3fv(lightColorLoc, 1, glm::value_ptr(light.color));
         glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
 
+        // Update bone transformations
+        //if (boneInfos.empty())
+        //{
+        //    std::vector<glm::mat4> boneTransforms;
+        //    boneTransforms.reserve(numBones);
+        //    for (const auto& boneInfo : boneInfos)
+        //    {
+        //        boneTransforms.push_back(model * boneInfo.finalTransformation);
+        //    }
+        //    glUniformMatrix4fv(boneTransformsLoc, numBones, GL_FALSE, glm::value_ptr(boneTransforms[0]));
+        //}
 
         for (unsigned int i = 0; i < textureIDs.size(); i++)
         {

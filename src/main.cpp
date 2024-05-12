@@ -17,6 +17,7 @@
 #include "Player/Player.h"
 #include "Core/LightPoint.h"
 
+#include <stb/stb_image.h>
 
 #include "Core/Shader.hpp"
 
@@ -29,6 +30,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+
+unsigned int colorGradingLUTTexture;
 
 unsigned int VBO, VAO;
 
@@ -179,6 +182,8 @@ void renderQuad() {
     glBindVertexArray(0);
 }
 
+
+
 int main(void) {
     GLFWwindow* window = Engine::Run();
     Renderer _renderer;
@@ -192,9 +197,12 @@ int main(void) {
 
     unsigned int* playerShader = nullptr;
 
-    character.Init(_renderer, false, playerShader, &isInInteractionZone);
+    bool hideHudButLetter = false;
 
-    levelManager.GameStart(_renderer, &character);
+    character.Init(_renderer, false, playerShader, &isInInteractionZone, &hideHudButLetter);
+    float timeScale = 1.f;
+
+    levelManager.GameStart(_renderer, &character, &timeScale);
 
     float lastFrame = 0.0f;
     float deltaTime = 0.0f;
@@ -276,35 +284,59 @@ int main(void) {
     Model3D* modelLocation = nullptr;
     TriggerBox* triggerLocation = nullptr;
     LightPoint* lightLocation = nullptr;
+    Interactable* interactableLocation = nullptr;
     Player* playerLocation = nullptr;
     
-
     static char inputAdd[256] = "";
-    static const char* items[]{ "TriggerBox", "Model3D", "LightPoint", "Fog", "Post Process"};
+    static const char* items[]{ "TriggerBox", "Model3D", "LightPoint", "Fog", "Post Process", "Interactable" };
     static int Selecteditem = 0;
 
-    float vignetteIntensity = 1.5f;
+
+    float vignetteIntensity = 1.05f;
     float vignetteRadius = 0.3f;
     float vignetteSmooth = -0.75f;
 
-    float bloomIntensity = .8f;
-    float gammaIntensity = 1.f;
+    float colorGradingIntensity = 0.18f;
 
-    float grainIntensity = 0.05f;
-    float grainSize = 0.01f;
+    float bloomIntensity = 1.9f;
+    float gammaIntensity = .8f;
+
+    float grainIntensity = 0.1f;
+
+    float grainSize = 0.007f;
+
+
     static float col1[3] = { 1.f, 1.f, 1.f };
     static float fog[3] = { 1.f, 1.f, 1.f };
     bool isLightOn = true;
     bool isFogOn = true;
+    int lutWidth, lutHeight, lutChannels;
+    unsigned char* lutData = stbi_load("assets/textures/LUTS/vertopal.com_CINECOLOR_BLADE_RUNNER_2049.jpg", &lutWidth, &lutHeight, &lutChannels, 0);
+    if (lutData) {
+        glGenTextures(1, &colorGradingLUTTexture);
+        glBindTexture(GL_TEXTURE_2D, colorGradingLUTTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, lutWidth, lutHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, lutData);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        stbi_image_free(lutData);
+    }
+    else {
+        std::cout << "Failed to load LUT texture" << std::endl;
+    }
     // !glfwWindowShouldClose(imgui_window)
     Shader vignetteShader("shaders/fbo_vertex.glsl", "shaders/fbo_fragment.glsl");
     vignetteShader.setVec2("screenSize", glm::vec2(1920.0f, 1080.0f));
 
+
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
+        deltaTime = (currentFrame - lastFrame) * timeScale;
         lastFrame = currentFrame;
         fps = 1000 / deltaTime / 1000;
+        int fpsInt = fps;
+        std::string asdasad(std::to_string(fpsInt));
 
         // Process events for both windows
         glfwPollEvents();
@@ -325,8 +357,6 @@ int main(void) {
             {
                 ImGui::Begin("Another Window", &show_another_window);
                 bool check = ImGui::Combo("MyCombo", &Selecteditem, items, IM_ARRAYSIZE(items));
-                std::string asdasad(std::to_string(fps));
-                ImGui::Text(asdasad.c_str());
 
                 ImGui::InputText("Memory Address", inputAdd, 256);
 
@@ -347,6 +377,9 @@ int main(void) {
 
                     ImGui::Text("Chromatic Abberation");
                     ImGui::DragFloat("Chromatism", &grainSize);
+
+                    ImGui::Text("LUT");
+                    ImGui::DragFloat("LUT Intensity", &colorGradingIntensity);
                     break;
                 case 3:
                     if (ImGui::Button("Update Pointer"))
@@ -365,6 +398,31 @@ int main(void) {
                         playerLocation->fogColor.z = fog[2];
                     }
 
+                    break;
+                case 5:
+                    if (ImGui::Button("Update Pointer"))
+                    {
+                        std::stringstream ss;
+                        ss << std::hex << inputAdd;
+                        ss >> reinterpret_cast<std::uintptr_t&>(interactableLocation);
+                    }
+                    if (interactableLocation != nullptr)
+                    {
+                        ImGui::Text("Transform");
+                        ImGui::DragFloat("X Transform", &interactableLocation->position.x);
+                        ImGui::DragFloat("Y Transform", &interactableLocation->position.y);
+                        ImGui::DragFloat("Z Transform", &interactableLocation->position.z);
+
+                        ImGui::Text("Rotation");
+                        ImGui::DragFloat("X Rotation", &interactableLocation->rotation.x);
+                        ImGui::DragFloat("Y Rotation", &interactableLocation->rotation.y);
+                        ImGui::DragFloat("Z Rotation", &interactableLocation->rotation.z);
+
+                        ImGui::Text("Scale");
+                        ImGui::DragFloat("X Scale", &interactableLocation->size.x);
+                        ImGui::DragFloat("Y Scale", &interactableLocation->size.y);
+                        ImGui::DragFloat("Z Scale", &interactableLocation->size.z);
+                    }
                     break;
                 case 2:
                     if (ImGui::Button("Update Pointer"))
@@ -407,9 +465,9 @@ int main(void) {
                     if (modelLocation != nullptr)
                     {
                         ImGui::Text("Transform");
-                        ImGui::InputFloat("X Transform", &modelLocation->transform.x);
-                        ImGui::InputFloat("Y Transform", &modelLocation->transform.y);
-                        ImGui::InputFloat("Z Transform", &modelLocation->transform.z);
+                        ImGui::DragFloat("X Transform", &modelLocation->transform.x);
+                        ImGui::DragFloat("Y Transform", &modelLocation->transform.y);
+                        ImGui::DragFloat("Z Transform", &modelLocation->transform.z);
 
                         ImGui::Text("Rotation");
                         ImGui::SliderFloat("X Rotation", &modelLocation->rotation.x, 0, 360);
@@ -484,7 +542,10 @@ int main(void) {
         // Render quad with vignette shader
         vignetteShader.use();
         vignetteShader.setInt("screenTexture", 0);
+
+        vignetteShader.setInt("colorGradingLUT", 1);
         vignetteShader.setFloat("vignetteIntensity", vignetteIntensity);
+        vignetteShader.setFloat("colorGradingIntensity", colorGradingIntensity);
         vignetteShader.setFloat("vignetteRadius", vignetteRadius);
         vignetteShader.setFloat("vignetteSmooth", vignetteSmooth);
         vignetteShader.setFloat("exposure", bloomIntensity);
@@ -496,6 +557,9 @@ int main(void) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fboTexture);
 
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, colorGradingLUTTexture);
+
         renderQuad();
 
         // Enable blending for text rendering
@@ -503,11 +567,25 @@ int main(void) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 
-        renderText("Objective: " + Game::state.currentObjective, 50.0f, 50.0f, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
-
-        if (isInInteractionZone)
+        if (!hideHudButLetter)
         {
-            renderText("Press E", 1920/2 - 100, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+
+            if (isInInteractionZone)
+            {
+                renderText("Press E", 1920 / 2 - 100, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+            }
+
+            renderText("Objective: " + Game::state.currentObjective, 50.0f, 50.0f, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+            renderText(asdasad + " FPS", 50.0f, 1000, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+
+        }
+
+        if (Game::state.currentLetter != nullptr)
+        {
+            renderText("[ESCAPE]", 1920 / 2 - 140, 1080 / 2 + 300, 1.f, glm::vec3(1.0f, 0.4f, 0.4f), textShader);
+
+            renderText(Game::state.currentLetter->title, 1920 / 2 - 100, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+            renderText(Game::state.currentLetter->content, 1920 / 2 - 350, 1080 / 2 - 150, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
         }
         // Disable blending after text rendering
         glDisable(GL_BLEND);

@@ -74,6 +74,8 @@ void Player::Update(float deltaTime)
 
     if (glfwGetCurrentContext() == Engine::GetOpenGLWindow())
     {
+
+
         if (Input::inputState.keys[GLFW_KEY_LEFT_SHIFT])
             Sprint(true);
         else
@@ -102,7 +104,7 @@ void Player::Update(float deltaTime)
 
         if (Input::inputState.keys[GLFW_KEY_SPACE] && !isJumping) {
             isJumping = true;
-            velocity.y = jumpForce;
+            velocity.y = jumpForce * deltaTime;
         }
 
 
@@ -164,7 +166,9 @@ void Player::Update(float deltaTime)
             movement.position.x += moveDirection.x * velocity;
             movement.position.z += moveDirection.z * velocity;
         }
+
     }
+;
 
     glm::vec3 cameraPosition = movement.position;
     if (isCrouching) {
@@ -215,7 +219,7 @@ void Player::Update(float deltaTime)
     //pistol.Update(movement.position, light);
 
     hand.SetPosition(movement.position, movement.lookingAngle, movement.cameraUp, 1.3f, .75, 0);
-    hand.Update(movement.position, light);
+    hand.Update(movement.position, light, deltaTime);
 
 
     //if (Input::inputState.keys[GLFW_MOUSE_BUTTON_LEFT]) {
@@ -236,10 +240,11 @@ void Player::Crouch(bool value) {
     }
 }
 
-void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionRec)
+void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionRec, bool* hideHudButLetterRec)
 {
     audioManager.LoadSound("assets/sounds/footstep.wav");
 
+    hideHudButLetter = hideHudButLetterRec;
     isInInteractionZone = isInInteractionRec;
 
     movement.position = glm::vec3(0.0f, 1.0f, 0.0f);

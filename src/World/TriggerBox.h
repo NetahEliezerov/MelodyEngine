@@ -34,7 +34,7 @@ public:
         std::cout << "TriggerBox: " << this << std::endl;
     }
 
-    void Update(const glm::vec3& playerPosition, LightPoint light) {
+    void Update(const glm::vec3& playerPosition, LightPoint light, float deltaTime) {
         if (!isTriggered && IsPlayerInside(playerPosition)) {
             // HERE
             triggerFunction();
@@ -51,7 +51,7 @@ public:
 
         model.transform = position;
         model.scale = size * 0.4f;
-        model.Update(playerPosition, light);
+        model.Update(playerPosition, light, deltaTime);
         model.visibility = showBox;
     }
 

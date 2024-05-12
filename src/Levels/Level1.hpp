@@ -24,14 +24,13 @@
 #include "../Player/Player.h"
 #include "../Core/LightPoint.h"
 
-#include "../Core/ShadowMap.h"
-
 #include "../AI/CharacterNPC.h"
 
 #include "../World/WorldLevel.h"
 #include "../World/TriggerBox.h"
 #include "../World/Interactable.hpp"
 
+#include "Components/Letter.hpp"
 
 #include "../Core/AudioManager.hpp"
 
@@ -40,7 +39,7 @@ class Level1 : public WorldLevel
 
 public:
 
-	virtual void Init(Renderer renderer, Player* playerPointer) override
+	virtual void Init(Renderer renderer, Player* playerPointer, float* timeScaleRec) override
     {
         character = playerPointer;
         playerPointer->level = this;
@@ -53,14 +52,14 @@ public:
 
         ObjectSettings wall5Settings = { "Wall", "assets/meshes/plane.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(8, 1, 7), glm::vec3(2, 4, 1.1), glm::vec3(180,0,0), true, character->shader };
 
-        ObjectSettings targetCubeSettings = { "Something", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(0, 0, 0), glm::vec3(0,0,0), true, character->shader };
-        ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.007, 0.007, 0.007), glm::vec3(2.5, 0, 0), glm::vec3(0,0,0), true, character->shader };
+        ObjectSettings targetCubeSettings = { "Something", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.4, 0.4, 0.4), glm::vec3(-2, 0, -2), glm::vec3(0,0,0), true, character->shader };
+        ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.004, 0.004, 0.004), glm::vec3(4, -1.5, -5.1), glm::vec3(0,327,270), true, character->shader };
+        
+
+        ObjectSettings tableSettings = { "Target Cube", "assets/meshes/Table/MechanicalTable.fbx", {"assets/meshes/Table/BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.007, 0.012, 0.009), glm::vec3(1.5, -4, -5.2), glm::vec3(0,0,0), true, character->shader };
 
 
         LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(0.25, 0.25, 0.25, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(0, 5, 2), character->shader };
-
-        ObjectSettings interactSettings = { "interact", "assets/meshes/cube.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(2, 2, 2), glm::vec3(2, 0, 0), glm::vec3(0,0,0), false, character->shader };
-
 
         wall.Init(wall1Settings);
         wall2.Init(wall2Settings);
@@ -70,30 +69,36 @@ public:
 
         // npc.Init(renderer, character, true);
 
-        cube.Init(cubeSettings);
         targetCube.Init(targetCubeSettings);
         targetCube2.Init(targetCube2Settings);
+
+        table.Init(tableSettings);
+
         light.Init(lightSettings);
         playerPointer->light = light;
-        sceneModels.push_back(&cube);
-        sceneModels.push_back(&targetCube);
-        sceneModels.push_back(&targetCube2);
 
         // audioSweetHeart.LoadSound("assets/sounds/sweetheart.wav");
 
         std::cout << "Wall 1: " << &wall << std::endl;
         std::cout << "Wall 2: " << &wall2 << std::endl;
         std::cout << "Wall 3: " << &wall3 << std::endl;
-        std::cout << "Wall 4: " << &wall4 << std::endl;
-        std::cout << "Wall 5: " << &wall5 << std::endl;
+        std::cout << "Gun: " << &targetCube2 << std::endl;
+        std::cout << "Letter Model: " << &letter.interactable1 << std::endl;
+        std::cout << "TABLE 1: " << &table << std::endl;
         std::cout << "Light: " << &light << std::endl;
-        std::cout << "Flick: " << &light.flickLight << std::endl;
 
         Game::state.currentMission = 0;
         Game::state.currentSubMission = 0;
-        Game::state.currentObjective = "Find the way out";
-        interactable1.Init(interactSettings, [this]() { OnBoxInteract(); }, character, 2.0f);
+        Game::state.currentObjective = "Investigate";
+
+
+        letter.Init({ "Noah", std::string("Hey. Find me in the factory.") }, renderer, character, &light, timeScaleRec, [this]() { NoahLetterOpen(); });
+
         triggerBox.Init(glm::vec3(-6.f, 0.0f, 7.f), glm::vec3(2.0f, 8.0f, 2.0f), [this]() { OnRoomExit(); }, character, false, false);
+
+        // sceneModels.push_back(&cube);
+        sceneModels.push_back(&targetCube);
+        sceneModels.push_back(&targetCube2);
     };
 
 	virtual void Update(float deltaTime) override
@@ -107,36 +112,40 @@ public:
         // audioSweetHeart.Update();
 
 
-        triggerBox.Update(character->movement.position, light);
-        interactable1.Update(character->movement.position, light);
+        triggerBox.Update(character->movement.position, light, deltaTime);
+        
+        letter.Update(deltaTime);
 
-        targetCube.Update(character->movement.position, light);
-        wall.Update(character->movement.position, light);
-        targetCube2.Update(character->movement.position, light);
+        targetCube.Update(character->movement.position, light, deltaTime);
+        wall.Update(character->movement.position, light, deltaTime);
+        targetCube2.Update(character->movement.position, light, deltaTime);
+
+        table.Update(character->movement.position, light, deltaTime);
         // npc.Update(deltaTime, light, true);
-        wall2.Update(character->movement.position, light);
-        wall3.Update(character->movement.position, light);
-        wall4.Update(character->movement.position, light);
-        wall5.Update(character->movement.position, light);
-        cube.Update(character->movement.position, light);
+        wall2.Update(character->movement.position, light, deltaTime);
+        wall3.Update(character->movement.position, light, deltaTime);
+        wall4.Update(character->movement.position, light, deltaTime);
+        wall5.Update(character->movement.position, light, deltaTime);
         light.Update(character->movement.position);
-
     };
 
     virtual void Fire(Model3D* hitObject) override
     {
     };
 
-    void OnBoxInteract()
+    void NoahLetterOpen()
     {
-        std::cout << "Interact with box!" << std::endl;
-        interactable1.Destroy();
+        if (Game::state.currentSubMission == 0)
+        {
+            Game::state.currentSubMission++;
+            Game::state.currentObjective = "Go to the factory";
+        }
     }
 
 	void OnRoomExit()
 	{
 		// audioSweetHeart.PlaySound(0);
-		if (Game::state.currentSubMission == 0)
+		if (Game::state.currentSubMission == 1)
 		{
 			std::cout << "GOT OUT OF ROOM" << std::endl;
 			Game::state.currentSubMission++;
@@ -156,15 +165,13 @@ private:
 	Model3D targetCube2;
 
 
+    Model3D table;
+    Letter letter;
+
 	CharacterNPC npc;
 
 	TriggerBox triggerBox;
 
-    Interactable interactable1;
-
-	glm::mat4 lightSpaceMatrix;
-
-	ShadowMap shadowMap;
 
 	bool lightOn = true;
 	float flickerTimer = 0.0f;

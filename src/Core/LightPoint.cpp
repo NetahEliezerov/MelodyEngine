@@ -12,10 +12,10 @@ void LightPoint::Init(LightSettings settings)
     shader = settings.recShader;
     color = settings.recColor;
 
-    std::pair<int, float*> things = loadVerticesFromFileOld(settings.fileName, numIndices, indices);
+    // std::pair<int, float*> things = loadVerticesFromFileOld(settings.fileName, numIndices, indices);
 
-    numVertices = things.first;
-    vertices = things.second;
+    // numVertices = things.first;
+    // vertices = things.second;
 
     /*glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);

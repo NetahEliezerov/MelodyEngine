@@ -29,10 +29,10 @@ struct LevelManager
 	Level1 _level1;
 	Player* character;
 
-	void GameStart(Renderer renderer, Player* playerPointer)
+	void GameStart(Renderer renderer, Player* playerPointer, float* timeScale)
 	{
 		character = playerPointer;
-		_level1.Init(renderer, playerPointer);
+		_level1.Init(renderer, playerPointer, timeScale);
 
 	}
 
