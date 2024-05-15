@@ -152,6 +152,9 @@
     <ClInclude Include="src\Levels\Components\Letter.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Levels\Level2.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\lights\frag.glsl" />

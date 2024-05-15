@@ -17,6 +17,8 @@ public:
     bool* isInInteractionZone;
     bool interactable = true;
 
+    bool firstTimeAfterNot = true;
+
     float yOffset;
 
     bool isTriggered;
@@ -82,10 +84,15 @@ public:
                         timeSinceShoot = currentTime;
                     }
                 }
+                firstTimeAfterNot = true;
             }
             else
             {
-                *isInInteractionZone = false;
+                if (firstTimeAfterNot)
+                {
+                    *isInInteractionZone = false;
+                }
+                firstTimeAfterNot = false;
             }
         }
 

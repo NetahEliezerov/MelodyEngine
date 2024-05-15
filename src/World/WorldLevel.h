@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -27,7 +28,7 @@ class Player;
 class WorldLevel
 {
 public:
-	virtual void Init(Renderer renderer, Player* playerPointer, float* timeScaleRec) = 0;
+	virtual void Init(Renderer renderer, std::function<void()> func, Player* playerPointer, float* timeScaleRec) = 0;
 	virtual void Update(float deltaTime) = 0;
 
 	virtual void Fire(Model3D* hitObject) = 0;
@@ -36,4 +37,3 @@ public:
 
 	std::vector<Model3D*> sceneModels;
 };
-

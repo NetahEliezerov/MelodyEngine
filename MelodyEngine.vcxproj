@@ -166,6 +166,7 @@
     <ClInclude Include="src\Core\Shader.hpp" />
     <ClInclude Include="src\Game\Game.h" />
     <ClInclude Include="src\Levels\Components\Letter.hpp" />
+    <ClInclude Include="src\Levels\Level2.hpp" />
     <ClInclude Include="src\Levels\LevelManager.hpp" />
     <ClInclude Include="src\Levels\Level1.hpp" />
     <ClInclude Include="src\Core\LightPoint.h" />

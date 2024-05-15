@@ -14,6 +14,9 @@ uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
 
+uniform float specularStrength;
+uniform float ambientStrength;
+
 uniform float fogDensity;
 uniform vec3 fogColor;
 
@@ -62,7 +65,6 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 void main()
 {
     // Ambient
-    float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * vec3(1, 1, 1);
 
     // Diffuse
@@ -72,7 +74,6 @@ void main()
     vec3 diffuse = diff * lightColor;
 
     // Specular
-    float specularStrength = 0.006;
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);

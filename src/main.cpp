@@ -294,19 +294,21 @@ int main(void) {
     static int Selecteditem = 0;
 
 
-    float vignetteIntensity = 1.05f;
+    float vignetteIntensity = 1.2f;
     float vignetteRadius = 0.3f;
     float vignetteSmooth = -0.75f;
 
-    float colorGradingIntensity = 0.18f;
+    float colorGradingIntensity = 0.1f;
 
-    float bloomIntensity = 1.9f;
-    float gammaIntensity = .8f;
+    float bloomIntensity = 1.5f;
+    float gammaIntensity = .9f;
 
     float grainIntensity = 0.1f;
 
     float grainSize = 0.007f;
 
+    float specularStrength = 0.05;
+    float ambientStrength = 0.1;
 
     static float col1[3] = { 1.f, 1.f, 1.f };
     static float fog[3] = { 1.f, 1.f, 1.f };
@@ -467,6 +469,10 @@ int main(void) {
 
                         ImGui::DragFloat("Near clip", &near_plane);
 
+
+                        ImGui::InputFloat("Ambient Strength", &ambientStrength);
+                        ImGui::InputFloat("Specular Strength", &specularStrength);
+
                         ImGui::Text("Transform");
                         ImGui::DragFloat("X Transform", &lightLocation->transform.x);
                         ImGui::DragFloat("Y Transform", &lightLocation->transform.y);
@@ -587,6 +593,8 @@ int main(void) {
         // Use the main shader
         glUseProgram(character.shader);
         glUniformMatrix4fv(glGetUniformLocation(character.shader, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+        glUniform1f(glGetUniformLocation(character.shader, "ambientStrength"), ambientStrength);
+        glUniform1f(glGetUniformLocation(character.shader, "specularStrength"), specularStrength);
 
         // Bind the depth map texture to the correct texture unit
         glActiveTexture(GL_TEXTURE2);
@@ -639,7 +647,7 @@ int main(void) {
 
         if (Game::state.currentLetter != nullptr)
         {
-            vignetteIntensity = 50.05;
+            vignetteIntensity = 150.05;
             vignetteRadius = 1;
             vignetteSmooth = -6;
             renderText("[ESCAPE]", 1920 / 2 - 140, 1080 / 2 + 300, 1.f, glm::vec3(1.0f, 0.4f, 0.4f), textShader);
@@ -648,7 +656,7 @@ int main(void) {
         }
         else
         {
-            vignetteIntensity = 1.05f;
+            vignetteIntensity = 1.2f;
             vignetteRadius = 0.3f;
             vignetteSmooth = -0.75;
         }

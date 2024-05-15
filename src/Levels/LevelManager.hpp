@@ -16,24 +16,38 @@
 #include "../Player/Player.h"
 #include "../Core/LightPoint.h"
 #include "../Core/Shader.hpp"
+
+
 #include "../Levels/Level1.hpp"
+#include "../Levels/Level2.hpp"
 
 struct LevelManager
 {
-    Level1 _level1;
-    Player* character;
     WorldLevel* currentLevel;
+    Renderer renderer;
+    Player* character;
+    float* timeScale;
 
-    void GameStart(Renderer renderer, Player* playerPointer, float* timeScale)
+    Level1 _level1;
+    Level2 _level2;
+
+    void GameStart(Renderer rendererRec, Player* playerPointer, float* timeScaleRec)
     {
+        renderer = rendererRec;
         character = playerPointer;
-        _level1.Init(renderer, playerPointer, timeScale);
+        timeScale = timeScaleRec;
+
+        _level1.Init(renderer, [this]() { ASDSAD(); }, playerPointer, timeScale);
         currentLevel = &_level1; // Set the current level to Level1
     }
 
     void GameUpdate(float deltaTime)
     {
-        _level1.Update(deltaTime);
+        if(currentLevel == &_level1)
+            _level1.Update(deltaTime);
+
+        if (currentLevel == &_level2)
+            _level2.Update(deltaTime);
     }
 
     void RenderShadows(Shader& shadowShader)
@@ -61,5 +75,12 @@ struct LevelManager
                 glBindVertexArray(0);
             }
         }
+    }
+
+    void ASDSAD()
+    {
+        std::cout << "asdasdasdas" << std::endl;
+        currentLevel = &_level2;
+        _level2.Init(renderer, [this]() {  }, character, timeScale);
     }
 };

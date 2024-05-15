@@ -1,3 +1,5 @@
+#pragma once
+
 #include <AL/al.h>
 #include <sndfile.h>
 #include <AL/alc.h>
@@ -5,6 +7,7 @@
 #include <string>
 #include "./Renderer.h"
 #include "./Input.h"
+
 class AudioManager
 {
 public:
