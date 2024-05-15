@@ -19,6 +19,10 @@
 #include "../Player/Player.h"
 #include "../Core/LightPoint.h"
 
+#include <any>
+
+#include <variant>
+
 #include "../Core/Shader.hpp"
 
 #include "../Types.h"
@@ -36,4 +40,7 @@ public:
 	Player* character;
 
 	std::vector<Model3D*> sceneModels;
+
+	std::vector<std::any> sceneHierarchy;
+
 };

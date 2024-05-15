@@ -164,6 +164,7 @@
     <ClInclude Include="src\AI\CharacterNPC.h" />
     <ClInclude Include="src\Core\AudioManager.hpp" />
     <ClInclude Include="src\Core\Shader.hpp" />
+    <ClInclude Include="src\Debugging\Hierarchy.hpp" />
     <ClInclude Include="src\Game\Game.h" />
     <ClInclude Include="src\Levels\Components\Letter.hpp" />
     <ClInclude Include="src\Levels\Level2.hpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="src\Types.h" />
     <ClInclude Include="src\Utils\OBJ_Loader.h" />
     <ClInclude Include="src\World\Interactable.hpp" />
+    <ClInclude Include="src\World\LevelManagerState.hpp" />
     <ClInclude Include="src\World\TriggerBox.h" />
     <ClInclude Include="vendor\glad\glad.h" />
     <ClInclude Include="vendor\GLFW\include\GLFW\glfw3.h" />
@@ -203,7 +205,6 @@
     <None Include="shaders\vertex_texture.glsl" />
     <None Include="shaders\vignette\frag.glsl" />
     <None Include="shaders\vignette\vertex.glsl" />
-    <None Include="src\Levels\Test.LEVEL" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

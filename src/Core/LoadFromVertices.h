@@ -30,7 +30,6 @@ inline std::pair<int, float*> loadVerticesFromFileOld(std::string fileName, int&
     int totalNumVertices = 0;
     int totalNumIndices = 0;
 
-    // Calculate the total number of vertices and indices in all meshes
     for (unsigned int i = 0; i < scene->mNumMeshes; i++)
     {
         aiMesh* mesh = scene->mMeshes[i];
@@ -44,7 +43,6 @@ inline std::pair<int, float*> loadVerticesFromFileOld(std::string fileName, int&
     int vertexIndex = 0;
     int indexOffset = 0;
 
-    // Iterate over all meshes and concatenate their vertex and index data
     for (unsigned int i = 0; i < scene->mNumMeshes; i++)
     {
         aiMesh* mesh = scene->mMeshes[i];

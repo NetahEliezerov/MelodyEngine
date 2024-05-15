@@ -13,7 +13,6 @@ class AudioManager
 public:
     AudioManager()
     {
-        // Initialize OpenAL
         device = alcOpenDevice(nullptr);
         context = alcCreateContext(device, nullptr);
         alcMakeContextCurrent(context);
@@ -21,7 +20,6 @@ public:
 
     ~AudioManager()
     {
-        // Clean up OpenAL resources
         alcMakeContextCurrent(nullptr);
         alcDestroyContext(context);
         alcCloseDevice(device);
@@ -32,7 +30,6 @@ public:
         ALuint buffer;
         alGenBuffers(1, &buffer);
 
-        // Load audio file using libsndfile
         SNDFILE* file = sf_open(filename.c_str(), SFM_READ, &sfInfo);
         if (file)
         {
@@ -47,7 +44,6 @@ public:
         }
         else
         {
-            // Failed to load the audio file
             alDeleteBuffers(1, &buffer);
         }
     }
@@ -61,14 +57,12 @@ public:
             alSourcei(source, AL_BUFFER, buffers[index]);
             alSourcePlay(source);
 
-            // Store the source for later cleanup
             sources.push_back(source);
         }
     }
 
     void Update()
     {
-        // Clean up finished sound sources
         for (auto it = sources.begin(); it != sources.end();)
         {
             ALuint source = *it;

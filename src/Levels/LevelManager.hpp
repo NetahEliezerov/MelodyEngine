@@ -18,16 +18,13 @@
 #include "../Core/Shader.hpp"
 
 
+#include "../World/LevelManagerState.hpp"
+
 #include "../Levels/Level1.hpp"
 #include "../Levels/Level2.hpp"
 
-struct LevelManager
+struct LevelManager : LevelManagerState
 {
-    WorldLevel* currentLevel;
-    Renderer renderer;
-    Player* character;
-    float* timeScale;
-
     Level1 _level1;
     Level2 _level2;
 
@@ -37,49 +34,18 @@ struct LevelManager
         character = playerPointer;
         timeScale = timeScaleRec;
 
-        _level1.Init(renderer, [this]() { ASDSAD(); }, playerPointer, timeScale);
+        _level1.Init(renderer, [this]() { OnDoorEnter(); }, playerPointer, timeScale);
         currentLevel = &_level1; // Set the current level to Level1
     }
 
     void GameUpdate(float deltaTime)
     {
-        if(currentLevel == &_level1)
-            _level1.Update(deltaTime);
-
-        if (currentLevel == &_level2)
-            _level2.Update(deltaTime);
+        currentLevel->Update(deltaTime);
     }
 
-    void RenderShadows(Shader& shadowShader)
+
+    void OnDoorEnter()
     {
-        if (currentLevel != nullptr)
-        {
-            for (const auto& model : currentLevel->sceneModels)
-            {
-                // Render the model using the shadow shader
-                glUseProgram(shadowShader.ID);
-
-                // Set up model matrix
-                glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), model->transform);
-                modelMatrix = glm::scale(modelMatrix, model->scale);
-                modelMatrix = glm::rotate(modelMatrix, glm::radians(model->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-                modelMatrix = glm::rotate(modelMatrix, glm::radians(model->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-                modelMatrix = glm::rotate(modelMatrix, glm::radians(model->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-                // Pass the model matrix to the shadow shader
-                glUniformMatrix4fv(glGetUniformLocation(shadowShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
-
-                // Bind VAO and draw the model
-                glBindVertexArray(model->VAO);
-                glDrawElements(GL_TRIANGLES, model->numIndices, GL_UNSIGNED_INT, 0);
-                glBindVertexArray(0);
-            }
-        }
-    }
-
-    void ASDSAD()
-    {
-        std::cout << "asdasdasdas" << std::endl;
         currentLevel = &_level2;
         _level2.Init(renderer, [this]() {  }, character, timeScale);
     }

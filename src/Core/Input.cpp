@@ -17,7 +17,6 @@ void Input::cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     Input::inputState.prevMouseY = ypos;
 
     if (xpos <= 0 || xpos >= width - 1 || ypos <= 0 || ypos >= height - 1) {
-        // Set the cursor position to the center of the window
         glfwSetCursorPos(window, width / 2, height / 2);
         Input::inputState.prevMouseX = width / 2;
         Input::inputState.prevMouseY = height / 2;

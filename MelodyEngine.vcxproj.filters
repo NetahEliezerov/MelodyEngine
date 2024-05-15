@@ -155,13 +155,18 @@
     <ClInclude Include="src\Levels\Level2.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Debugging\Hierarchy.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\World\LevelManagerState.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\lights\frag.glsl" />
     <None Include="shaders\lights\vertex.glsl" />
     <None Include="shaders\fragment_texture.glsl" />
     <None Include="shaders\vertex_texture.glsl" />
-    <None Include="src\Levels\Test.LEVEL" />
     <None Include="shaders\SkyBox\vertex.glsl" />
     <None Include="shaders\SkyBox\frag.glsl" />
     <None Include="shaders\vignette\frag.glsl" />

@@ -23,6 +23,8 @@
 
 #include "Levels/LevelManager.hpp"
 
+#include "Debugging/Hierarchy.hpp"
+
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_glfw.h>
 #include <imgui.h>
@@ -217,7 +219,7 @@ int main(void) {
 
     GLFWwindow* imgui_window = nullptr;
     bool show_demo_window = true;
-    bool show_another_window = false;
+    bool show_another_window = true;
 
     Shader textShader("shaders/postprocess/vertex.glsl", "shaders/postprocess/fragment.glsl");
 
@@ -230,17 +232,17 @@ int main(void) {
     textShader.use();
     glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(1920), 0.0f, static_cast<float>(1080));
     textShader.setMat4("projection", projection);
-    textShader.setVec3("textColor", glm::vec3(1.0f, 1.0f, 1.0f)); // Set text color to white
+    textShader.setVec3("textColor", glm::vec3(1.0f, 1.0f, 1.0f));
     
 
 
 
-    // Create FBO
+
     unsigned int fbo;
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    // Create texture attachment
+
     unsigned int fboTexture;
     glGenTextures(1, &fboTexture);
     glBindTexture(GL_TEXTURE_2D, fboTexture);
@@ -249,7 +251,7 @@ int main(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
 
-    // Create depth buffer for FBO
+
     unsigned int depthBuffer;
     glGenRenderbuffers(1, &depthBuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
@@ -261,20 +263,20 @@ int main(void) {
 
     if (show)
     {
-        // Our state
+
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
         imgui_window = glfwCreateWindow(800, 600, "Dear ImGui Window", NULL, NULL);
 
-        // Setup Dear ImGui context
+
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
-        // Setup Platform/Renderer backends
+
         ImGui_ImplGlfw_InitForOpenGL(imgui_window, true);
         ImGui_ImplOpenGL3_Init(glsl_version);
         glfwSetKeyCallback(imgui_window, ImGui_ImplGlfw_KeyCallback);
@@ -310,8 +312,7 @@ int main(void) {
     float specularStrength = 0.05;
     float ambientStrength = 0.1;
 
-    static float col1[3] = { 1.f, 1.f, 1.f };
-    static float fog[3] = { 1.f, 1.f, 1.f };
+    static float fog[3] = { character.fogColor.x, character.fogColor.y, character.fogColor.z };
     bool isLightOn = true;
     bool isFogOn = true;
     int lutWidth, lutHeight, lutChannels;
@@ -329,7 +330,7 @@ int main(void) {
     else {
         std::cout << "Failed to load LUT texture" << std::endl;
     }
-    // !glfwWindowShouldClose(imgui_window)
+
     Shader vignetteShader("shaders/fbo_vertex.glsl", "shaders/fbo_fragment.glsl");
     vignetteShader.setVec2("screenSize", glm::vec2(1920.0f, 1080.0f));
 
@@ -366,25 +367,67 @@ int main(void) {
         int fpsInt = fps;
         std::string asdasad(std::to_string(fpsInt));
 
-        // Process events for both windows
+
         glfwPollEvents();
 
-        // Switch to the Dear ImGui window
+
         if (show)
         {
             glfwMakeContextCurrent(imgui_window);
             ImGui::SetCurrentContext(ImGui::GetCurrentContext());
             glClear(GL_COLOR_BUFFER_BIT);
 
-            // Start the Dear ImGui frame
+
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+
             if (show_demo_window)
             {
-                ImGui::Begin("Another Window", &show_another_window);
-                bool check = ImGui::Combo("MyCombo", &Selecteditem, items, IM_ARRAYSIZE(items));
+                ImGui::Begin("Global Settings", &show_another_window);
+
+                ImGui::Text("Lighting");
+
+                ImGui::DragFloat("Far clip", &far_plane);
+
+                ImGui::DragFloat("Near clip", &near_plane);
+
+
+                ImGui::InputFloat("Ambient Strength", &ambientStrength);
+                ImGui::InputFloat("Specular Strength", &specularStrength);
+
+                ImGui::Text("Post Processing");
+
+                ImGui::Text("Bloom");
+                ImGui::DragFloat("Bloom Intensity", &bloomIntensity);
+                ImGui::DragFloat("Gamma", &gammaIntensity);
+
+                ImGui::Text("Vignette");
+                ImGui::DragFloat("Vignette Intensity", &vignetteIntensity);
+                ImGui::DragFloat("Radius", &vignetteRadius);
+                ImGui::DragFloat("Smooth", &vignetteSmooth);
+
+                ImGui::Text("Grain");
+                ImGui::DragFloat("Grain Intensity", &grainIntensity);
+
+                ImGui::Text("Chromatic Abberation");
+                ImGui::DragFloat("Chromatism", &grainSize);
+
+                ImGui::Text("LUT");
+                ImGui::DragFloat("LUT Intensity", &colorGradingIntensity);
+
+                ImGui::End();
+
+                ImGui::Begin("Fog", &show_another_window);
+
+                ImGui::DragFloat("Density", &character.fogDensity);
+                ImGui::ColorPicker4("Color", fog);
+                character.fogColor.x = fog[0];
+                character.fogColor.y = fog[1];
+                character.fogColor.z = fog[2];
+
+                /*bool check = ImGui::Combo("MyCombo", &Selecteditem, items, IM_ARRAYSIZE(items));
 
                 ImGui::InputText("Memory Address", inputAdd, 256);
 
@@ -408,24 +451,6 @@ int main(void) {
 
                     ImGui::Text("LUT");
                     ImGui::DragFloat("LUT Intensity", &colorGradingIntensity);
-                    break;
-                case 3:
-                    if (ImGui::Button("Update Pointer"))
-                    {
-                        std::stringstream ss;
-                        ss << std::hex << inputAdd;
-                        ss >> reinterpret_cast<std::uintptr_t&>(playerLocation);
-                    }
-
-                    if (playerLocation != nullptr)
-                    {
-                        ImGui::DragFloat("Density", &playerLocation->fogDensity);
-                        ImGui::ColorPicker4("Color", fog);
-                        playerLocation->fogColor.x = fog[0];
-                        playerLocation->fogColor.y = fog[1];
-                        playerLocation->fogColor.z = fog[2];
-                    }
-
                     break;
                 case 5:
                     if (ImGui::Button("Update Pointer"))
@@ -452,80 +477,7 @@ int main(void) {
                         ImGui::DragFloat("Z Scale", &interactableLocation->size.z);
                     }
                     break;
-                case 2:
-                    if (ImGui::Button("Update Pointer"))
-                    {
-                        std::stringstream ss;
-                        ss << std::hex << inputAdd;
-                        ss >> reinterpret_cast<std::uintptr_t&>(lightLocation);
-                    }
-                    if (lightLocation != nullptr)
-                    {
-
-                        ImGui::Checkbox("On/Off", &isLightOn);
-                        ImGui::Checkbox("Flicker Light", &lightLocation->flickLight);
-
-                        ImGui::DragFloat("Far clip", &far_plane);
-
-                        ImGui::DragFloat("Near clip", &near_plane);
-
-
-                        ImGui::InputFloat("Ambient Strength", &ambientStrength);
-                        ImGui::InputFloat("Specular Strength", &specularStrength);
-
-                        ImGui::Text("Transform");
-                        ImGui::DragFloat("X Transform", &lightLocation->transform.x);
-                        ImGui::DragFloat("Y Transform", &lightLocation->transform.y);
-                        ImGui::DragFloat("Z Transform", &lightLocation->transform.z);
-
-                        ImGui::Text("Something 1");
-                        ImGui::DragFloat("1X 1", &something1.x);
-                        ImGui::DragFloat("1Y 6", &something1.y);
-                        ImGui::DragFloat("1Z 2", &something1.z);
-
-                        ImGui::Text("Something 2");
-                        ImGui::DragFloat("2X b", &something2.x);
-                        ImGui::DragFloat("2Y f", &something2.y);
-                        ImGui::DragFloat("2Z a", &something2.z);
-                        ImGui::ColorPicker3("Color", col1);
-
-
-                        if (isLightOn)
-                        {
-                            lightLocation->color = glm::vec4(col1[0], col1[1], col1[2], 1.f);
-                        }
-                        else
-                        {
-                            lightLocation->color = glm::vec4(0.f, 0.f, 0.f, 0.f);
-                        }
-                    }
-                    break;
-                case 1:
-                    if (ImGui::Button("Update Pointer"))
-                    {
-                        std::stringstream ss;
-                        ss << std::hex << inputAdd;
-                        ss >> reinterpret_cast<std::uintptr_t&>(modelLocation);
-                    }
-
-                    if (modelLocation != nullptr)
-                    {
-                        ImGui::Text("Transform");
-                        ImGui::DragFloat("X Transform", &modelLocation->transform.x);
-                        ImGui::DragFloat("Y Transform", &modelLocation->transform.y);
-                        ImGui::DragFloat("Z Transform", &modelLocation->transform.z);
-
-                        ImGui::Text("Rotation");
-                        ImGui::SliderFloat("X Rotation", &modelLocation->rotation.x, 0, 360);
-                        ImGui::SliderFloat("Y Rotation", &modelLocation->rotation.y, 0, 360);
-                        ImGui::SliderFloat("Z Rotation", &modelLocation->rotation.z, 0, 360);
-
-                        ImGui::Text("Scale");
-                        ImGui::InputFloat("X Scale", &modelLocation->scale.x);
-                        ImGui::InputFloat("Y Scale", &modelLocation->scale.y);
-                        ImGui::InputFloat("Z Scale", &modelLocation->scale.z);
-                    }
-                    break;
+                
                 case 0:
                     if (ImGui::Button("Update Pointer"))
                     {
@@ -547,11 +499,12 @@ int main(void) {
                         ImGui::InputFloat("Z Scale", &triggerLocation->size.z);
                     }
                     break;
-                }
+                }*/
 
                 ImGui::End();
             }
 
+            ShowTreeExample(&character);
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -570,7 +523,7 @@ int main(void) {
         glm::mat4 lightView = glm::lookAt(character.light->transform, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
 
-        // Render scene from light's perspective to generate depth map
+
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -596,7 +549,7 @@ int main(void) {
         glUniform1f(glGetUniformLocation(character.shader, "ambientStrength"), ambientStrength);
         glUniform1f(glGetUniformLocation(character.shader, "specularStrength"), specularStrength);
 
-        // Bind the depth map texture to the correct texture unit
+
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         glUniform1i(glGetUniformLocation(character.shader, "shadowMap"), 2);
@@ -605,10 +558,10 @@ int main(void) {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        // Clear the default framebuffer
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Render quad with vignette shader
+
         vignetteShader.use();
         vignetteShader.setInt("screenTexture", 0);
         vignetteShader.setInt("colorGradingLUT", 1);
@@ -630,7 +583,7 @@ int main(void) {
 
         renderQuad();
 
-        // Enable blending for text rendering
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -661,10 +614,10 @@ int main(void) {
             vignetteSmooth = -0.75;
         }
 
-        // Disable blending after text rendering
+
         glDisable(GL_BLEND);
 
-        // Re-enable depth testing if needed for other rendering
+
         glEnable(GL_DEPTH_TEST);
 
         if (Input::inputState.keys[GLFW_KEY_F])

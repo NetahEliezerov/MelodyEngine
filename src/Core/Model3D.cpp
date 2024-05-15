@@ -86,7 +86,6 @@ void Model3D::Init(ObjectSettings settings)
     viewPosLoc = glGetUniformLocation(shader, "viewPos");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-    // Set up bone information
     boneTransformsLoc = glGetUniformLocation(shader, "boneTransforms");
     glUniform1i(glGetUniformLocation(shader, "numBones"), numBones);
 }
@@ -95,20 +94,20 @@ void Model3D::Init(ObjectSettings settings)
 void Model3D::SetPosition(const glm::vec3& cameraPos, const glm::vec3& cameraFront, const glm::vec3& cameraUp, float distance, float rightOffset, float upOffset)
 {
     isAttached = true;
-    // Calculate the camera's right vector
+
     glm::vec3 right = glm::normalize(glm::cross(cameraFront, cameraUp));
 
-    // Calculate the position of the cube relative to the camera
+
     glm::vec3 cubePos = cameraPos + cameraFront * distance + right * rightOffset + cameraUp * upOffset;
 
-    // Calculate the rotation matrix based on the camera's orientation
+
     glm::vec3 up = glm::normalize(glm::cross(right, cameraFront));
     glm::mat4 rotationMatrix = glm::mat4(1.0f);
     rotationMatrix[0] = glm::vec4(right, 0.0f);
     rotationMatrix[1] = glm::vec4(up, 0.0f);
     rotationMatrix[2] = glm::vec4(-cameraFront, 0.0f);
 
-    // Set the model matrix based on the cube's position and rotation
+
     model = glm::translate(glm::mat4(1.0f), cubePos) * rotationMatrix;
 }
 
@@ -142,7 +141,7 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint light, float deltaTime)
         glUniform3fv(lightColorLoc, 1, glm::value_ptr(light.color));
         glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
 
-        // Update bone transformations
+
         //if (boneInfos.empty())
         //{
         //    std::vector<glm::mat4> boneTransforms;

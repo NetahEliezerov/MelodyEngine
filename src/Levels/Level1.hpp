@@ -45,11 +45,9 @@ public:
         playerPointer->level = this;
         func = funcRec;
 
-        ObjectSettings cubeSettings = { "Ground", "assets/meshes/cube.obj", {"assets/textures/pngtree-ragged-edge-texture-wall-beige-torn-cardboard-with-unique-texture-image_13779231.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(10, 0.2, 10), glm::vec3(0, -4, 0), glm::vec3(0,0,0), false, character->shader };
-
         ObjectSettings wall1Settings = { "Wall", "assets/meshes/cube.obj", {"assets/textures/Wall/pngtree-wood-grain-texture-wooden-flooring-design-with-wooden-floor-textures-image_13051712.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0), true, character->shader };
 
-        ObjectSettings targetCubeSettings = { "Something", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98), true, character->shader };
+        ObjectSettings targetCubeSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98), true, character->shader };
         ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.004, 0.004, 0.004), glm::vec3(4, -1.5, -5.1), glm::vec3(0,327,270), true, character->shader };
 
 
@@ -74,10 +72,6 @@ public:
         // audioSweetHeart.LoadSound("assets/sounds/sweetheart.wav");
 
         std::cout << "Wall 1: " << &wall << std::endl;
-        std::cout << "Wall 2: " << &wall2 << std::endl;
-        std::cout << "Wall 3: " << &wall3 << std::endl;
-        std::cout << "Wall 4: " << &wall4 << std::endl;
-        std::cout << "Wall 5: " << &wall5 << std::endl;
         std::cout << "Hand: " << &targetCube << std::endl;
         std::cout << "Gun: " << &targetCube2 << std::endl;
         std::cout << "Letter Model: " << &letter.interactable1 << std::endl;
@@ -92,6 +86,12 @@ public:
         letter.Init({ "Noah", std::string("Hey. Find me in the factory.") }, renderer, character, &light, timeScaleRec, [this]() { NoahLetterOpen(); });
 
         triggerBox.Init(glm::vec3(-4.f, 0.0f, 4.f), glm::vec3(2.0f, 8.0f, 2.0f), [this]() { OnRoomExit(); }, character, true, true);
+
+        sceneHierarchy.push_back(&wall);
+        sceneHierarchy.push_back(&targetCube);
+        sceneHierarchy.push_back(&targetCube2);
+        sceneHierarchy.push_back(&table);
+        sceneHierarchy.push_back(&light);
 
         // sceneModels.push_back(&cube);
         sceneModels.push_back(&wall);
@@ -160,11 +160,6 @@ private:
     Model3D hand;
     Model3D cube;
     Model3D wall;
-    Model3D wall2;
-    Model3D wall3;
-    Model3D wall4;
-    Model3D wall5;
-    Model3D wall6;
     Model3D targetCube;
     Model3D targetCube2;
 

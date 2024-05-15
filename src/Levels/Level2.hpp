@@ -45,22 +45,19 @@ public:
         playerPointer->level = this;
         func = funcRec;
 
-        ObjectSettings cubeSettings = { "Ground", "assets/meshes/Pipes/untitled.obj", {"assets/meshes/Pipes/Untitled_2_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(2, 2, 1.5), glm::vec3(3, -3.5, 4), glm::vec3(0,0,0), false, character->shader };
+        ObjectSettings cubeSettings = { "Pipes", "assets/meshes/Pipes/untitled.obj", {"assets/meshes/Pipes/Untitled_2_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(2, 2, 1.5), glm::vec3(3, -3.5, 4), glm::vec3(0,0,0), false, character->shader };
 
 
-        ObjectSettings pipe1Settings = { "Ground", "assets/meshes/Pipes/1/1.obj", {"assets/meshes/Pipes/1/modular_pipes_stoppers.001_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1.4, 1.3, 1.3), glm::vec3(-6, -7, -5), glm::vec3(0,90,90), false, character->shader };
+        ObjectSettings pipe1Settings = { "Pipe", "assets/meshes/Pipes/1/1.obj", {"assets/meshes/Pipes/1/old-rusty-metal-texture-big-22.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1.4, 1.3, 1.3), glm::vec3(-6, -7, -5), glm::vec3(0,90,90), false, character->shader };
 
 
-        ObjectSettings boxSettings = { "Ground", "assets/meshes/Box/box.fbx", {"assets/meshes/Box/box_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1, 1, 1), glm::vec3(-3, -4, -1), glm::vec3(270,0,56), false, character->shader };
+        ObjectSettings boxSettings = { "Box", "assets/meshes/Box/box.fbx", {"assets/meshes/Box/box_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1, 1, 1), glm::vec3(-3, -4, -1), glm::vec3(270,0,56), false, character->shader };
 
-        ObjectSettings wall1Settings = { "Wall", "assets/meshes/cube.obj", {"assets/textures/Wall/images.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0), true, character->shader };
+        ObjectSettings wall1Settings = { "Exterior", "assets/meshes/cube.obj", {"assets/textures/Wall/images.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0), true, character->shader };
 
-        ObjectSettings targetCubeSettings = { "Something", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98), true, character->shader };
+        ObjectSettings targetCubeSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98), true, character->shader };
 
-        ObjectSettings tableSettings = { "Target Cube", "assets/meshes/Table/MechanicalTable.fbx", {"assets/meshes/Table/BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.007, 0.012, 0.009), glm::vec3(1.5, -4, -5.2), glm::vec3(0,0,0), true, character->shader };
-
-
-        LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(0, 0, 1), character->shader };
+        LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(1, 0, 2), character->shader };
 
 
         wall.Init(wall1Settings);
@@ -85,9 +82,18 @@ public:
 
         std::cout << "PIPE 1: " << &pipe1 << std::endl;
         std::cout << "BOX: " << &box << std::endl;
+        std::cout << "LIGHT: " << &light << std::endl;
 
 
         // sceneModels.push_back(&cube);
+
+        sceneHierarchy.push_back(&box);
+        sceneHierarchy.push_back(&pipes);
+        sceneHierarchy.push_back(&pipe1);
+        sceneHierarchy.push_back(&targetCube);
+        sceneHierarchy.push_back(&light);
+        sceneHierarchy.push_back(&wall);
+
         sceneModels.push_back(&wall);
         sceneModels.push_back(&targetCube);
         sceneModels.push_back(&pipes);
@@ -99,11 +105,6 @@ public:
         FlickLight(deltaTime);
 
         targetCube.rotation.z += 7.5 * deltaTime;
-
-
-        // audioSweetHeart.Update();
-
-
 
         pipes.Update(character->movement.position, light, deltaTime);
         pipe1.Update(character->movement.position, light, deltaTime);
@@ -132,7 +133,6 @@ public:
 
     void OnRoomExit()
     {
-        // audioSweetHeart.PlaySound(0);
         std::cout << "HELKO JOHNKES";
         if (Game::state.currentSubMission == 1)
         {
@@ -155,14 +155,13 @@ private:
 
     std::function<void()> func;
 
-    Model3D table;
 
     CharacterNPC npc;
 
 
     bool lightOn = true;
     float flickerTimer = 0.0f;
-    float flickerInterval = 0.2f; // Adjust this value to control the flickering speed
+    float flickerInterval = 0.2f;
 
     LightPoint light;
 
@@ -176,9 +175,9 @@ private:
             lightOn = !lightOn;
 
             if (lightOn)
-                light.color = glm::vec4(1, 0.78, 0.6, 1.f); // White color when the light is on
+                light.color = glm::vec4(1, 0.78, 0.6, 1.f);
             else
-                light.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f); // Black color when the light is off
+                light.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
             std::random_device rd;
             std::mt19937 gen(rd());
