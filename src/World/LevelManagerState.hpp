@@ -42,21 +42,27 @@ public:
     {
         if (currentLevel != nullptr)
         {
-            for (const auto& model : currentLevel->sceneModels)
+
+            for (std::any& item : currentLevel->sceneHierarchy)
             {
-                glUseProgram(shadowShader.ID);
+                if (std::any_cast<Model3D*>(&item))
+                {
+                    Model3D* model = std::any_cast<Model3D*>(item);
 
-                glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), model->transform);
-                modelMatrix = glm::scale(modelMatrix, model->scale);
-                modelMatrix = glm::rotate(modelMatrix, glm::radians(model->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-                modelMatrix = glm::rotate(modelMatrix, glm::radians(model->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-                modelMatrix = glm::rotate(modelMatrix, glm::radians(model->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
+                    glUseProgram(shadowShader.ID);
 
-                glUniformMatrix4fv(glGetUniformLocation(shadowShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+                    glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), model->transform);
+                    modelMatrix = glm::scale(modelMatrix, model->scale);
+                    modelMatrix = glm::rotate(modelMatrix, glm::radians(model->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+                    modelMatrix = glm::rotate(modelMatrix, glm::radians(model->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+                    modelMatrix = glm::rotate(modelMatrix, glm::radians(model->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-                glBindVertexArray(model->VAO);
-                glDrawElements(GL_TRIANGLES, model->numIndices, GL_UNSIGNED_INT, 0);
-                glBindVertexArray(0);
+                    glUniformMatrix4fv(glGetUniformLocation(shadowShader.ID, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+                    glBindVertexArray(model->VAO);
+                    glDrawElements(GL_TRIANGLES, model->numIndices, GL_UNSIGNED_INT, 0);
+                    glBindVertexArray(0);
+                }
             }
         }
     }

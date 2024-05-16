@@ -267,7 +267,7 @@ int main(void) {
         ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
-        imgui_window = glfwCreateWindow(800, 600, "Dear ImGui Window", NULL, NULL);
+        imgui_window = glfwCreateWindow(800, 600, "Level Editor", NULL, NULL);
 
 
         IMGUI_CHECKVERSION();
@@ -299,6 +299,11 @@ int main(void) {
     float vignetteIntensity = 1.2f;
     float vignetteRadius = 0.3f;
     float vignetteSmooth = -0.75f;
+
+
+    float overAllVignetteIntensity = vignetteIntensity;
+    float overAllVignetteRadius = vignetteRadius;
+    float overAllVignetteSmooth = vignetteSmooth;
 
     float colorGradingIntensity = 0.1f;
 
@@ -427,80 +432,6 @@ int main(void) {
                 character.fogColor.y = fog[1];
                 character.fogColor.z = fog[2];
 
-                /*bool check = ImGui::Combo("MyCombo", &Selecteditem, items, IM_ARRAYSIZE(items));
-
-                ImGui::InputText("Memory Address", inputAdd, 256);
-
-                switch (Selecteditem)
-                {
-                case 4:
-                    ImGui::Text("Bloom");
-                    ImGui::DragFloat("Bloom Intensity", &bloomIntensity);
-                    ImGui::DragFloat("Gamma", &gammaIntensity);
-
-                    ImGui::Text("Vignette");
-                    ImGui::DragFloat("Vignette Intensity", &vignetteIntensity);
-                    ImGui::DragFloat("Radius", &vignetteRadius);
-                    ImGui::DragFloat("Smooth", &vignetteSmooth);
-
-                    ImGui::Text("Grain");
-                    ImGui::DragFloat("Grain Intensity", &grainIntensity);
-
-                    ImGui::Text("Chromatic Abberation");
-                    ImGui::DragFloat("Chromatism", &grainSize);
-
-                    ImGui::Text("LUT");
-                    ImGui::DragFloat("LUT Intensity", &colorGradingIntensity);
-                    break;
-                case 5:
-                    if (ImGui::Button("Update Pointer"))
-                    {
-                        std::stringstream ss;
-                        ss << std::hex << inputAdd;
-                        ss >> reinterpret_cast<std::uintptr_t&>(interactableLocation);
-                    }
-                    if (interactableLocation != nullptr)
-                    {
-                        ImGui::Text("Transform");
-                        ImGui::DragFloat("X Transform", &interactableLocation->position.x);
-                        ImGui::DragFloat("Y Transform", &interactableLocation->position.y);
-                        ImGui::DragFloat("Z Transform", &interactableLocation->position.z);
-
-                        ImGui::Text("Rotation");
-                        ImGui::DragFloat("X Rotation", &interactableLocation->rotation.x);
-                        ImGui::DragFloat("Y Rotation", &interactableLocation->rotation.y);
-                        ImGui::DragFloat("Z Rotation", &interactableLocation->rotation.z);
-
-                        ImGui::Text("Scale");
-                        ImGui::DragFloat("X Scale", &interactableLocation->size.x);
-                        ImGui::DragFloat("Y Scale", &interactableLocation->size.y);
-                        ImGui::DragFloat("Z Scale", &interactableLocation->size.z);
-                    }
-                    break;
-                
-                case 0:
-                    if (ImGui::Button("Update Pointer"))
-                    {
-                        std::stringstream ss;
-                        ss << std::hex << inputAdd;
-                        ss >> reinterpret_cast<std::uintptr_t&>(triggerLocation);
-                    }
-
-                    if (triggerLocation != nullptr)
-                    {
-                        ImGui::Text("Transform");
-                        ImGui::InputFloat("X Transform", &triggerLocation->position.x);
-                        ImGui::InputFloat("Y Transform", &triggerLocation->position.y);
-                        ImGui::InputFloat("Z Transform", &triggerLocation->position.z);
-
-                        ImGui::Text("Scale");
-                        ImGui::InputFloat("X Scale", &triggerLocation->size.x);
-                        ImGui::InputFloat("Y Scale", &triggerLocation->size.y);
-                        ImGui::InputFloat("Z Scale", &triggerLocation->size.z);
-                    }
-                    break;
-                }*/
-
                 ImGui::End();
             }
 
@@ -600,18 +531,18 @@ int main(void) {
 
         if (Game::state.currentLetter != nullptr)
         {
-            vignetteIntensity = 150.05;
-            vignetteRadius = 1;
-            vignetteSmooth = -6;
+            overAllVignetteIntensity = 150.05;
+            overAllVignetteRadius = 1;
+            overAllVignetteSmooth = -6;
             renderText("[ESCAPE]", 1920 / 2 - 140, 1080 / 2 + 300, 1.f, glm::vec3(1.0f, 0.4f, 0.4f), textShader);
             renderText("From: " + Game::state.currentLetter->title, 1920 / 2 - 200, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
             renderText(Game::state.currentLetter->content, 1920 / 2 - 350, 1080 / 2 - 150, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
         }
         else
         {
-            vignetteIntensity = 1.2f;
-            vignetteRadius = 0.3f;
-            vignetteSmooth = -0.75;
+            overAllVignetteIntensity = vignetteIntensity;
+            overAllVignetteRadius = vignetteRadius;
+            overAllVignetteSmooth = vignetteSmooth;
         }
 
 

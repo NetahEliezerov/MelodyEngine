@@ -1,4 +1,5 @@
 #pragma once
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -16,7 +17,6 @@
 #include "../Core/Renderer.h"
 #include "../Core/Input.h"
 #include "../Core/Model3D.h"
-#include "../Player/Player.h"
 #include "../Core/LightPoint.h"
 
 #include <any>
@@ -27,6 +27,7 @@
 
 #include "../Types.h"
 
+
 class Player;
 
 class WorldLevel
@@ -35,11 +36,12 @@ public:
 	virtual void Init(Renderer renderer, std::function<void()> func, Player* playerPointer, float* timeScaleRec) = 0;
 	virtual void Update(float deltaTime) = 0;
 
-	virtual void Fire(Model3D* hitObject) = 0;
+	// virtual void Fire(Model3D* hitObject) = 0;
+
+	void RenderUpdate(float deltaTime);
 
 	Player* character;
 
-	std::vector<Model3D*> sceneModels;
 
 	std::vector<std::any> sceneHierarchy;
 

@@ -34,7 +34,7 @@
 
 #include "../Core/AudioManager.hpp"
 
-class Level2 : public WorldLevel
+class BasicLevel : public WorldLevel
 {
 
 public:
@@ -46,30 +46,21 @@ public:
         playerPointer->light = &light;
         func = funcRec;
 
-        ObjectSettings cubeSettings = { "Pipes", "assets/meshes/Pipes/untitled.obj", {"assets/meshes/Pipes/Untitled_2_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(2, 2, 1.5), glm::vec3(3, -3.5, 4), glm::vec3(0,0,0), false, character->shader };
-        ObjectSettings pipe1Settings = { "Pipe", "assets/meshes/Pipes/1/1.obj", {"assets/meshes/Pipes/1/old-rusty-metal-texture-big-22.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1.4, 1.3, 1.3), glm::vec3(-6, -7, -5), glm::vec3(0,90,90), false, character->shader };
-        ObjectSettings boxSettings = { "Box", "assets/meshes/Box/box.fbx", {"assets/meshes/Box/box_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1, 1, 1), glm::vec3(-3, -4, -1), glm::vec3(270,0,56), false, character->shader };
-        ObjectSettings wall1Settings = { "Exterior", "assets/meshes/cube.obj", {"assets/textures/Wall/images.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0), true, character->shader };
-        ObjectSettings targetCubeSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98), true, character->shader };
+        ObjectSettings wallSettings = { "Exterior", "assets/meshes/cube.obj", {"assets/textures/Wall/images.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0), true, character->shader };
+        ObjectSettings handSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98), true, character->shader };
         LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(1, 0, 2), character->shader };
 
 
-        wall.Init(wall1Settings);
-        box.Init(boxSettings);
-        pipes.Init(cubeSettings);
-        pipe1.Init(pipe1Settings);
-        targetCube.Init(targetCubeSettings);
+        wall.Init(wallSettings);
+        hand.Init(handSettings);
         light.Init(lightSettings);
 
 
-        Game::state.currentMission = 1;
+        Game::state.currentMission = 0;
         Game::state.currentSubMission = 0;
-        Game::state.currentObjective = "Find Noah";
+        Game::state.currentObjective = "Investigate";
 
-        sceneHierarchy.push_back(&box);
-        sceneHierarchy.push_back(&pipes);
-        sceneHierarchy.push_back(&pipe1);
-        sceneHierarchy.push_back(&targetCube);
+        sceneHierarchy.push_back(&hand);
         sceneHierarchy.push_back(&light);
         sceneHierarchy.push_back(&wall);
     };
@@ -78,16 +69,12 @@ public:
     {
         FlickLight(deltaTime);
 
-        targetCube.rotation.z += 7.5 * deltaTime;
+        hand.rotation.z += 7.5 * deltaTime;
     };
 
 private:
-    Model3D pistol;
     Model3D wall;
-    Model3D targetCube;
-    Model3D pipes;
-    Model3D box;
-    Model3D pipe1;
+    Model3D hand;
 
     LightPoint light;
 

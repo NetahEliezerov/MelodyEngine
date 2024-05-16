@@ -40,7 +40,7 @@ void RenderModelTree(const char* label, int idx, LightPoint* modelLocation, bool
 
 void ShowTreeExample(Player* player)
 {
-    ImGui::Begin("Tree Example");
+    ImGui::Begin("Hierarchy");
     int i = 0;
     for (std::any& item : player->level->sceneHierarchy)
     {
@@ -70,7 +70,7 @@ void ShowTreeExample(Player* player)
                 try
                 {
                     LightPoint* model = std::any_cast<LightPoint*>(item);
-                    std::string name("Light " + std::to_string(i));
+                    std::string name(std::to_string(i) + ": Light");
                     RenderModelTree(name.c_str(), i, model);
                 }
                 catch (const std::bad_any_cast& e)

@@ -277,36 +277,36 @@ void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPoi
 }
 void Player::Fire()
 {
-    auto currentTime = std::chrono::steady_clock::now();
-    auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - timeSinceShoot).count();
+    //auto currentTime = std::chrono::steady_clock::now();
+    //auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - timeSinceShoot).count();
 
-    const int delayBetweenShots = 200;
+    //const int delayBetweenShots = 200;
 
-    if (elapsedTime >= delayBetweenShots) {
-        FireAnimation(&pistol, 4);
+    //if (elapsedTime >= delayBetweenShots) {
+    //    FireAnimation(&pistol, 4);
 
-        glm::vec3 cameraPos = movement.position;
-        glm::vec3 cameraFront = movement.lookingAngle;
-        float shootDistance = 100.0f;
+    //    glm::vec3 cameraPos = movement.position;
+    //    glm::vec3 cameraFront = movement.lookingAngle;
+    //    float shootDistance = 100.0f;
 
-        Ray shootRay = calculatePistolTarget(cameraPos, cameraFront, shootDistance);
+    //    Ray shootRay = calculatePistolTarget(cameraPos, cameraFront, shootDistance);
 
-        float closestHitDistance = std::numeric_limits<float>::max();
-        Model3D* hitObject = nullptr;
+    //    float closestHitDistance = std::numeric_limits<float>::max();
+    //    Model3D* hitObject = nullptr;
 
-        for (auto& model : level->sceneModels) {
-            float hitDistance;
-            if (raySphereIntersection(shootRay, model->transform, model->radius, hitDistance)) {
-                if (hitDistance < closestHitDistance) {
-                    closestHitDistance = hitDistance;
-                    hitObject = model;
-                }
-            }
-        }
-        level->Fire(hitObject);
+    //    for (auto& model : level->sceneModels) {
+    //        float hitDistance;
+    //        if (raySphereIntersection(shootRay, model->transform, model->radius, hitDistance)) {
+    //            if (hitDistance < closestHitDistance) {
+    //                closestHitDistance = hitDistance;
+    //                hitObject = model;
+    //            }
+    //        }
+    //    }
+    //    level->Fire(hitObject);
 
-        timeSinceShoot = currentTime;
-    }
+    //    timeSinceShoot = currentTime;
+    //}
 }
 
 void Player::Sprint(bool value)

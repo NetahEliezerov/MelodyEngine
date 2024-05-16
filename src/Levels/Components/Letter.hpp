@@ -1,14 +1,17 @@
 #pragma once
+
+#ifndef FOO_BAR_BsAZ_H_
+#define FOO_BAR_BsAZ_H_
 #include <glm/glm.hpp>
 #include <functional>
 #include <memory>
 #include <any>
 
-#include "../../Core/Model3D.h"
 #include "../../Player/Player.h"
 
 #include "../../World/Interactable.hpp"
-#include "../../World/WorldLevel.h"
+
+#include "../../Game/Game.h"
 
 class Letter {
 public:
@@ -66,3 +69,4 @@ public:
 	Player* character = nullptr;
 	LightPoint* light = nullptr;
 };
+#endif

@@ -20,13 +20,15 @@
 
 #include "../World/LevelManagerState.hpp"
 
-#include "../Levels/Level1.hpp"
-#include "../Levels/Level2.hpp"
+#include "Level1.hpp"
+#include "Level2.hpp"
+#include "BasicLevel.hpp"
 
 struct LevelManager : LevelManagerState
 {
     Level1 _level1;
     Level2 _level2;
+    BasicLevel _basicLevel;
 
     void GameStart(Renderer rendererRec, Player* playerPointer, float* timeScaleRec)
     {
@@ -34,13 +36,14 @@ struct LevelManager : LevelManagerState
         character = playerPointer;
         timeScale = timeScaleRec;
 
-        _level1.Init(renderer, [this]() { OnDoorEnter(); }, playerPointer, timeScale);
-        currentLevel = &_level1; // Set the current level to Level1
+        _basicLevel.Init(renderer, [this]() { OnDoorEnter(); }, playerPointer, timeScale);
+        currentLevel = &_basicLevel; // Set the current level to Level1
     }
 
     void GameUpdate(float deltaTime)
     {
         currentLevel->Update(deltaTime);
+        currentLevel->RenderUpdate(deltaTime);
     }
 
 

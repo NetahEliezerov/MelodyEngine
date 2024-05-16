@@ -1,4 +1,6 @@
 #pragma once
+#ifndef FOO_BAR_BAZ_H_
+#define FOO_BAR_BAZ_H_
 #include <glm/glm.hpp>
 #include <functional>
 #include <memory>
@@ -69,3 +71,4 @@ public:
         isTriggered = false;
     }
 };
+#endif

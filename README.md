@@ -30,12 +30,12 @@ MelodyEngine offers plenty of features, designed to run first-person horror game
 
 
 ## Basic Example
+### LevelManager
 This piece of code is starting by rendering the "_level1" level, and points the "currentLevel" pointer to it.
 ```cpp
 struct LevelManager : LevelManagerState
 {
-    Level1 _level1;
-    Level2 _level2;
+    BasicLevel _basicLevel;
 
     void GameStart(Renderer rendererRec, Player* playerPointer, float* timeScaleRec)
     {
@@ -43,21 +43,98 @@ struct LevelManager : LevelManagerState
         character = playerPointer;
         timeScale = timeScaleRec;
 
-        _level1.Init(renderer, [this]() { OnDoorEnter(); }, playerPointer, timeScale);
-        currentLevel = &_level1; // Set the current level to Level1
+        _basicLevel.Init(renderer, [this]() {}, playerPointer, timeScale);
+        currentLevel = &_basicLevel; // Set the current level to Level1
     }
 
     void GameUpdate(float deltaTime)
     {
         currentLevel->Update(deltaTime);
+        currentLevel->RenderUpdate(deltaTime);
     }
-
-
-    void OnDoorEnter()
+};
+```
+### BasicLevel
+```cpp
+class BasicLevel : public WorldLevel
+{
+public:
+    
+    // Init: CALLED ON GAME START
+    virtual void Init(Renderer renderer, std::function<void()> funcRec, Player* playerPointer, float* timeScaleRec) override
     {
-        currentLevel = &_level2;
-        _level2.Init(renderer, [this]() {  }, character, timeScale);
-    }
+        // SET PRIMARY MEMBERS
+        character = playerPointer;
+        playerPointer->level = this;
+        playerPointer->light = &light;
+        func = funcRec;
+
+        // DEFINE SCENE MEMBERS
+        ObjectSettings wallSettings = { "Exterior", "assets/meshes/cube.obj", {"assets/textures/Wall/images.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0), true, character->shader };
+        ObjectSettings handSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98), true, character->shader };
+        LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(1, 0, 2), character->shader };
+
+        
+        // INITIALIZE SCENE MEMBERS
+        wall.Init(wallSettings);
+        hand.Init(handSettings);
+        light.Init(lightSettings);
+
+        // SET CURRENT GAME STATE
+        Game::state.currentMission = 0;
+        Game::state.currentSubMission = 0;
+        Game::state.currentObjective = "Investigate";
+
+        // ADD OBJECTS/ETC TO HIERARCHY
+        sceneHierarchy.push_back(&hand);
+        sceneHierarchy.push_back(&light);
+        sceneHierarchy.push_back(&wall);
+    };
+
+    
+    // Update: CALLED ON FRAME UPDATE
+    virtual void Update(float deltaTime) override
+    {
+        // CALL FlickLight
+        FlickLight(deltaTime);
+
+        // HAND ROTATION ANIMATION
+        hand.rotation.z += 7.5 * deltaTime;
+    };
+
+private:
+    // DEFINE MEMBERS
+    Model3D wall;
+    Model3D hand;
+    LightPoint light;
+
+    std::function<void()> func;
+
+    bool lightOn = true;
+    float flickerTimer = 0.0f;
+    float flickerInterval = 0.2f;
+
+    // DEFINE FLICK LIGHT
+    void FlickLight(float deltaTime)
+    {
+        flickerTimer += deltaTime;
+
+        if (flickerTimer >= flickerInterval)
+        {
+            flickerTimer = 0.0f;
+            lightOn = !lightOn;
+
+            if (lightOn)
+                light.color = glm::vec4(1, 0.78, 0.6, 1.f);
+            else
+                light.color = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<> dis(0.1f, 0.5f);
+            flickerInterval = dis(gen);
+        }
+    };
 };
 ```
 
