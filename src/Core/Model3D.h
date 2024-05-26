@@ -38,6 +38,7 @@ public:
 	bool visibility = true;
 	float radius = 1.f;
 	float collisionRadius;
+	float colliderOffsetX = -1.f;
 
 	unsigned int VBO, VAO;
 	glm::mat4 model = glm::mat4(1.0f);
@@ -52,4 +53,3 @@ public:
 	unsigned int* indices;
 	unsigned int EBO;
 };
-

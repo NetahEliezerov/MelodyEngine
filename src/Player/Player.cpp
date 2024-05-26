@@ -16,23 +16,37 @@
 
 AudioManager audioManager;
 
-struct Ray {
+struct RayA {
     glm::vec3 origin;
     glm::vec3 direction;
 };
 
+static glm::vec3 ReactToGLM(Vector3 rec)
+{
+    return { rec.x, rec.y, rec.z };
+}
+static Vector3 GLMToReact(glm::vec3 rec)
+{
+    return { rec.x, rec.y, rec.z };
+}
+
+static Quaternion GLMToQuaternion(glm::vec3 rec)
+{
+    return Quaternion(rec.x, rec.y, rec.z, 1);
+}
+
 unsigned int lutTexture;
 
-Ray calculatePistolTarget(const glm::vec3& cameraPos, const glm::vec3& cameraFront, float distance)
+RayA calculatePistolTarget(const glm::vec3& cameraPos, const glm::vec3& cameraFront, float distance)
 {
-    Ray ray;
+    RayA ray;
     ray.origin = cameraPos;
     ray.direction = glm::normalize(cameraFront);
     return ray;
 }
 
 
-bool raySphereIntersection(const Ray& ray, const glm::vec3& sphereCenter, float sphereRadius, float& hitDistance)
+bool raySphereIntersection(const RayA& ray, const glm::vec3& sphereCenter, float sphereRadius, float& hitDistance)
 {
     glm::vec3 oc = ray.origin - sphereCenter;
     float a = glm::dot(ray.direction, ray.direction);
@@ -72,6 +86,8 @@ void Player::Update(float deltaTime)
     glUniform1f(glGetUniformLocation(shader, "fogDensity"), fogDensity);
     glUniform3fv(glGetUniformLocation(shader, "fogColor"), 1, glm::value_ptr(fogColor));
 
+    glUniform1f(glGetUniformLocation(shader, "gradingStrength"), toneStrength);
+    glUniform3fv(glGetUniformLocation(shader, "gradingColor"), 1, glm::value_ptr(toneColor));
     if (glfwGetCurrentContext() == Engine::GetOpenGLWindow())
     {
 
@@ -94,6 +110,31 @@ void Player::Update(float deltaTime)
         direction.x = cos(glm::radians(movement.yaw)) * cos(glm::radians(movement.pitch));
         direction.y = sin(glm::radians(movement.pitch));
         direction.z = sin(glm::radians(movement.yaw)) * cos(glm::radians(movement.pitch));
+
+
+        bool isMoving = false;
+
+        if (Input::inputState.keys[GLFW_KEY_W] || Input::inputState.keys[GLFW_KEY_S] || Input::inputState.keys[GLFW_KEY_A] || Input::inputState.keys[GLFW_KEY_D])
+        {
+            isMoving = true;
+        }
+
+        if (isMoving)
+        {
+            aasdasd += rotationSpeed * deltaTime;
+            movement.roll = rotationMultiplier * sin(0.33*aasdasd);
+
+            glm::mat4 rotationMatrix = glm::mat4(1.0f);
+            rotationMatrix = glm::rotate(rotationMatrix, glm::radians(movement.roll), movement.lookingAngle);
+
+            movement.cameraUp = glm::vec3(rotationMatrix * glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
+        }
+
+
+
+
+
+
         movement.lookingAngle = glm::normalize(direction);
 
 
@@ -105,6 +146,7 @@ void Player::Update(float deltaTime)
         if (Input::inputState.keys[GLFW_KEY_SPACE] && !isJumping) {
             isJumping = true;
             velocity.y = jumpForce * deltaTime;
+            // body->applyWorldForceAtCenterOfMass(GLMToReact({ 0,20,0 }) * 650);
         }
 
 
@@ -125,6 +167,7 @@ void Player::Update(float deltaTime)
         {
             movement.position.y = groundLevel;
         }
+
 
 
         float velocity = movement.cameraSpeed * deltaTime;
@@ -162,18 +205,33 @@ void Player::Update(float deltaTime)
             if (glm::length(moveDirection) > 0.0f)
                 moveDirection = glm::normalize(moveDirection);
 
+            if (Input::inputState.keys[GLFW_KEY_H])
+                std::cout << movement.position.x << " " << movement.position.y << " " << movement.position.z << std::endl;
 
-            movement.position.x += moveDirection.x * velocity;
-            movement.position.z += moveDirection.z * velocity;
+            if (Input::inputState.keys[GLFW_KEY_W] || Input::inputState.keys[GLFW_KEY_S] || Input::inputState.keys[GLFW_KEY_A] || Input::inputState.keys[GLFW_KEY_D])
+            {
+                // std::cout << body->getTransform().getPosition().x << " " << body->getTransform().getPosition().y << " " << body->getTransform().getPosition().z << std::endl;
+                // std::cout << " ASDAS" << std::endl;
+                moveDirection.y = 0;
+                //body->applyWorldForceAtCenterOfMass(GLMToReact(moveDirection) * 750);
+            }
+            glm::vec3 newPosition = movement.position;
+
+            if (Input::inputState.keys[GLFW_KEY_W] || Input::inputState.keys[GLFW_KEY_S] || Input::inputState.keys[GLFW_KEY_A] || Input::inputState.keys[GLFW_KEY_D])
+            {
+                glm::vec3 moveOffset = moveDirection * velocity;
+                newPosition += moveOffset;
+                movement.position = newPosition;
+            }
         }
+    };
 
-    }
-    ;
 
+    //glm::vec3 cameraPosition = ReactToGLM(body->getTransform().getPosition());
     glm::vec3 cameraPosition = movement.position;
-    if (isCrouching) {
-        cameraPosition.y = crouchHeight;
-    }
+    //if (isCrouching) {
+    //    cameraPosition.y = crouchHeight;
+    //}
     view = glm::lookAt(cameraPosition, cameraPosition + movement.lookingAngle, movement.cameraUp);
     glUniformMatrix4fv(movement.viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(movement.projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -214,7 +272,6 @@ void Player::Update(float deltaTime)
         else
             Crouch(false);
     }
-
     //pistol.SetPosition(movement.position, movement.lookingAngle, movement.cameraUp, 1.3f, .75, 0);
     //pistol.Update(movement.position, light);
 
@@ -240,18 +297,26 @@ void Player::Crouch(bool value) {
     }
 }
 
-void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionRec, bool* hideHudButLetterRec)
+bool Player::CheckCollision(Model3D* model)
+{
+    // std::cout << glm::distance(model->transform, movement.position) << std::endl;
+    float distance = glm::distance(model->transform, movement.position);
+    float sumRadii = model->collisionRadius + collisionRadius;
+    return distance <= sumRadii;
+}
+
+void Player::Init(PhysicsEngine* engine, Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionRec, bool* hideHudButLetterRec)
 {
     audioManager.LoadSound("assets/sounds/footstep.wav");
-
     hideHudButLetter = hideHudButLetterRec;
     isInInteractionZone = isInInteractionRec;
 
-    movement.position = glm::vec3(0.0f, 1.0f, 0.0f);
+    // movement.position = glm::vec3(0.0f, 20.0f, 0.0f);
     std::string vertexShader = readShaderSource("shaders/vertex_texture.glsl");
     std::string fragmentShader = readShaderSource("shaders/fragment_texture.glsl");
 
     isGodMode = recIsGodMode;
+
 
     shader = _renderer.CreateShader(vertexShader, fragmentShader);
     shaderPointer = &shader;
@@ -270,9 +335,9 @@ void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPoi
     hand.Init(targetCube2Settings);
     timeSinceShoot = std::chrono::steady_clock::now(); // Initialize lastShotTime
 
-    fogColor = { 0.2f, 0.1f, 0.1f };
-
-
+    fogColor = { 0.67f, 0.44f, 0.27f };
+    toneColor = { 1, 0.82, 0.39f };
+    toneStrength = 1.0;
     std::cout << "PLAYER: " << this << std::endl;
 }
 void Player::Fire()
@@ -315,11 +380,15 @@ void Player::Sprint(bool value)
     {
         isSprinting = true;
         movement.cameraSpeed = movement.sprintSpeed;
+        rotationSpeed = 30;
+        rotationMultiplier = 1.75f;
     }
     else
     {
         isSprinting = false;
         movement.cameraSpeed = movement.walkSpeed;
+        rotationSpeed = 20;
+        rotationMultiplier = 1.f;
     }
 }
 

@@ -76,7 +76,7 @@ void Model3D::Init(ObjectSettings settings)
 
     model = glm::translate(model, transform) * rotationMatrix * scaleMatrix;
 
-    collisionRadius = std::max(scale.x, std::max(scale.y, scale.z)) * 0.5f;
+    collisionRadius = std::max(scale.x, std::max(scale.y, scale.z)) * 1.f;
 
     modelLoc = glGetUniformLocation(shader, "model");
     colorLoc = glGetUniformLocation(shader, "objectColor");

@@ -6,7 +6,7 @@
 class PlayerMovement
 {
 public:
-	glm::vec3 position = glm::vec3(0.0f, 0.0f, 3.0f);
+	glm::vec3 position = glm::vec3(7.5f, 20.0f, 7.5f);
 	glm::vec3 lookingAngle = glm::vec3(0.0f, 0.0f, -1.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -16,6 +16,7 @@ public:
 	float sprintSpeed = 4.5f;
 	float yaw = -90.0f;
 	float pitch = 0.0f;
+	float roll = 0.0f;
 
 	unsigned int projectionLoc;
 	unsigned int viewLoc;

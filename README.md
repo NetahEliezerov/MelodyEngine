@@ -1,7 +1,5 @@
 <div align="center">
 
-# MelodyEngine
-
 ![Banner](https://github.com/NetahEliezerov/MelodyEngine/blob/master/docs/assets/banner.png?raw=true)
 
 

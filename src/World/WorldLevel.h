@@ -19,6 +19,8 @@
 #include "../Core/Model3D.h"
 #include "../Core/LightPoint.h"
 
+#include "../Core/Physics/Physics.hpp"
+
 #include <any>
 
 #include <variant>
@@ -41,6 +43,7 @@ public:
 	void RenderUpdate(float deltaTime);
 
 	Player* character;
+	PhysicsEngine* physicsEngine;
 
 
 	std::vector<std::any> sceneHierarchy;

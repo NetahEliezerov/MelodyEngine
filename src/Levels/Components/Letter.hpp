@@ -26,7 +26,7 @@ public:
 
 		letterOpenHandle = func;
 
-		interactSettings = { "interact", "assets/meshes/Letter/Letter.FBX", {"assets/meshes/Letter/Letter.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.01, 0.01, 0.01), glm::vec3(2, -1.45, -5), glm::vec3(90, 0, -27), false, character->shader };
+		interactSettings = { "interact", "assets/meshes/Letter/Letter.FBX", {"assets/meshes/Letter/Letter.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.01, 0.01, 0.01), glm::vec3(2, -1.45, -5), glm::vec3(90, 0, -27), false, character->shader, false };
 		
 		interactable1.Init(interactSettings, [this]() { OnLetterOpen(); }, playerPointer, 325.0f, 200);
 

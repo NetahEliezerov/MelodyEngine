@@ -1,3 +1,4 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -17,6 +18,8 @@
 #include "Player/Player.h"
 #include "Core/LightPoint.h"
 
+#include "Core/Physics/Physics.hpp"
+
 #include <stb/stb_image.h>
 
 #include "Core/Shader.hpp"
@@ -34,6 +37,7 @@
 
 
 unsigned int colorGradingLUTTexture;
+unsigned int imageTexture;
 
 unsigned int VBO, VAO;
 
@@ -47,29 +51,37 @@ struct Character {
 
 static std::map<char, Character> characters;
 
-void renderText(const std::string& text, float x, float y, float scale, glm::vec3 color, Shader& shader) {
+void renderText(const std::string& text, float x, float y, float scale, glm::vec3 color, Shader& shader, bool isAligned) {
     shader.use();
     shader.setVec3("textColor", color);
-
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
-    float xPos = x;
+    float textWidth = 0.0f;
     for (const auto& c : text) {
         Character ch = characters[c];
+        textWidth += (ch.advance >> 6) * scale;
+    }
 
-        float xpos = xPos + ch.bearing.x * scale;
+    float xPos = x;
+    if (isAligned) {
+        xPos = (1920.0f - textWidth) / 2.0f;
+    }
+
+    for (const auto& c : text) {
+        Character ch = characters[c];
         float ypos = y - (ch.size.y - ch.bearing.y) * scale;
         float w = ch.size.x * scale;
         float h = ch.size.y * scale;
+        float xpos = xPos + ch.bearing.x * scale;
 
         float vertices[6][4] = {
-            { xpos,     ypos + h,   0.0f, 0.0f },
-            { xpos,     ypos,       0.0f, 1.0f },
-            { xpos + w, ypos,       1.0f, 1.0f },
-            { xpos,     ypos + h,   0.0f, 0.0f },
-            { xpos + w, ypos,       1.0f, 1.0f },
-            { xpos + w, ypos + h,   1.0f, 0.0f }
+            { xpos, ypos + h, 0.0f, 0.0f },
+            { xpos, ypos, 0.0f, 1.0f },
+            { xpos + w, ypos, 1.0f, 1.0f },
+            { xpos, ypos + h, 0.0f, 0.0f },
+            { xpos + w, ypos, 1.0f, 1.0f },
+            { xpos + w, ypos + h, 1.0f, 0.0f }
         };
 
         glBindTexture(GL_TEXTURE_2D, ch.textureID);
@@ -191,6 +203,9 @@ int main(void) {
     Renderer _renderer;
     const char* glsl_version = "#version 130";
 
+    PhysicsEngine physicsEngine;
+
+    physicsEngine.Init();
 
     bool isInInteractionZone = false;
 
@@ -203,7 +218,7 @@ int main(void) {
 
     float timeScale = 1.f;
 
-    character.Init(_renderer, false, playerShader, &isInInteractionZone, &hideHudButLetter);
+    character.Init(&physicsEngine, _renderer, false, playerShader, &isInInteractionZone, &hideHudButLetter);
     levelManager.GameStart(_renderer, &character, &timeScale);
 
     float lastFrame = 0.0f;
@@ -305,23 +320,24 @@ int main(void) {
     float overAllVignetteRadius = vignetteRadius;
     float overAllVignetteSmooth = vignetteSmooth;
 
-    float colorGradingIntensity = 0.1f;
+    float colorGradingIntensity = 0.07f;
 
-    float bloomIntensity = 1.5f;
-    float gammaIntensity = .9f;
+    float bloomIntensity = 1.6f;
+    float gammaIntensity = .6f;
 
-    float grainIntensity = 0.1f;
+    float grainIntensity = 0.13f;
 
-    float grainSize = 0.007f;
+    float grainSize = 0.008f;
 
-    float specularStrength = 0.05;
-    float ambientStrength = 0.1;
+    float specularStrength = 0.3;
+    float ambientStrength = 0.15;
 
     static float fog[3] = { character.fogColor.x, character.fogColor.y, character.fogColor.z };
+    static float tone[3] = { character.toneColor.x, character.toneColor.y, character.toneColor.z };
     bool isLightOn = true;
     bool isFogOn = true;
     int lutWidth, lutHeight, lutChannels;
-    unsigned char* lutData = stbi_load("assets/textures/LUTS/vertopal.com_CINECOLOR_BLADE_RUNNER_2049.jpg", &lutWidth, &lutHeight, &lutChannels, 0);
+    unsigned char* lutData = stbi_load("assets/textures/LUTS/LUT_TealOrangeContrastTable.jpg", &lutWidth, &lutHeight, &lutChannels, 0);
     if (lutData) {
         glGenTextures(1, &colorGradingLUTTexture);
         glBindTexture(GL_TEXTURE_2D, colorGradingLUTTexture);
@@ -422,6 +438,10 @@ int main(void) {
                 ImGui::Text("LUT");
                 ImGui::DragFloat("LUT Intensity", &colorGradingIntensity);
 
+                ImGui::Text("Tone");
+                ImGui::DragFloat("Tone Intensity", &character.toneStrength);
+                ImGui::ColorPicker3("Tone Color", tone);
+
                 ImGui::End();
 
                 ImGui::Begin("Fog", &show_another_window);
@@ -431,6 +451,10 @@ int main(void) {
                 character.fogColor.x = fog[0];
                 character.fogColor.y = fog[1];
                 character.fogColor.z = fog[2];
+
+                character.toneColor.x = tone[0];
+                character.toneColor.y = tone[1];
+                character.toneColor.z = tone[2];
 
                 ImGui::End();
             }
@@ -446,65 +470,49 @@ int main(void) {
 
             glfwPollEvents();
         }
-        // Clear the default framebuffer
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Set up light's view-projection matrix
+        physicsEngine.Update(deltaTime);
         glm::mat4 lightProjection = glm::ortho(-10.f, 10.f, -10.0f, 10.0f, near_plane, far_plane);
         glm::mat4 lightView = glm::lookAt(character.light->transform, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
-
-
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-
-        // Use the shadow shader
         shadowShader.use();
         glUniformMatrix4fv(glGetUniformLocation(shadowShader.ID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
-
-        // Render scene objects for depth map generation
         levelManager.RenderShadows(shadowShader);
-
-        // Render scene normally
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         glViewport(0, 0, 1920, 1080);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         character.Update(deltaTime);
         levelManager.GameUpdate(deltaTime);
-
-        // Use the main shader
         glUseProgram(character.shader);
         glUniformMatrix4fv(glGetUniformLocation(character.shader, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
         glUniform1f(glGetUniformLocation(character.shader, "ambientStrength"), ambientStrength);
         glUniform1f(glGetUniformLocation(character.shader, "specularStrength"), specularStrength);
-
-
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         glUniform1i(glGetUniformLocation(character.shader, "shadowMap"), 2);
-
         glDisable(GL_DEPTH_TEST);
-
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
         vignetteShader.use();
         vignetteShader.setInt("screenTexture", 0);
         vignetteShader.setInt("colorGradingLUT", 1);
-        vignetteShader.setFloat("vignetteIntensity", vignetteIntensity);
+        vignetteShader.setFloat("vignetteIntensity", overAllVignetteIntensity);
         vignetteShader.setFloat("colorGradingIntensity", colorGradingIntensity);
-        vignetteShader.setFloat("vignetteRadius", vignetteRadius);
-        vignetteShader.setFloat("vignetteSmooth", vignetteSmooth);
+        vignetteShader.setFloat("vignetteRadius", overAllVignetteRadius);
+        vignetteShader.setFloat("vignetteSmooth", overAllVignetteSmooth);
         vignetteShader.setFloat("exposure", bloomIntensity);
         vignetteShader.setFloat("gamma", gammaIntensity);
         vignetteShader.setFloat("time", glfwGetTime());
         vignetteShader.setFloat("grainIntensity", grainIntensity);
         vignetteShader.setFloat("chromaticAberrationOffset", grainSize);
+
+
+
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, fboTexture);
@@ -513,8 +521,6 @@ int main(void) {
         glBindTexture(GL_TEXTURE_2D, colorGradingLUTTexture);
 
         renderQuad();
-
-
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -522,21 +528,21 @@ int main(void) {
         {
             if (isInInteractionZone)
             {
-                renderText("Press E", 1920 / 2 - 100, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+                renderText("Press E", 1920 / 2 - 100, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, false);
             }
 
-            renderText("Objective: " + Game::state.currentObjective, 50.0f, 50.0f, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
-            renderText(asdasad + " FPS", 50.0f, 1000, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+            renderText("Objective: " + Game::state.currentObjective, 50.0f, 50.0f, 0.75f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, false);
+            renderText(asdasad + " FPS", 50.0f, 1000, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, false);
         }
 
         if (Game::state.currentLetter != nullptr)
         {
-            overAllVignetteIntensity = 150.05;
-            overAllVignetteRadius = 1;
-            overAllVignetteSmooth = -6;
-            renderText("[ESCAPE]", 1920 / 2 - 140, 1080 / 2 + 300, 1.f, glm::vec3(1.0f, 0.4f, 0.4f), textShader);
-            renderText("From: " + Game::state.currentLetter->title, 1920 / 2 - 200, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
-            renderText(Game::state.currentLetter->content, 1920 / 2 - 350, 1080 / 2 - 150, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), textShader);
+            overAllVignetteIntensity = 1500;
+            overAllVignetteRadius = 1.3;
+            overAllVignetteSmooth = -0.75;
+            renderText("[ESCAPE]", 1920 / 2 - 140, 1080 / 2 + 300, 1.f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, true);
+            renderText("From: " + Game::state.currentLetter->title, 1920 / 2 - 200, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
+            renderText(Game::state.currentLetter->content, (1920 / 2), 1080 / 2 - 150, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
         }
         else
         {

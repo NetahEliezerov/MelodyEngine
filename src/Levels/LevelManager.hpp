@@ -23,6 +23,7 @@
 #include "Level1.hpp"
 #include "Level2.hpp"
 #include "BasicLevel.hpp"
+#include "../Core/Physics/Physics.hpp"
 
 struct LevelManager : LevelManagerState
 {
@@ -36,8 +37,8 @@ struct LevelManager : LevelManagerState
         character = playerPointer;
         timeScale = timeScaleRec;
 
-        _basicLevel.Init(renderer, [this]() { OnDoorEnter(); }, playerPointer, timeScale);
-        currentLevel = &_basicLevel; // Set the current level to Level1
+        _level1.Init(renderer, [this]() { OnDoorEnter(); }, playerPointer, timeScale);
+        currentLevel = &_level1; // Set the current level to Level1
     }
 
     void GameUpdate(float deltaTime)

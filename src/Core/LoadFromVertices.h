@@ -69,8 +69,8 @@ inline std::pair<int, float*> loadVerticesFromFileOld(std::string fileName, int&
 
             if (mesh->mTextureCoords[0])
             {
-                vertices[vertexIndex++] = mesh->mTextureCoords[0][j].x;
-                vertices[vertexIndex++] = mesh->mTextureCoords[0][j].y;
+                vertices[vertexIndex++] = mesh->mTextureCoords[0][j].x / 3;
+                vertices[vertexIndex++] = mesh->mTextureCoords[0][j].y / 3;
             }
             else
             {

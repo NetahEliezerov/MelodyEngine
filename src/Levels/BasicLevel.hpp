@@ -46,12 +46,12 @@ public:
         playerPointer->light = &light;
         func = funcRec;
 
-        ObjectSettings wallSettings = { "Exterior", "assets/meshes/cube.obj", {"assets/textures/Wall/images.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0), true, character->shader };
-        ObjectSettings handSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98), true, character->shader };
+        ObjectSettings wallSettings = { "Exterior", "assets/meshes/cube.obj", {"assets/textures/Wall/images.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0), true, character->shader, true };
+        ObjectSettings handSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1, 1, 1), glm::vec3(0, -3.5, 0), glm::vec3(87, 165,98), true, character->shader, false };
         LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(1, 0, 2), character->shader };
 
 
-        wall.Init(wallSettings);
+        // wall.Init(wallSettings, engine);
         hand.Init(handSettings);
         light.Init(lightSettings);
 
@@ -62,14 +62,14 @@ public:
 
         sceneHierarchy.push_back(&hand);
         sceneHierarchy.push_back(&light);
-        sceneHierarchy.push_back(&wall);
+        // sceneHierarchy.push_back(&wall);
     };
 
     virtual void Update(float deltaTime) override
     {
-        FlickLight(deltaTime);
+        // FlickLight(deltaTime);
 
-        hand.rotation.z += 7.5 * deltaTime;
+        // hand.rotation.z += 7.5 * deltaTime;
     };
 
 private:

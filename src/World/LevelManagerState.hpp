@@ -19,6 +19,8 @@
 #include "../Player/Player.h"
 #include "../Core/LightPoint.h"
 
+#include "../Core/Physics/Physics.hpp"
+
 #include <any>
 
 #include <variant>
@@ -35,6 +37,7 @@ public:
     WorldLevel* currentLevel;
     Renderer renderer;
     Player* character;
+
     float* timeScale;
 
 

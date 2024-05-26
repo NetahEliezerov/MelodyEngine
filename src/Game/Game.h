@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <reactphysics3d/reactphysics3d.h>
 #include "../Types.h"
 
 class GameState
@@ -10,6 +11,9 @@ public:
 	std::string currentObjective;
 
 	LetterSettings* currentLetter = nullptr;
+
+	reactphysics3d::PhysicsWorld* world;
+	reactphysics3d::PhysicsCommon* common;
 };
 
 class Game

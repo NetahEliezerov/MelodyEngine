@@ -21,11 +21,13 @@
 #include "../Core/LightPoint.h"
 #include "../Types.h"
 #include "../World/WorldLevel.h"
+#include "../Core/Physics/ConvexMesh.hpp"
 class Player
 {
 public:
 	void Update(float deltaTime);
-	void Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionZone, bool* hideHudButLetterRec);
+	void Init(PhysicsEngine* engine, Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionZone, bool* hideHudButLetterRec);
+
 
 	PlayerMovement movement;
 
@@ -35,6 +37,8 @@ public:
 
 	float footstepTimer = 0.0f;
 	float footstepDelay = 0.5f;
+
+	reactphysics3d::RigidBody* body;
 
 	glm::mat4 view = glm::lookAt(
 		glm::vec3(2.0f, 2.0f, 2.0f),  // Camera position
@@ -49,10 +53,19 @@ public:
 	float gravity = -13.8f;
 	bool isSprinting = false;
 
-	float collisionRadius = 0.5f;
+	bool toRightRotate = true;
 
-	float fogDensity = 0.06f;
+
+	float aasdasd = 0;
+	int rotationMultiplier = 0.75;
+	float rotationSpeed = 20.0f;
+
+	float collisionRadius = 2.f;
+
+	float fogDensity = 0.03f;
 	glm::vec3 fogColor;
+	glm::vec3 toneColor;
+	float toneStrength = 0.06f;
 
 	bool ableToLook = true;
 
@@ -70,6 +83,7 @@ private:
 	void Sprint(bool value);
 	void Crouch(bool value);
 	bool isGodMode;
+	bool CheckCollision(Model3D* model);
 	Model3D hand;
 	Model3D pistol;
 	void FireAnimation(Model3D* whatto, float toHow);

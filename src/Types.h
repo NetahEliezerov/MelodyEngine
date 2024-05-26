@@ -18,6 +18,7 @@ struct ObjectSettings
     glm::vec3 recRotation;
     bool isDynamicRec;
     unsigned int recShader;
+    bool isGround;
 };
 
 struct LetterSettings

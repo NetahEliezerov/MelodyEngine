@@ -50,7 +50,7 @@ public:
         ObjectSettings targetCubeSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98), true, character->shader };
         ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.004, 0.004, 0.004), glm::vec3(4, -1.5, -5.1), glm::vec3(0,327,270), true, character->shader };
         ObjectSettings tableSettings = { "Target Cube", "assets/meshes/Table/MechanicalTable.fbx", {"assets/meshes/Table/BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.007, 0.012, 0.009), glm::vec3(1.5, -4, -5.2), glm::vec3(0,0,0), true, character->shader };
-        
+
         LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(0, 0, 1), character->shader };
 
 

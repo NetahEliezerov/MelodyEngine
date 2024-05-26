@@ -76,7 +76,7 @@ public:
 
     virtual void Update(float deltaTime) override
     {
-        FlickLight(deltaTime);
+        // FlickLight(deltaTime);
 
         targetCube.rotation.z += 7.5 * deltaTime;
     };

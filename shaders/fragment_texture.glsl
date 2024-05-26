@@ -20,6 +20,11 @@ uniform float ambientStrength;
 uniform float fogDensity;
 uniform vec3 fogColor;
 
+
+// Color grading variables
+uniform vec3 gradingColor;
+uniform float gradingStrength;
+
 float ShadowCalculation(vec4 fragPosLightSpace)
 {
     // perform perspective divide
@@ -89,7 +94,10 @@ void main()
     fogFactor = clamp(fogFactor, 0.0, 1.0);
 
     vec3 result = mix(fogColor, lighting, fogFactor);
+    
+    
+    vec3 gradedColor = mix(result, gradingColor, gradingStrength);
+    
 
-
-    FragColor = vec4(result, 0.6);
+    FragColor = vec4(result, 0.6) * vec4(gradedColor, 0.6);
 }
