@@ -20,21 +20,6 @@ struct RayA {
     glm::vec3 origin;
     glm::vec3 direction;
 };
-
-static glm::vec3 ReactToGLM(Vector3 rec)
-{
-    return { rec.x, rec.y, rec.z };
-}
-static Vector3 GLMToReact(glm::vec3 rec)
-{
-    return { rec.x, rec.y, rec.z };
-}
-
-static Quaternion GLMToQuaternion(glm::vec3 rec)
-{
-    return Quaternion(rec.x, rec.y, rec.z, 1);
-}
-
 unsigned int lutTexture;
 
 RayA calculatePistolTarget(const glm::vec3& cameraPos, const glm::vec3& cameraFront, float distance)
@@ -305,7 +290,7 @@ bool Player::CheckCollision(Model3D* model)
     return distance <= sumRadii;
 }
 
-void Player::Init(PhysicsEngine* engine, Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionRec, bool* hideHudButLetterRec)
+void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionRec, bool* hideHudButLetterRec)
 {
     audioManager.LoadSound("assets/sounds/footstep.wav");
     hideHudButLetter = hideHudButLetterRec;
@@ -381,14 +366,14 @@ void Player::Sprint(bool value)
         isSprinting = true;
         movement.cameraSpeed = movement.sprintSpeed;
         rotationSpeed = 30;
-        rotationMultiplier = 1.75f;
+        rotationMultiplier = 1.25f;
     }
     else
     {
         isSprinting = false;
         movement.cameraSpeed = movement.walkSpeed;
         rotationSpeed = 20;
-        rotationMultiplier = 1.f;
+        rotationMultiplier = 0.5f;
     }
 }
 

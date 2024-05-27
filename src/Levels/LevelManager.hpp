@@ -23,7 +23,6 @@
 #include "Level1.hpp"
 #include "Level2.hpp"
 #include "BasicLevel.hpp"
-#include "../Core/Physics/Physics.hpp"
 
 struct LevelManager : LevelManagerState
 {

@@ -1,21 +1,6 @@
 #include <imgui.h>
 #include "../World/WorldLevel.h"
 
-
-static glm::vec3 ReactToGLM(Vector3 rec)
-{
-    return { rec.x, rec.y, rec.z };
-}
-static Vector3 GLMToReact(glm::vec3 rec)
-{
-    return { rec.x, rec.y, rec.z };
-}
-
-static Quaternion GLMToQuaternion(glm::vec3 rec)
-{
-    return Quaternion(rec.x, rec.y, rec.z, 1);
-}
-
 void RenderModelTree(const char* label, int idx, Model3D* modelLocation, bool* opened = nullptr, ImGuiTreeNodeFlags flags = 0)
 {
     if (ImGui::TreeNodeEx(label, flags))

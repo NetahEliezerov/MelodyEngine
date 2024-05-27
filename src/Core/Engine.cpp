@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "../Game/Game.h"
 
 GLFWwindow* g_OpenGLWindow = nullptr;
 
@@ -23,7 +24,12 @@ GLFWwindow* Engine::Run()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-    window = glfwCreateWindow(1920, 1080, "Engine", NULL, NULL);
+    const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    window = glfwCreateWindow(mode->width, mode->height, "Engine", glfwGetPrimaryMonitor(), NULL);
+
+    Game::state.WIDTH = mode->width;
+    Game::state.HEIGHT = mode->height;
+    int HEIGHT = mode->height;
 
     if (!window) {
         std::cout << " can't create window!!!" << std::endl;

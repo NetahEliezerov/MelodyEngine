@@ -18,14 +18,12 @@
 #include "Player/Player.h"
 #include "Core/LightPoint.h"
 
-#include "Core/Physics/Physics.hpp"
-
 #include <stb/stb_image.h>
 
 #include "Core/Shader.hpp"
 
 #include "Levels/LevelManager.hpp"
-
+#include "Game/Game.h"
 #include "Debugging/Hierarchy.hpp"
 
 #include <imgui_impl_opengl3.h>
@@ -65,7 +63,7 @@ void renderText(const std::string& text, float x, float y, float scale, glm::vec
 
     float xPos = x;
     if (isAligned) {
-        xPos = (1920.0f - textWidth) / 2.0f;
+        xPos = (Game::state.WIDTH - textWidth) / 2.0f;
     }
 
     for (const auto& c : text) {
@@ -203,10 +201,6 @@ int main(void) {
     Renderer _renderer;
     const char* glsl_version = "#version 130";
 
-    PhysicsEngine physicsEngine;
-
-    physicsEngine.Init();
-
     bool isInInteractionZone = false;
 
     Player character;
@@ -218,7 +212,7 @@ int main(void) {
 
     float timeScale = 1.f;
 
-    character.Init(&physicsEngine, _renderer, false, playerShader, &isInInteractionZone, &hideHudButLetter);
+    character.Init(_renderer, false, playerShader, &isInInteractionZone, &hideHudButLetter);
     levelManager.GameStart(_renderer, &character, &timeScale);
 
     float lastFrame = 0.0f;
@@ -245,7 +239,7 @@ int main(void) {
 
     bool show = true;
     textShader.use();
-    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(1920), 0.0f, static_cast<float>(1080));
+    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(Game::state.WIDTH), 0.0f, static_cast<float>(Game::state.HEIGHT));
     textShader.setMat4("projection", projection);
     textShader.setVec3("textColor", glm::vec3(1.0f, 1.0f, 1.0f));
     
@@ -261,7 +255,7 @@ int main(void) {
     unsigned int fboTexture;
     glGenTextures(1, &fboTexture);
     glBindTexture(GL_TEXTURE_2D, fboTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1920, 1080, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Game::state.WIDTH, Game::state.HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
@@ -270,7 +264,7 @@ int main(void) {
     unsigned int depthBuffer;
     glGenRenderbuffers(1, &depthBuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1920, 1080);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, Game::state.WIDTH, Game::state.HEIGHT);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -322,15 +316,15 @@ int main(void) {
 
     float colorGradingIntensity = 0.07f;
 
-    float bloomIntensity = 1.6f;
-    float gammaIntensity = .6f;
+    float bloomIntensity = 0.75f;
+    float gammaIntensity = 0.5f;
 
     float grainIntensity = 0.13f;
 
-    float grainSize = 0.008f;
+    float grainSize = 0.01f;
 
-    float specularStrength = 0.3;
-    float ambientStrength = 0.15;
+    float specularStrength = 0.2;
+    float ambientStrength = 0.6;
 
     static float fog[3] = { character.fogColor.x, character.fogColor.y, character.fogColor.z };
     static float tone[3] = { character.toneColor.x, character.toneColor.y, character.toneColor.z };
@@ -353,12 +347,12 @@ int main(void) {
     }
 
     Shader vignetteShader("shaders/fbo_vertex.glsl", "shaders/fbo_fragment.glsl");
-    vignetteShader.setVec2("screenSize", glm::vec2(1920.0f, 1080.0f));
+    vignetteShader.setVec2("screenSize", glm::vec2(Game::state.WIDTH, Game::state.HEIGHT));
 
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
 
-    const unsigned int SHADOW_WIDTH = 1920, SHADOW_HEIGHT = 1080;
+    const unsigned int SHADOW_WIDTH = Game::state.WIDTH, SHADOW_HEIGHT = Game::state.HEIGHT;
     unsigned int depthMap;
     glGenTextures(1, &depthMap);
     glBindTexture(GL_TEXTURE_2D, depthMap);
@@ -471,7 +465,6 @@ int main(void) {
             glfwPollEvents();
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        physicsEngine.Update(deltaTime);
         glm::mat4 lightProjection = glm::ortho(-10.f, 10.f, -10.0f, 10.0f, near_plane, far_plane);
         glm::mat4 lightView = glm::lookAt(character.light->transform, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
@@ -482,7 +475,7 @@ int main(void) {
         glUniformMatrix4fv(glGetUniformLocation(shadowShader.ID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
         levelManager.RenderShadows(shadowShader);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        glViewport(0, 0, 1920, 1080);
+        // glViewport(0, 0, 1920, 1080);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         character.Update(deltaTime);
         levelManager.GameUpdate(deltaTime);
@@ -528,11 +521,11 @@ int main(void) {
         {
             if (isInInteractionZone)
             {
-                renderText("Press E", 1920 / 2 - 100, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, false);
+                renderText("Press E", Game::state.WIDTH / 2 - 100, Game::state.HEIGHT / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, false);
             }
 
             renderText("Objective: " + Game::state.currentObjective, 50.0f, 50.0f, 0.75f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, false);
-            renderText(asdasad + " FPS", 50.0f, 1000, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, false);
+            renderText(asdasad + " FPS", 50.0f, Game::state.HEIGHT - 50, 0.75f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, false);
         }
 
         if (Game::state.currentLetter != nullptr)
@@ -540,9 +533,9 @@ int main(void) {
             overAllVignetteIntensity = 1500;
             overAllVignetteRadius = 1.3;
             overAllVignetteSmooth = -0.75;
-            renderText("[ESCAPE]", 1920 / 2 - 140, 1080 / 2 + 300, 1.f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, true);
-            renderText("From: " + Game::state.currentLetter->title, 1920 / 2 - 200, 1080 / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
-            renderText(Game::state.currentLetter->content, (1920 / 2), 1080 / 2 - 150, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
+            renderText("[ESCAPE]", 0                                 , Game::state.HEIGHT / 2 + 300,  1.f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, true);
+            renderText("From: " + Game::state.currentLetter->title, 0, Game::state.HEIGHT / 2,        1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
+            renderText(Game::state.currentLetter->content, 0         , Game::state.HEIGHT / 2 - 150, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
         }
         else
         {

@@ -2,7 +2,6 @@
 #include "PlayerMovement.h"
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/ext.hpp>
@@ -26,7 +25,7 @@ class Player
 {
 public:
 	void Update(float deltaTime);
-	void Init(PhysicsEngine* engine, Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionZone, bool* hideHudButLetterRec);
+	void Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionZone, bool* hideHudButLetterRec);
 
 
 	PlayerMovement movement;
@@ -37,8 +36,6 @@ public:
 
 	float footstepTimer = 0.0f;
 	float footstepDelay = 0.5f;
-
-	reactphysics3d::RigidBody* body;
 
 	glm::mat4 view = glm::lookAt(
 		glm::vec3(2.0f, 2.0f, 2.0f),  // Camera position
@@ -57,7 +54,7 @@ public:
 
 
 	float aasdasd = 0;
-	int rotationMultiplier = 0.75;
+	float rotationMultiplier = 0.5f;
 	float rotationSpeed = 20.0f;
 
 	float collisionRadius = 2.f;

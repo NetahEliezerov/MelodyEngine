@@ -1,6 +1,7 @@
 #pragma once
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <string>
-#include <reactphysics3d/reactphysics3d.h>
 #include "../Types.h"
 
 class GameState
@@ -10,10 +11,10 @@ public:
 	int currentSubMission = -1;
 	std::string currentObjective;
 
-	LetterSettings* currentLetter = nullptr;
+	int WIDTH;
+	int HEIGHT;
 
-	reactphysics3d::PhysicsWorld* world;
-	reactphysics3d::PhysicsCommon* common;
+	LetterSettings* currentLetter = nullptr;
 };
 
 class Game
