@@ -91,26 +91,5 @@ inline std::pair<int, float*> loadVerticesFromFileOld(std::string fileName, int&
 
     numIndices = totalNumIndices;
 
-
-    // Load bone information
-    //for (unsigned int i = 0; i < scene->mNumMeshes; i++)
-    //{
-    //    aiMesh* mesh = scene->mMeshes[i];
-    //    for (unsigned int j = 0; j < mesh->mNumBones; j++)
-    //    {
-    //        aiBone* bone = mesh->mBones[j];
-    //        std::string boneName(bone->mName.data);
-
-    //        if (boneMapping.find(boneName) == boneMapping.end())
-    //        {
-    //            BoneInfo boneInfo;
-    //            boneInfo.boneOffset = glm::transpose(glm::make_mat4(&bone->mOffsetMatrix.a1));
-    //            boneInfos.push_back(boneInfo);
-    //            boneMapping[boneName] = numBones;
-    //            numBones++;
-    //        }
-    //    }
-    //}
-
     return std::make_pair(totalNumVertices, vertices);
 }

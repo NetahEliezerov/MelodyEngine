@@ -39,6 +39,24 @@ public:
 
     float* timeScale;
 
+    void InitDefault(Renderer rendererRec, Player* playerPointer, float* timeScaleRec)
+    {
+        renderer = rendererRec;
+        character = playerPointer;
+        timeScale = timeScaleRec;
+        GameStart(rendererRec, playerPointer, timeScaleRec);
+    }
+
+    void UpdateDefault(float deltaTime)
+    {
+        currentLevel->Update(deltaTime);
+        currentLevel->RenderUpdate(deltaTime);
+        GameUpdate(deltaTime);
+    }
+
+    virtual void GameUpdate(float deltaTime) = 0;
+
+    virtual void GameStart(Renderer rendererRec, Player* playerPointer, float* timeScaleRec) = 0;
 
     void RenderShadows(Shader& shadowShader)
     {

@@ -1,10 +1,16 @@
 #include <imgui.h>
 #include "../World/WorldLevel.h"
 
+static bool isAddingNewModel = false;
+static char* newModelLabel;
+static char* newModelTexture;
+static char* newModelPath;
+
 void RenderModelTree(const char* label, int idx, Model3D* modelLocation, bool* opened = nullptr, ImGuiTreeNodeFlags flags = 0)
 {
     if (ImGui::TreeNodeEx(label, flags))
     {
+        modelLocation->isSelected = true;
         int index = 1;
         ImGui::Text("Offset");
         ImGui::DragFloat(("O X##" + std::to_string(idx)).c_str(), &modelLocation->colliderOffsetX);
@@ -24,7 +30,8 @@ void RenderModelTree(const char* label, int idx, Model3D* modelLocation, bool* o
         ImGui::InputFloat(("S Y##" + std::to_string(idx)).c_str(), &modelLocation->scale.y);
         ImGui::InputFloat(("S Z##" + std::to_string(idx)).c_str(), &modelLocation->scale.z);
         ImGui::TreePop();
-    }
+    } else
+        modelLocation->isSelected = false;
 }
 
 void RenderLightTree(const char* label, int idx, LightPoint* modelLocation, bool* opened = nullptr, ImGuiTreeNodeFlags flags = 0)
@@ -33,9 +40,9 @@ void RenderLightTree(const char* label, int idx, LightPoint* modelLocation, bool
     {
 
         ImGui::Text("Transform");
-        ImGui::DragFloat(("X Transform" + idx), &modelLocation->transform.x);
-        ImGui::DragFloat(("Y Transform" + idx), &modelLocation->transform.y);
-        ImGui::DragFloat(("Z Transform" + idx), &modelLocation->transform.z);
+        ImGui::DragFloat(("X ##" + std::to_string(idx)).c_str(), &modelLocation->transform.x);
+        ImGui::DragFloat(("y ##" + std::to_string(idx)).c_str(), &modelLocation->transform.y);
+        ImGui::DragFloat(("z ##" + std::to_string(idx)).c_str(), &modelLocation->transform.z);
 
         ImGui::TreePop();
     }
@@ -79,6 +86,29 @@ void ShowTreeExample(Player* player)
                 catch (const std::bad_any_cast& e)
                 {
                     std::cout << e.what() << '\n';
+                }
+            }
+        }
+
+        if (player->level->sceneHierarchy.size() == i)
+        {
+            //if (ImGui::Button("Add New Model"))
+            //{
+            //    isAddingNewModel = !isAddingNewModel;
+            //}
+            if (isAddingNewModel)
+            {
+                ImGui::InputText("Model Label", newModelLabel, sizeof(newModelLabel));
+                ImGui::InputText("Model Path", newModelPath, sizeof(newModelPath));
+                ImGui::InputText("Model Texture", newModelTexture, sizeof(newModelTexture));
+                if (ImGui::Button("Add"))
+                {
+                    isAddingNewModel = !isAddingNewModel;
+                    
+                    ObjectSettings handSettings = { newModelLabel, newModelPath, {newModelTexture}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(0, 0,0), true, player->shader, false };
+                    Model3D hands;
+                    hands.Init(handSettings);
+                    player->level->sceneHierarchy.push_back(hands);
                 }
             }
         }

@@ -20,6 +20,7 @@ uniform float ambientStrength;
 uniform float fogDensity;
 uniform vec3 fogColor;
 
+uniform bool whiteTint;
 
 // Color grading variables
 uniform vec3 gradingColor;
@@ -81,7 +82,7 @@ void main()
     // Specular
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 4);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2);
     vec3 specular = specularStrength * spec * lightColor;
 
     // Calculate shadow
@@ -98,6 +99,13 @@ void main()
     
     vec3 gradedColor = mix(result, gradingColor, gradingStrength);
     
+    float multiplierN = 1.f;
 
-    FragColor = vec4(result, 0.6) * vec4(gradedColor, 0.6);
+    vec4 final = vec4(result, 0.6) * vec4(gradedColor, 0.6) * multiplierN;
+
+    if (whiteTint) {
+        final = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    FragColor = final;
 }

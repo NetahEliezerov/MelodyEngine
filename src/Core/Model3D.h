@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include "LightPoint.h"
 #include "../Types.h"
+#include "Animations/AnimatedMesh.hpp"
 #include "LoadFromVertices.h"
 
 class Model3D
@@ -40,6 +41,8 @@ public:
 	float collisionRadius;
 	float colliderOffsetX = -1.f;
 
+	bool isSelected = false;
+
 	unsigned int VBO, VAO;
 	glm::mat4 model = glm::mat4(1.0f);
 	unsigned int shader;
@@ -48,6 +51,7 @@ public:
 	int numVertices;
 	bool isAttached = false;
 	bool isLight;
+	bool hasAnimation = false;
 
 	int numIndices;
 	unsigned int* indices;

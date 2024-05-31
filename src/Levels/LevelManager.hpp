@@ -30,20 +30,14 @@ struct LevelManager : LevelManagerState
     Level2 _level2;
     BasicLevel _basicLevel;
 
-    void GameStart(Renderer rendererRec, Player* playerPointer, float* timeScaleRec)
+    virtual void GameStart(Renderer rendererRec, Player* playerPointer, float* timeScaleRec) override
     {
-        renderer = rendererRec;
-        character = playerPointer;
-        timeScale = timeScaleRec;
-
         _level1.Init(renderer, [this]() { OnDoorEnter(); }, playerPointer, timeScale);
         currentLevel = &_level1; // Set the current level to Level1
     }
 
-    void GameUpdate(float deltaTime)
+    virtual void GameUpdate(float deltaTime) override
     {
-        currentLevel->Update(deltaTime);
-        currentLevel->RenderUpdate(deltaTime);
     }
 
 

@@ -25,11 +25,10 @@ GLFWwindow* Engine::Run()
 #endif
 
     const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-    window = glfwCreateWindow(mode->width, mode->height, "Engine", glfwGetPrimaryMonitor(), NULL);
+    window = glfwCreateWindow(mode->width, mode->height, "Engine", NULL , NULL);
 
     Game::state.WIDTH = mode->width;
     Game::state.HEIGHT = mode->height;
-    int HEIGHT = mode->height;
 
     if (!window) {
         std::cout << " can't create window!!!" << std::endl;

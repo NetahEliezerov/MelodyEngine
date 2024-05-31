@@ -213,7 +213,7 @@ int main(void) {
     float timeScale = 1.f;
 
     character.Init(_renderer, false, playerShader, &isInInteractionZone, &hideHudButLetter);
-    levelManager.GameStart(_renderer, &character, &timeScale);
+    levelManager.InitDefault(_renderer, &character, &timeScale);
 
     float lastFrame = 0.0f;
     float deltaTime = 0.0f;
@@ -317,13 +317,13 @@ int main(void) {
     float colorGradingIntensity = 0.07f;
 
     float bloomIntensity = 0.75f;
-    float gammaIntensity = 0.5f;
+    float gammaIntensity = 0.7f;
 
     float grainIntensity = 0.13f;
 
     float grainSize = 0.01f;
 
-    float specularStrength = 0.2;
+    float specularStrength = 0.7;
     float ambientStrength = 0.6;
 
     static float fog[3] = { character.fogColor.x, character.fogColor.y, character.fogColor.z };
@@ -455,6 +455,8 @@ int main(void) {
 
             ShowTreeExample(&character);
 
+
+
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -478,7 +480,7 @@ int main(void) {
         // glViewport(0, 0, 1920, 1080);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         character.Update(deltaTime);
-        levelManager.GameUpdate(deltaTime);
+        levelManager.UpdateDefault(deltaTime);
         glUseProgram(character.shader);
         glUniformMatrix4fv(glGetUniformLocation(character.shader, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
         glUniform1f(glGetUniformLocation(character.shader, "ambientStrength"), ambientStrength);

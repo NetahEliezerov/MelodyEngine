@@ -88,6 +88,7 @@ void Model3D::Init(ObjectSettings settings)
 
     boneTransformsLoc = glGetUniformLocation(shader, "boneTransforms");
     glUniform1i(glGetUniformLocation(shader, "numBones"), numBones);
+
 }
 
 
@@ -117,6 +118,10 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint light, float deltaTime)
     {
         glUseProgram(shader);
 
+        if(isSelected)
+            glUniform1i(glGetUniformLocation(shader, "whiteTint"), true);
+        else
+            glUniform1i(glGetUniformLocation(shader, "whiteTint"), false);
         float red = color.r;
         float green = color.g;
         float blue = color.b;
@@ -162,5 +167,7 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint light, float deltaTime)
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
+
+        glUniform1i(glGetUniformLocation(shader, "whiteTint"), false);
     }
 }
