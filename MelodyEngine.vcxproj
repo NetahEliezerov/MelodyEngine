@@ -168,7 +168,6 @@
     <ClInclude Include="src\Debugging\Hierarchy.hpp" />
     <ClInclude Include="src\Debugging\Log.hpp" />
     <ClInclude Include="src\Game\Game.h" />
-    <ClInclude Include="src\Levels\BasicLevel.hpp" />
     <ClInclude Include="src\Levels\Components\Letter.hpp" />
     <ClInclude Include="src\Levels\Level2.hpp" />
     <ClInclude Include="src\Levels\LevelManager.hpp" />
@@ -176,6 +175,7 @@
     <ClInclude Include="src\Core\LightPoint.h" />
     <ClInclude Include="src\Core\LoadFromVertices.h" />
     <ClInclude Include="src\Core\Model3D.h" />
+    <ClInclude Include="src\Levels\OpenWorld.hpp" />
     <ClInclude Include="src\Parser\Parser.hpp" />
     <ClInclude Include="src\Player\PlayerMovement.h" />
     <ClInclude Include="src\Player\Player.h" />

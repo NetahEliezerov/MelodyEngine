@@ -11,8 +11,8 @@ public:
 	double mouseY;
 	double prevMouseX;
 	double prevMouseY;
-	double mouseDeltaX;
-	double mouseDeltaY;
+	float mouseDeltaX;
+	float mouseDeltaY;
 
 	InputState();
 	~InputState();

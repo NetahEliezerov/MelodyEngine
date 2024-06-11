@@ -11,8 +11,8 @@ void Input::cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     int width, height;
     glfwGetWindowSize(window, &width, &height);
 
-    Input::inputState.mouseDeltaX = xpos - Input::inputState.prevMouseX;
-    Input::inputState.mouseDeltaY = ypos - Input::inputState.prevMouseY;
+    Input::inputState.mouseDeltaX = (xpos - Input::inputState.prevMouseX);
+    Input::inputState.mouseDeltaY = (ypos - Input::inputState.prevMouseY);
     Input::inputState.prevMouseX = xpos;
     Input::inputState.prevMouseY = ypos;
 

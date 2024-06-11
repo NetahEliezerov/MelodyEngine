@@ -92,10 +92,6 @@ void ShowTreeExample(Player* player)
 
         if (player->level->sceneHierarchy.size() == i)
         {
-            //if (ImGui::Button("Add New Model"))
-            //{
-            //    isAddingNewModel = !isAddingNewModel;
-            //}
             if (isAddingNewModel)
             {
                 ImGui::InputText("Model Label", newModelLabel, sizeof(newModelLabel));
@@ -105,10 +101,10 @@ void ShowTreeExample(Player* player)
                 {
                     isAddingNewModel = !isAddingNewModel;
                     
-                    ObjectSettings handSettings = { newModelLabel, newModelPath, {newModelTexture}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(0, 0,0), true, player->shader, false };
+                    ObjectSettings handSettings = { newModelLabel, newModelPath, {newModelTexture}, glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), glm::vec3(0, 0,0) };
                     Model3D hands;
-                    hands.Init(handSettings);
-                    player->level->sceneHierarchy.push_back(hands);
+                    //hands.Init(handSettings);
+                    //player->level->sceneHierarchy.push_back(hands);
                 }
             }
         }

@@ -11,14 +11,9 @@ struct ObjectSettings
     std::string label;
     std::string fileName;
     std::vector<std::string> texturePaths;
-    bool recIsLight;
-    glm::vec4 recColor;
     glm::vec3 recScale;
     glm::vec3 recTransform;
     glm::vec3 recRotation;
-    bool isDynamicRec;
-    unsigned int recShader;
-    bool isGround;
 };
 
 struct LetterSettings
@@ -53,5 +48,4 @@ struct LightSettings
     glm::vec4 recColor;
     glm::vec3 recScale;
     glm::vec3 recTransform;
-    unsigned int recShader;
 };

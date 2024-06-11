@@ -158,9 +158,6 @@
     <ClInclude Include="src\World\LevelManagerState.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Levels\BasicLevel.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\World\PostProcessing.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -171,6 +168,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Debugging\Log.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Levels\OpenWorld.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

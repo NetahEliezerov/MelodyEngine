@@ -5,12 +5,18 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <stb/stb_image.h>
 #include "LoadFromVertices.h"
+#include "../Game/Game.h"
+#include "../Player/Player.h"
+#include "../World/WorldLevel.h"
 
 void LightPoint::Init(LightSettings settings)
 {
     transform = settings.recTransform;
-    shader = settings.recShader;
     color = settings.recColor;
+    if (Game::state.character->level != nullptr)
+    {
+        Game::state.character->level->sceneHierarchy.push_back(this);
+    }
 
     // std::pair<int, float*> things = loadVerticesFromFileOld(settings.fileName, numIndices, indices);
 

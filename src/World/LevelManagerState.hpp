@@ -19,7 +19,7 @@
 #include "../Core/Model3D.h"
 #include "../Player/Player.h"
 #include "../Core/LightPoint.h"
-
+#include "WorldLevel.h"
 #include <any>
 
 #include <variant>
@@ -34,12 +34,12 @@ class LevelManagerState
 {
 public:
     WorldLevel* currentLevel;
-    Renderer renderer;
+    Renderer* renderer;
     Player* character;
 
     float* timeScale;
 
-    void InitDefault(Renderer rendererRec, Player* playerPointer, float* timeScaleRec)
+    void InitDefault(Renderer* rendererRec, Player* playerPointer, float* timeScaleRec)
     {
         renderer = rendererRec;
         character = playerPointer;
@@ -49,14 +49,20 @@ public:
 
     void UpdateDefault(float deltaTime)
     {
-        currentLevel->Update(deltaTime);
         currentLevel->RenderUpdate(deltaTime);
+        currentLevel->Update(deltaTime);
         GameUpdate(deltaTime);
+    }
+
+    void SetLevel(WorldLevel* level, std::function<void()> outHandle)
+    {
+        currentLevel = level;
+        level->Init(renderer, outHandle, character, timeScale);
     }
 
     virtual void GameUpdate(float deltaTime) = 0;
 
-    virtual void GameStart(Renderer rendererRec, Player* playerPointer, float* timeScaleRec) = 0;
+    virtual void GameStart(Renderer* rendererRec, Player* playerPointer, float* timeScaleRec) = 0;
 
     void RenderShadows(Shader& shadowShader)
     {

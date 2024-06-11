@@ -167,7 +167,6 @@ unsigned int quadVAO, quadVBO;
 
 void setupQuad() {
     float quadVertices[] = {
-        // positions   // texture Coords
         -1.0f,  1.0f,  0.0f, 1.0f,
         -1.0f, -1.0f,  0.0f, 0.0f,
          1.0f, -1.0f,  1.0f, 0.0f,
@@ -205,6 +204,7 @@ int main(void) {
 
     Player character;
     LevelManager levelManager;
+    Game::state.character = &character;
 
     unsigned int* playerShader = nullptr;
 
@@ -213,7 +213,7 @@ int main(void) {
     float timeScale = 1.f;
 
     character.Init(_renderer, false, playerShader, &isInInteractionZone, &hideHudButLetter);
-    levelManager.InitDefault(_renderer, &character, &timeScale);
+    levelManager.InitDefault(&_renderer, &character, &timeScale);
 
     float lastFrame = 0.0f;
     float deltaTime = 0.0f;
@@ -222,8 +222,6 @@ int main(void) {
 
     setupQuad();
 
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
     glfwSwapInterval(1); // Enable vsync
 
     GLFWwindow* imgui_window = nullptr;
@@ -305,7 +303,7 @@ int main(void) {
     static int Selecteditem = 0;
 
 
-    float vignetteIntensity = 1.2f;
+    float vignetteIntensity = 0.5f;
     float vignetteRadius = 0.3f;
     float vignetteSmooth = -0.75f;
 
@@ -314,17 +312,17 @@ int main(void) {
     float overAllVignetteRadius = vignetteRadius;
     float overAllVignetteSmooth = vignetteSmooth;
 
-    float colorGradingIntensity = 0.07f;
+    float colorGradingIntensity = 0.1f;
 
-    float bloomIntensity = 0.75f;
+    float bloomIntensity = 1.3f;
     float gammaIntensity = 0.7f;
 
     float grainIntensity = 0.13f;
 
     float grainSize = 0.01f;
 
-    float specularStrength = 0.7;
-    float ambientStrength = 0.6;
+    float specularStrength = 0.9;
+    float ambientStrength = 0.2;
 
     static float fog[3] = { character.fogColor.x, character.fogColor.y, character.fogColor.z };
     static float tone[3] = { character.toneColor.x, character.toneColor.y, character.toneColor.z };
@@ -369,10 +367,15 @@ int main(void) {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
     float near_plane = 1.0f, far_plane = 10.0f;
 
     glm::vec3 something1 = glm::vec3(0);
     glm::vec3 something2 = glm::vec3(0);
+    int postProcessingEnable = 1;
+    int specularEnable = 1;
+    int fogAndToneEnable = 1;
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -384,7 +387,6 @@ int main(void) {
 
 
         glfwPollEvents();
-
 
         if (show)
         {
@@ -401,6 +403,8 @@ int main(void) {
             if (show_demo_window)
             {
                 ImGui::Begin("Global Settings", &show_another_window);
+
+                ImGui::DragFloat("Mouse Sensitivity", &character.movement.sensitivity);
 
                 ImGui::Text("Lighting");
 
@@ -455,6 +459,18 @@ int main(void) {
 
             ShowTreeExample(&character);
 
+            ImGui::Begin("Graphics", &show_another_window);
+            ImGui::Text("Post Processing");
+            ImGui::RadioButton("Off ##0", &postProcessingEnable, 0);
+            ImGui::RadioButton("On ##1", &postProcessingEnable, 1);
+            ImGui::Text("Specular Lighting");
+            ImGui::RadioButton("Off ##2", &specularEnable, 0);
+            ImGui::RadioButton("On ##3", &specularEnable, 1);
+            ImGui::Text("Fog & Tone");
+            ImGui::RadioButton("Off ##4", &fogAndToneEnable, 0);
+            ImGui::RadioButton("On ##5", &fogAndToneEnable, 1);
+            ImGui::End();
+
 
 
             ImGui::Render();
@@ -467,6 +483,7 @@ int main(void) {
             glfwPollEvents();
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // glClearColor(1, 1, 0.5, 1);
         glm::mat4 lightProjection = glm::ortho(-10.f, 10.f, -10.0f, 10.0f, near_plane, far_plane);
         glm::mat4 lightView = glm::lookAt(character.light->transform, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
         glm::mat4 lightSpaceMatrix = lightProjection * lightView;
@@ -477,43 +494,73 @@ int main(void) {
         glUniformMatrix4fv(glGetUniformLocation(shadowShader.ID, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
         levelManager.RenderShadows(shadowShader);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        // glViewport(0, 0, 1920, 1080);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        character.Update(deltaTime);
+        character.Update(deltaTime, &fogAndToneEnable);
         levelManager.UpdateDefault(deltaTime);
         glUseProgram(character.shader);
         glUniformMatrix4fv(glGetUniformLocation(character.shader, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
-        glUniform1f(glGetUniformLocation(character.shader, "ambientStrength"), ambientStrength);
-        glUniform1f(glGetUniformLocation(character.shader, "specularStrength"), specularStrength);
+
+        if (specularEnable)
+        {
+            glUniform1f(glGetUniformLocation(character.shader, "ambientStrength"), ambientStrength);
+            glUniform1f(glGetUniformLocation(character.shader, "specularStrength"), specularStrength);
+        }
+        else {
+            glUniform1f(glGetUniformLocation(character.shader, "ambientStrength"), 0.750f);
+            glUniform1f(glGetUniformLocation(character.shader, "specularStrength"), 0);
+        }
+
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         glUniform1i(glGetUniformLocation(character.shader, "shadowMap"), 2);
-        glDisable(GL_DEPTH_TEST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
+        glClearColor(0, 0, 0.239215686, 1);
         vignetteShader.use();
-        vignetteShader.setInt("screenTexture", 0);
-        vignetteShader.setInt("colorGradingLUT", 1);
-        vignetteShader.setFloat("vignetteIntensity", overAllVignetteIntensity);
-        vignetteShader.setFloat("colorGradingIntensity", colorGradingIntensity);
-        vignetteShader.setFloat("vignetteRadius", overAllVignetteRadius);
-        vignetteShader.setFloat("vignetteSmooth", overAllVignetteSmooth);
-        vignetteShader.setFloat("exposure", bloomIntensity);
-        vignetteShader.setFloat("gamma", gammaIntensity);
-        vignetteShader.setFloat("time", glfwGetTime());
-        vignetteShader.setFloat("grainIntensity", grainIntensity);
-        vignetteShader.setFloat("chromaticAberrationOffset", grainSize);
 
 
+        // glClearColor(1, 1, 0.5, 1);
 
+        if (postProcessingEnable == 0)
+        {
+            vignetteShader.setInt("screenTexture", 0);
+            vignetteShader.setInt("colorGradingLUT", 1);
+            vignetteShader.setFloat("vignetteIntensity", 0);
+            vignetteShader.setFloat("colorGradingIntensity", 0);
+            vignetteShader.setFloat("vignetteRadius", 0);
+            vignetteShader.setFloat("vignetteSmooth", 0);
+            vignetteShader.setFloat("exposure", 1);
+            vignetteShader.setFloat("gamma", 1);
+            vignetteShader.setFloat("time", glfwGetTime());
+            vignetteShader.setFloat("grainIntensity", 0);
+            vignetteShader.setFloat("chromaticAberrationOffset", 0);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, fboTexture);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, fboTexture);
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, colorGradingLUTTexture);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, colorGradingLUTTexture);
+        }
+        else {
+            vignetteShader.setInt("screenTexture", 0);
+            vignetteShader.setInt("colorGradingLUT", 1);
+            vignetteShader.setFloat("vignetteIntensity", overAllVignetteIntensity);
+            vignetteShader.setFloat("colorGradingIntensity", colorGradingIntensity);
+            vignetteShader.setFloat("vignetteRadius", overAllVignetteRadius);
+            vignetteShader.setFloat("vignetteSmooth", overAllVignetteSmooth);
+            vignetteShader.setFloat("exposure", bloomIntensity);
+            vignetteShader.setFloat("gamma", gammaIntensity);
+            vignetteShader.setFloat("time", glfwGetTime());
+            vignetteShader.setFloat("grainIntensity", grainIntensity);
+            vignetteShader.setFloat("chromaticAberrationOffset", grainSize);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, fboTexture);
+
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, colorGradingLUTTexture);
+        }
 
         renderQuad();
         glEnable(GL_BLEND);

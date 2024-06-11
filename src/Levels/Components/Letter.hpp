@@ -16,26 +16,27 @@
 class Letter {
 public:
 
-	void Init(LetterSettings letterSettingsRec, Renderer renderer, Player* playerPointer, LightPoint *lightRec, float* timeScaleRec, std::function<void()> func)
+	void Init(LetterSettings letterSettingsRec, WorldLevel* level, float* timeScaleRec, std::function<void()> func)
 	{
-		light = lightRec;
-		character = playerPointer;
+		character = Game::state.character;
+		light =     Game::state.character->light;
 		timeScale = timeScaleRec;
+		std::cout << "LETTER INITIATED!" << std::endl;
 
 		letterSettings = letterSettingsRec;
 
 		letterOpenHandle = func;
 
-		interactSettings = { "interact", "assets/meshes/Letter/Letter.FBX", {"assets/meshes/Letter/Letter.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.01, 0.01, 0.01), glm::vec3(2, -1.45, -5), glm::vec3(90, 0, -27), false, character->shader, false };
+		interactSettings = { "interact", "assets/meshes/Letter/Letter.FBX", {"assets/meshes/Letter/Letter.png"}, glm::vec3(0.01, 0.01, 0.01), glm::vec3(2, -1.45, -5), glm::vec3(90, 0, -27) };
 		
-		interactable1.Init(interactSettings, [this]() { OnLetterOpen(); }, playerPointer, 325.0f, 200);
+		interactable1.Init(interactSettings, level, [this]() { OnLetterOpen(); }, character, 325.0f, 200);
 
-
+		level->sceneHierarchy.push_back(this);
 	}
 
 	void Update(float deltaTime)
 	{
-		interactable1.Update(character->movement.position, *light, deltaTime);
+		interactable1.Update(character->movement.position, light, deltaTime);
 
 		if (isOpen)
 		{

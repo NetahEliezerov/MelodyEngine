@@ -1,24 +1,26 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include "Model3D.h"
 #include <GLAD/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <stb/stb_image.h>
 #include "LoadFromVertices.h"
+#include "../Game/Game.h"
+#include "../Player/Player.h"
+#include "../World/WorldLevel.h"
 
 #include <chrono>
 #include <thread>
 
-void Model3D::Init(ObjectSettings settings)
+void Model3D::Init(ObjectSettings settings, WorldLevel* recLevel)
 {
     label = settings.label;
     transform = settings.recTransform;
     scale = settings.recScale;
     rotation = settings.recRotation;
-    shader = settings.recShader;
-    isDynamic = settings.isDynamicRec;
-    color = settings.recColor;
-    isLight = settings.recIsLight;
+    shader = Game::state.character->shader;
 
     std::pair<int, float*> verticesData = loadVerticesFromFileOld(settings.fileName, numIndices, indices, boneInfos, boneMapping, numBones);
     numVertices = verticesData.first;
@@ -74,7 +76,7 @@ void Model3D::Init(ObjectSettings settings)
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(settings.recRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
     rotationMatrix = glm::rotate(rotationMatrix, glm::radians(settings.recRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 
-    model = glm::translate(model, transform) * rotationMatrix * scaleMatrix;
+    model = glm::translate(glm::mat4(1.0f), transform) * rotationMatrix * scaleMatrix;
 
     collisionRadius = std::max(scale.x, std::max(scale.y, scale.z)) * 1.f;
 
@@ -88,7 +90,10 @@ void Model3D::Init(ObjectSettings settings)
 
     boneTransformsLoc = glGetUniformLocation(shader, "boneTransforms");
     glUniform1i(glGetUniformLocation(shader, "numBones"), numBones);
-
+    if (recLevel == nullptr)
+        std::cout << "NULL: " << settings.label;
+    if (recLevel != nullptr)
+        recLevel->sceneHierarchy.push_back(this);
 }
 
 
@@ -111,14 +116,13 @@ void Model3D::SetPosition(const glm::vec3& cameraPos, const glm::vec3& cameraFro
 
     model = glm::translate(glm::mat4(1.0f), cubePos) * rotationMatrix;
 }
-
-void Model3D::Update(glm::vec3 cameraPos, LightPoint light, float deltaTime)
+void Model3D::Update(glm::vec3 cameraPos, LightPoint* light, float deltaTime)
 {
     if (visibility)
     {
         glUseProgram(shader);
 
-        if(isSelected)
+        if (isSelected)
             glUniform1i(glGetUniformLocation(shader, "whiteTint"), true);
         else
             glUniform1i(glGetUniformLocation(shader, "whiteTint"), false);
@@ -142,8 +146,8 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint light, float deltaTime)
 
         glUniform3f(colorLoc, red, green, blue);
         glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform3fv(lightPosLoc, 1, glm::value_ptr(light.transform));
-        glUniform3fv(lightColorLoc, 1, glm::value_ptr(light.color));
+        glUniform3fv(lightPosLoc, 1, glm::value_ptr(light->transform));
+        glUniform3fv(lightColorLoc, 1, glm::value_ptr(light->color));
         glUniform3fv(viewPosLoc, 1, glm::value_ptr(cameraPos));
 
 

@@ -22,18 +22,17 @@
 
 #include "Level1.hpp"
 #include "Level2.hpp"
-#include "BasicLevel.hpp"
+#include "OpenWorld.hpp"
 
 struct LevelManager : LevelManagerState
 {
     Level1 _level1;
     Level2 _level2;
-    BasicLevel _basicLevel;
+    OpenWorld _openWorld;
 
-    virtual void GameStart(Renderer rendererRec, Player* playerPointer, float* timeScaleRec) override
+    virtual void GameStart(Renderer* rendererRec, Player* playerPointer, float* timeScaleRec) override
     {
-        _level1.Init(renderer, [this]() { OnDoorEnter(); }, playerPointer, timeScale);
-        currentLevel = &_level1; // Set the current level to Level1
+        SetLevel(&_level1, [this]() { OnDoorEnter(); });
     }
 
     virtual void GameUpdate(float deltaTime) override
@@ -43,7 +42,6 @@ struct LevelManager : LevelManagerState
 
     void OnDoorEnter()
     {
-        currentLevel = &_level2;
-        _level2.Init(renderer, [this]() {  }, character, timeScale);
+        SetLevel(&_level1, [this]() {});
     }
 };

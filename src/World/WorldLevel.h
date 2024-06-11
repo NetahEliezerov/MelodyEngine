@@ -13,18 +13,15 @@
 #include <string>
 #include <vector>
 #include <chrono>
+#include <any>
+#include <variant>
 
 #include "../Core/Renderer.h"
 #include "../Core/Input.h"
 #include "../Core/Model3D.h"
 #include "../Core/LightPoint.h"
-
-#include <any>
-
-#include <variant>
-
 #include "../Core/Shader.hpp"
-
+#include "../Game/Game.h"
 #include "../Types.h"
 
 
@@ -34,14 +31,22 @@ class Player;
 class WorldLevel
 {
 public:
-	virtual void Init(Renderer renderer, std::function<void()> func, Player* playerPointer, float* timeScaleRec) = 0;
+	virtual void LevelStart() = 0;
 	virtual void Update(float deltaTime) = 0;
 
+
+	void Init(Renderer* rendererRec, std::function<void()> funcRec, Player* playerPointer, float* timeScaleRec);
 	// virtual void Fire(Model3D* hitObject) = 0;
 
 	void RenderUpdate(float deltaTime);
 
 	Player* character;
+	Renderer* renderer;
+	float* timeScale;
+	std::function<void()> func;
+	LightPoint light;
+	std::string d;
+	
 
 	std::vector<std::any> sceneHierarchy;
 

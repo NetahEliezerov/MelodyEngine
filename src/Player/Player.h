@@ -19,12 +19,13 @@
 #include "../Core/Model3D.h"
 #include "../Core/LightPoint.h"
 #include "../Types.h"
-#include "../World/WorldLevel.h"
 #include "../Core/Physics/ConvexMesh.hpp"
+
+class WorldLevel;
 class Player
 {
 public:
-	void Update(float deltaTime);
+	void Update(float deltaTime, int* isGradingLow);
 	void Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPointer, bool* isInInteractionZone, bool* hideHudButLetterRec);
 
 

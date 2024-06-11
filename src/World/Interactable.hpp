@@ -17,6 +17,8 @@ public:
     bool* isInInteractionZone;
     bool interactable = true;
 
+    Player* character;
+
     bool firstTimeAfterNot = true;
 
     float yOffset;
@@ -37,7 +39,7 @@ public:
         *isInInteractionZone = false;
     }
 
-    void Init(ObjectSettings objectSettings, std::function<void()> func, Player* characterRec, float multiplierRadiusRec, float yOffsetRec)
+    void Init(ObjectSettings objectSettings, WorldLevel* level, std::function<void()> func, Player* characterRec, float multiplierRadiusRec, float yOffsetRec)
     {
         position = objectSettings.recTransform;
         size = objectSettings.recScale;
@@ -46,31 +48,26 @@ public:
         radiusMultiplier = multiplierRadiusRec;
         yOffset = yOffsetRec;
         isInInteractionZone = characterRec->isInInteractionZone;
+        character = characterRec;
+        std::cout << "INTERACTABLE INITIATED!" << std::endl;
 
         ObjectSettings cubeSettings = {
             objectSettings.label,
             objectSettings.fileName,
             objectSettings.texturePaths,
-            objectSettings.recIsLight,
-            objectSettings.recColor,
             objectSettings.recScale * 0.35f,
             objectSettings.recTransform,
             objectSettings.recRotation,
-            objectSettings.isDynamicRec,
-            characterRec->shader
         };
-
-        model.Init(cubeSettings);
-
-        std::cout << "Interactable: " << this << std::endl;
+        model.Init(cubeSettings, level);
     }
 
-    void Update(const glm::vec3& playerPosition, LightPoint light, float deltaTime) {
+    void Update(const glm::vec3& playerPosition, LightPoint* light, float deltaTime) {
         if (interactable)
         {
             if (IsPlayerInside(playerPosition)) {
-                // HERE
                 *isInInteractionZone = true;
+                std::cout << "BULBUL!" << std::endl;
                 if (Input::inputState.keys[GLFW_KEY_E])
                 {
 
@@ -99,17 +96,13 @@ public:
         model.transform = position;
         model.scale = size * 0.35f;
         model.rotation = rotation;
-        model.Update(playerPosition, light, deltaTime);
+        // model.Update(playerPosition, light, deltaTime);
     }
 
     bool IsPlayerInside(const glm::vec3& playerPosition) {
-        //float halfWidth = size.x / 2.0f;
-        //float halfHeight = size.y / 2.0f;
-        //float halfDepth = size.z / 2.0f;
-        float halfWidth = size.x / 2.0f * radiusMultiplier;
-        float halfHeight = (size.y / 2.0f * radiusMultiplier) * yOffset;
-        float halfDepth = size.z / 2.0f * radiusMultiplier;
-
+        float halfWidth = (size.x / 2.0f) * radiusMultiplier;
+        float halfHeight = (size.y / 2.0f) * radiusMultiplier * yOffset;
+        float halfDepth = (size.z / 2.0f) * radiusMultiplier;
         return (playerPosition.x >= position.x - halfWidth && playerPosition.x <= position.x + halfWidth &&
             playerPosition.y >= position.y - halfHeight && playerPosition.y <= position.y + halfHeight &&
             playerPosition.z >= position.z - halfDepth && playerPosition.z <= position.z + halfDepth);

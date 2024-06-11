@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+#include "../World/WorldLevel.h"
 #include <stb/stb_image.h>
 
 #include "../Core/AudioManager.hpp"
@@ -62,17 +62,25 @@ static std::string readShaderSource(const std::string& filename) {
     return buffer.str();
 }
 
-void Player::Update(float deltaTime)
+void Player::Update(float deltaTime, int* isGradingLow)
 {
     glUseProgram(shader);
     bool isMoving = false;
 
     // Set uniform variables
     glUniform1f(glGetUniformLocation(shader, "fogDensity"), fogDensity);
+    if (*isGradingLow == 1)
+    {
+        glUniform1f(glGetUniformLocation(shader, "fogDensity"), fogDensity);
+        glUniform1f(glGetUniformLocation(shader, "gradingStrength"), toneStrength);
+    }
+    else {
+        glUniform1f(glGetUniformLocation(shader, "fogDensity"), 0);
+        glUniform1f(glGetUniformLocation(shader, "gradingStrength"), 0);
+    }
+    glUniform3fv(glGetUniformLocation(shader, "gradingColor"), 1, glm::value_ptr(toneColor));
     glUniform3fv(glGetUniformLocation(shader, "fogColor"), 1, glm::value_ptr(fogColor));
 
-    glUniform1f(glGetUniformLocation(shader, "gradingStrength"), toneStrength);
-    glUniform3fv(glGetUniformLocation(shader, "gradingColor"), 1, glm::value_ptr(toneColor));
     if (glfwGetCurrentContext() == Engine::GetOpenGLWindow())
     {
 
@@ -195,10 +203,7 @@ void Player::Update(float deltaTime)
 
             if (Input::inputState.keys[GLFW_KEY_W] || Input::inputState.keys[GLFW_KEY_S] || Input::inputState.keys[GLFW_KEY_A] || Input::inputState.keys[GLFW_KEY_D])
             {
-                // std::cout << body->getTransform().getPosition().x << " " << body->getTransform().getPosition().y << " " << body->getTransform().getPosition().z << std::endl;
-                // std::cout << " ASDAS" << std::endl;
                 moveDirection.y = 0;
-                //body->applyWorldForceAtCenterOfMass(GLMToReact(moveDirection) * 750);
             }
             glm::vec3 newPosition = movement.position;
 
@@ -212,11 +217,10 @@ void Player::Update(float deltaTime)
     };
 
 
-    //glm::vec3 cameraPosition = ReactToGLM(body->getTransform().getPosition());
     glm::vec3 cameraPosition = movement.position;
-    //if (isCrouching) {
-    //    cameraPosition.y = crouchHeight;
-    //}
+    if (isCrouching) {
+        cameraPosition.y = crouchHeight;
+    }
     view = glm::lookAt(cameraPosition, cameraPosition + movement.lookingAngle, movement.cameraUp);
     glUniformMatrix4fv(movement.viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(movement.projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
@@ -284,7 +288,6 @@ void Player::Crouch(bool value) {
 
 bool Player::CheckCollision(Model3D* model)
 {
-    // std::cout << glm::distance(model->transform, movement.position) << std::endl;
     float distance = glm::distance(model->transform, movement.position);
     float sumRadii = model->collisionRadius + collisionRadius;
     return distance <= sumRadii;
@@ -296,7 +299,6 @@ void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPoi
     hideHudButLetter = hideHudButLetterRec;
     isInInteractionZone = isInInteractionRec;
 
-    // movement.position = glm::vec3(0.0f, 20.0f, 0.0f);
     std::string vertexShader = readShaderSource("shaders/vertex_texture.glsl");
     std::string fragmentShader = readShaderSource("shaders/fragment_texture.glsl");
 
@@ -312,16 +314,16 @@ void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPoi
     glUniformMatrix4fv(movement.viewLoc, 1, GL_FALSE, glm::value_ptr(view));
     glUniformMatrix4fv(movement.projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
-    ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.007, 0.007, 0.007), glm::vec3(2.5, 0, 0), glm::vec3(0,0,0), true, shader };
+    ObjectSettings targetCube2Settings = { "Target Cube", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, glm::vec3(0.007, 0.007, 0.007), glm::vec3(2.5, 0, 0), glm::vec3(0,0,0) };
     std::cout << "JOHNNY " << &targetCube2Settings << std::endl;
     //ObjectSettings pistolSettings = { "Pistol", "assets/meshes/pistol.obj", "assets/textures/sp226-color-2.jpeg", true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.2, 0.2, 0.2), glm::vec3(-0.2f, -0.2f, 0), glm::vec3(0,270,0), true, shader };
     //ObjectSettings handSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, true, glm::vec4(1.f, 1.f, 1.f, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(-0.1f, -0.3, 1.2f), glm::vec3(270,180,0), true, shader };
     //pistol.Init(pistolSettings);
-    hand.Init(targetCube2Settings);
+    // hand.Init(targetCube2Settings, level);
     timeSinceShoot = std::chrono::steady_clock::now(); // Initialize lastShotTime
 
-    fogColor = { 0.67f, 0.44f, 0.27f };
-    toneColor = { 1, 0.82, 0.39f };
+    fogColor = { 1, 1, 1 };
+    toneColor = { 0.93, 0.88, 1 };
     toneStrength = 1.0;
     std::cout << "PLAYER: " << this << std::endl;
 }
