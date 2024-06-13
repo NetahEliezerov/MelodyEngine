@@ -26,7 +26,7 @@ public:
     bool isTriggered;
     bool canBeReTriggered;
 
-    float radiusMultiplier = 1;
+    float radiusMultiplier = 0.75f;
     std::function<void()> interactFunction;
     Model3D model;
 
@@ -67,7 +67,6 @@ public:
         {
             if (IsPlayerInside(playerPosition)) {
                 *isInInteractionZone = true;
-                std::cout << "BULBUL!" << std::endl;
                 if (Input::inputState.keys[GLFW_KEY_E])
                 {
 
@@ -93,7 +92,7 @@ public:
             }
         }
 
-        model.transform = position;
+        model.transform =position;
         model.scale = size * 0.35f;
         model.rotation = rotation;
         // model.Update(playerPosition, light, deltaTime);

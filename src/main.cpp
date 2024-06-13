@@ -312,16 +312,16 @@ int main(void) {
     float overAllVignetteRadius = vignetteRadius;
     float overAllVignetteSmooth = vignetteSmooth;
 
-    float colorGradingIntensity = 0.1f;
+    float colorGradingIntensity = 0;
 
-    float bloomIntensity = 1.3f;
-    float gammaIntensity = 0.7f;
+    float bloomIntensity = 0.8f;
+    float gammaIntensity = 1.f;
 
-    float grainIntensity = 0.13f;
+    float grainIntensity = 0.08f;
 
     float grainSize = 0.01f;
 
-    float specularStrength = 0.9;
+    float specularStrength = 1;
     float ambientStrength = 0.2;
 
     static float fog[3] = { character.fogColor.x, character.fogColor.y, character.fogColor.z };
@@ -377,6 +377,11 @@ int main(void) {
     int specularEnable = 1;
     int fogAndToneEnable = 1;
 
+    std::chrono::steady_clock::time_point timeSinceInventoryShow;
+    bool isShowingInventory = false;
+    bool hideHud = false;
+    Game::state.isShowingInventory = &isShowingInventory;
+    Game::state.hideHud = &hideHud;
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
         deltaTime = (currentFrame - lastFrame) * timeScale;
@@ -568,9 +573,9 @@ int main(void) {
 
         if (!hideHudButLetter)
         {
-            if (isInInteractionZone)
+            if (isInInteractionZone && !hideHud)
             {
-                renderText("Press E", Game::state.WIDTH / 2 - 100, Game::state.HEIGHT / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, false);
+                renderText("Press E", Game::state.WIDTH / 2 - 100, Game::state.HEIGHT / 2 - 100, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, false);
             }
 
             renderText("Objective: " + Game::state.currentObjective, 50.0f, 50.0f, 0.75f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, false);
@@ -579,12 +584,12 @@ int main(void) {
 
         if (Game::state.currentLetter != nullptr)
         {
-            overAllVignetteIntensity = 1500;
+            overAllVignetteIntensity = 2500;
             overAllVignetteRadius = 1.3;
             overAllVignetteSmooth = -0.75;
-            renderText("[ESCAPE]", 0                                 , Game::state.HEIGHT / 2 + 300,  1.f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, true);
-            renderText("From: " + Game::state.currentLetter->title, 0, Game::state.HEIGHT / 2,        1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
-            renderText(Game::state.currentLetter->content, 0         , Game::state.HEIGHT / 2 - 150, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
+            renderText("[ESCAPE]", 0, Game::state.HEIGHT / 2 + 300, 1.f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, true);
+            renderText("From: " + Game::state.currentLetter->title, 0, Game::state.HEIGHT / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
+            renderText(Game::state.currentLetter->content, 0, Game::state.HEIGHT / 2 - 150, 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
         }
         else
         {
@@ -593,6 +598,42 @@ int main(void) {
             overAllVignetteSmooth = vignetteSmooth;
         }
 
+        if (isShowingInventory)
+        {
+            overAllVignetteIntensity = 2500;
+            overAllVignetteRadius = 1.3;
+            overAllVignetteSmooth = -0.75;
+            renderText("[TAB]", 0, Game::state.HEIGHT / 2 + 300, 1.f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, true);
+            renderText("INVENTORY", 0, Game::state.HEIGHT / 2, 1.f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
+            int iForItems = 0;
+            for (InventoryItem& item : Game::state.inventory)
+            {
+                renderText((std::to_string(iForItems+1) + ": " + item.label).c_str(), 0, Game::state.HEIGHT / 2 - 150 - (iForItems*40), 0.6f, glm::vec3(1.0f, 1.0f, 1.0f), textShader, true);
+            }
+        }
+
+        if (Input::inputState.keys[GLFW_KEY_TAB] && Game::state.currentLetter == nullptr)
+        {
+
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - timeSinceInventoryShow).count();
+
+            const int delayBetweenShots = 350;
+
+            if (elapsedTime >= delayBetweenShots) {
+                isShowingInventory = !isShowingInventory;
+                if (isShowingInventory)
+                    timeScale = 0;
+                else
+                {
+                    timeScale = 1;
+                    overAllVignetteIntensity = vignetteIntensity;
+                    overAllVignetteRadius = vignetteRadius;
+                    overAllVignetteSmooth = vignetteSmooth;
+                }
+                timeSinceInventoryShow = currentTime;
+            }
+        }
 
         glDisable(GL_BLEND);
 

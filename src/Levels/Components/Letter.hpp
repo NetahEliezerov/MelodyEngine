@@ -29,8 +29,7 @@ public:
 
 		interactSettings = { "interact", "assets/meshes/Letter/Letter.FBX", {"assets/meshes/Letter/Letter.png"}, glm::vec3(0.01, 0.01, 0.01), glm::vec3(2, -1.45, -5), glm::vec3(90, 0, -27) };
 		
-		interactable1.Init(interactSettings, level, [this]() { OnLetterOpen(); }, character, 325.0f, 200);
-
+		interactable1.Init(interactSettings, level, [this]() { OnLetterOpen(); }, character, 150.0f, 100);
 		level->sceneHierarchy.push_back(this);
 	}
 

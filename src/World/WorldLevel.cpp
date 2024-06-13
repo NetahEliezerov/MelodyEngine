@@ -1,6 +1,7 @@
 #include "WorldLevel.h"
 
 #include "../Levels/Components/Letter.hpp"
+#include "../Levels/Components/DoorKey.hpp"
 #include "TriggerBox.h"
 #include "../Player/Player.h"
 
@@ -40,6 +41,11 @@ void WorldLevel::RenderUpdate(float deltaTime)
         {
             TriggerBox* model = std::any_cast<TriggerBox*>(item);
             model->Update(character->movement.position, &light, deltaTime);
+        }
+        if (std::any_cast<DoorKey*>(&item))
+        {
+            DoorKey* model = std::any_cast<DoorKey*>(item);
+            model->Update(deltaTime);
         }
     }
 }

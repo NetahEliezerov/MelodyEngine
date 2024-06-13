@@ -168,6 +168,7 @@
     <ClInclude Include="src\Debugging\Hierarchy.hpp" />
     <ClInclude Include="src\Debugging\Log.hpp" />
     <ClInclude Include="src\Game\Game.h" />
+    <ClInclude Include="src\Levels\Components\DoorKey.hpp" />
     <ClInclude Include="src\Levels\Components\Letter.hpp" />
     <ClInclude Include="src\Levels\Level2.hpp" />
     <ClInclude Include="src\Levels\LevelManager.hpp" />

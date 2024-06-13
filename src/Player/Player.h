@@ -60,9 +60,9 @@ public:
 
 	float collisionRadius = 2.f;
 
-	float fogDensity = 0.03f;
 	glm::vec3 fogColor;
 	glm::vec3 toneColor;
+	float fogDensity = 0.1f;
 	float toneStrength = 0.06f;
 
 	bool ableToLook = true;

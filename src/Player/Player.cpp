@@ -322,8 +322,8 @@ void Player::Init(Renderer _renderer, bool recIsGodMode, unsigned int* shaderPoi
     // hand.Init(targetCube2Settings, level);
     timeSinceShoot = std::chrono::steady_clock::now(); // Initialize lastShotTime
 
-    fogColor = { 1, 1, 1 };
-    toneColor = { 0.93, 0.88, 1 };
+    fogColor = { 0, 0, 0 };
+    toneColor = { 1, 0.694, 0.401 };
     toneStrength = 1.0;
     std::cout << "PLAYER: " << this << std::endl;
 }

@@ -7,6 +7,18 @@
 // #include "../Player/Player.h"
 class Player;
 
+enum InventoryItemType
+{
+    InventoryKeyItemType = 0
+};
+
+struct InventoryItem
+{
+    int id;
+    std::string label;
+    InventoryItemType type;
+};
+
 class GameState
 {
 public:
@@ -15,6 +27,11 @@ public:
     std::string currentObjective;
 
     Player* character = nullptr;
+
+    std::vector<InventoryItem> inventory;
+
+    bool* isShowingInventory;
+    bool* hideHud;
 
     int WIDTH;
     int HEIGHT;

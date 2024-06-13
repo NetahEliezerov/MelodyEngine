@@ -42,6 +42,6 @@ struct LevelManager : LevelManagerState
 
     void OnDoorEnter()
     {
-        SetLevel(&_level1, [this]() {});
+        SetLevel(&_level2, [this]() {});
     }
 };

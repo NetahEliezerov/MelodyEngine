@@ -31,6 +31,7 @@
 #include "../World/Interactable.hpp"
 
 #include "Components/Letter.hpp"
+#include "Components/DoorKey.hpp"
 
 #include "../Core/AudioManager.hpp"
 
@@ -43,6 +44,8 @@ public:
     {
         character->level = this;
         character->light = &light;
+        
+        
         wall.Init(        { "Wall", "assets/meshes/cube.obj", {"assets/textures/Wall/pngtree-wood-grain-texture-wooden-flooring-design-with-wooden-floor-textures-image_13051712.jpg"}, glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0) }, this);
         targetCube.Init(  { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98) }, this);
         targetCube2.Init( { "Target Cube 1", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, glm::vec3(0.004, 0.004, 0.004), glm::vec3(4, -1.5, -5.1), glm::vec3(0,327,270) }, this);
@@ -54,6 +57,8 @@ public:
         Game::state.currentObjective = "Investigate";
 
         letter.Init({ "Noah", std::string("Hey. Find me in the factory.") }, this, timeScale, [this]() { NoahLetterOpen(); });
+        ObjectSettings doorSettings = { "Door Key", "assets/meshes/Key/Key2.obj", {"assets/meshes/Key/Albedo.jpg"}, glm::vec3(0.003, 0.003, 0.003), glm::vec3(4.3, -1.45, -5), glm::vec3(90, 0, -27) };
+        doorKey.Init(doorSettings, 0, this, timeScale);
 
         triggerBox.Init(this, glm::vec3(-4.f, 0.0f, 4.f), glm::vec3(2.0f, 8.0f, 2.0f), [this]() { OnRoomExit(); }, character, true, true);
 
@@ -66,7 +71,7 @@ public:
             FlickLight(deltaTime);
         }
 
-        // targetCube.rotation.z += 7.5 * deltaTime;
+        targetCube.rotation.z += 7.5 * deltaTime;
     };
 
     void NoahLetterOpen()
@@ -99,6 +104,7 @@ private:
 
     Model3D table;
     Letter letter;
+    DoorKey doorKey;
 
     CharacterNPC npc;
 
