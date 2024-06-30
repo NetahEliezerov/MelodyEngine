@@ -1,45 +1,41 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-#ifndef PX_PHYSICS_NX_SHAPE
-#define PX_PHYSICS_NX_SHAPE
-/** \addtogroup physics
-@{
-*/
+#ifndef PX_SHAPE_H
+#define PX_SHAPE_H
 
-#include "PxPhysX.h"
-#include "common/PxSerialFramework.h"
+#include "PxPhysXConfig.h"
+#include "common/PxBase.h"
+#include "foundation/PxSimpleTypes.h"
 #include "geometry/PxGeometry.h"
 #include "geometry/PxGeometryHelpers.h"
-#include "PxSceneQueryReport.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
@@ -50,16 +46,21 @@ class PxCapsuleGeometry;
 class PxPlaneGeometry;
 class PxConvexMeshGeometry;
 class PxTriangleMeshGeometry;
+class PxTetrahedronMeshGeometry;
 class PxHeightFieldGeometry;
+class PxParticleSystemGeometry;
+class PxHairSystemGeometry;
 class PxRigidActor;
 struct PxFilterData;
-struct PxRaycastHit;
-struct PxSweepHit;
+class PxBaseMaterial;
+class PxMaterial;
+class PxFEMSoftBodyMaterial;
+class PxFEMClothMaterial;
 
 /**
 \brief Flags which affect the behavior of PxShapes.
 
-@see PxShape PxShape.setFlag()
+\see PxShape PxShape.setFlag()
 */
 struct PxShapeFlag
 {
@@ -73,7 +74,9 @@ struct PxShapeFlag
 		attempt to raise the other.  To raise the eSIMULATION_SHAPE first ensure that 
 		eTRIGGER_SHAPE is already lowered.
 
-		@see PxSimulationEventCallback.onContact() PxScene.setSimulationEventCallback() PxShape.setFlag(), PxShape.setFlags()
+		\note This flag has no effect if simulation is disabled for the corresponding actor (see #PxActorFlag::eDISABLE_SIMULATION).
+
+		\see PxSimulationEventCallback.onContact() PxScene.setSimulationEventCallback() PxShape.setFlag(), PxShape.setFlags()
 		*/
 		eSIMULATION_SHAPE				= (1<<0),
 
@@ -94,77 +97,63 @@ struct PxShapeFlag
 		raised the sdk will reject any attempt to raise the other.  To raise the eTRIGGER_SHAPE flag first 
 		ensure that eSIMULATION_SHAPE flag is already lowered.
 
+		\note Trigger shapes will no longer send notification events for interactions with other trigger shapes.
+
 		\note Shapes marked as triggers are allowed to participate in scene queries, provided the eSCENE_QUERY_SHAPE flag is set. 
 
-		@see PxSimulationEventCallback.onTrigger() PxScene.setSimulationEventCallback() PxShape.setFlag(), PxShape.setFlags()
+		\note This flag has no effect if simulation is disabled for the corresponding actor (see #PxActorFlag::eDISABLE_SIMULATION).
+
+		\see PxSimulationEventCallback.onTrigger() PxScene.setSimulationEventCallback() PxShape.setFlag(), PxShape.setFlags()
 		*/
 		eTRIGGER_SHAPE					= (1<<2),
 
 		/**
 		\brief Enable debug renderer for this shape
 
-		@see PxScene.getRenderBuffer() PxRenderBuffer PxVisualizationParameter
+		\see PxScene.getRenderBuffer() PxRenderBuffer PxVisualizationParameter
 		*/
-		eVISUALIZATION					= (1<<3),
-
-		/**
-		\brief Sets the shape to be a particle drain.
-		*/
-		ePARTICLE_DRAIN					= (1<<4),
-
-		/**
-		\brief  Enables the shape's use of temporal bounds during the post integration broad phase check.
-		*/
-		eUSE_SWEPT_BOUNDS				= (1<<6),
+		eVISUALIZATION					= (1<<3)
 	};
 };
 
 /**
 \brief collection of set bits defined in PxShapeFlag.
 
-@see PxShapeFlag
+\see PxShapeFlag
 */
 typedef PxFlags<PxShapeFlag::Enum,PxU8> PxShapeFlags;
-PX_FLAGS_OPERATORS(PxShapeFlag::Enum,PxU8);
-
+PX_FLAGS_OPERATORS(PxShapeFlag::Enum,PxU8)
 
 /**
 \brief Abstract class for collision shapes.
 
-An instance can be created by calling the createShape() method of the PxRigidActor class.
+Shapes are shared, reference counted objects.
+
+An instance can be created by calling the createShape() method of the PxRigidActor class, or
+the createShape() method of the PxPhysics class.
 
 <h3>Visualizations</h3>
 \li PxVisualizationParameter::eCOLLISION_AABBS
 \li PxVisualizationParameter::eCOLLISION_SHAPES
 \li PxVisualizationParameter::eCOLLISION_AXES
 
-@see PxRigidActor.createShape() PxBoxGeometry PxSphereGeometry PxCapsuleGeometry PxPlaneGeometry PxConvexMeshGeometry
+\see PxPhysics.createShape() PxRigidActor.createShape() PxBoxGeometry PxSphereGeometry PxCapsuleGeometry PxPlaneGeometry PxConvexMeshGeometry
 PxTriangleMeshGeometry PxHeightFieldGeometry
 */
-class PxShape : public PxSerializable
+class PxShape : public PxRefCounted
 {
 public:
-
 	/**
-	\brief Deletes the shape.
-	
-	Do not keep a reference to the deleted instance.
+	\brief Decrements the reference count of a shape and releases it if the new reference count is zero.
 
-	For static rigid actors it is not possible to release all shapes associated with the actor.
-	An attempt to remove the last shape will be ignored.
+	Note that in releases prior to PhysX 3.3 this method did not have reference counting semantics and was used to destroy a shape 
+	created with PxActor::createShape(). In PhysX 3.3 and above, this usage is deprecated, instead, use PxRigidActor::detachShape() to detach
+	a shape from an actor. If the shape to be detached was created with PxActor::createShape(), the actor holds the only counted reference,
+	and so when the shape is detached it will also be destroyed. 
 
-	@see PxRigidActor::createShape()
+	\see PxRigidActor::createShape() PxPhysics::createShape() PxRigidActor::attachShape() PxRigidActor::detachShape()
 	*/
-	virtual		void					release() = 0;
-
-	/**
-	\brief Get the geometry type of the shape.
-
-	\return Type of shape geometry.
-
-	@see PxGeometryType
-	*/
-	virtual		PxGeometryType::Enum	getGeometryType() const = 0;
+	virtual		void	release() = 0;
 
 	/**
 	\brief Adjust the geometry of the shape.
@@ -175,141 +164,42 @@ public:
 
 	\param[in] geometry New geometry of the shape.
 
-	@see PxGeometry PxGeometryType getGeometryType()
+	\see PxGeometry PxGeometryType getGeometryType()
 	*/
-	virtual		void					setGeometry(const PxGeometry& geometry) = 0;
-
+	virtual		void	setGeometry(const PxGeometry& geometry) = 0;
 
 	/**
-	\brief Retrieve the geometry from the shape in a PxGeometryHolder wrapper class.
+	\brief Retrieve a reference to the shape's geometry.
 
-	\return a PxGeometryHolder object containing the geometry;
-	
-	@see PxGeometry PxGeometryType getGeometryType() setGeometry()
+	\warning The returned reference has the same lifetime as the PxShape it comes from.
+
+	\return	Reference to internal PxGeometry object.
+
+	\see PxGeometry PxGeometryType getGeometryType() setGeometry()
 	*/
-
-	virtual		PxGeometryHolder		getGeometry() const = 0;
-
-
-	/**
-	\brief Fetch the geometry of the shape.
-
-	\note If the type of geometry to extract does not match the geometry type of the shape
-	then the method will return false and the passed in geometry descriptor is not modified.
-
-	\param[in] geometry The descriptor to save the shape's geometry data to.
-	\return True on success else false
-
-	@see PxGeometry PxGeometryType getGeometryType()
-	*/
-	virtual		bool					getBoxGeometry(PxBoxGeometry& geometry) const = 0;
-
-	/**
-	\brief Fetch the geometry of the shape.
-
-	\note If the type of geometry to extract does not match the geometry type of the shape
-	then the method will return false and the passed in geometry descriptor is not modified.
-
-	\param[in] geometry The descriptor to save the shape's geometry data to.
-	\return True on success else false
-
-	@see PxGeometry PxGeometryType getGeometryType()
-	*/
-	virtual		bool					getSphereGeometry(PxSphereGeometry& geometry) const = 0;
-
-	/**
-	\brief Fetch the geometry of the shape.
-
-	\note If the type of geometry to extract does not match the geometry type of the shape
-	then the method will return false and the passed in geometry descriptor is not modified.
-
-	\param[in] geometry The descriptor to save the shape's geometry data to.
-	\return True on success else false
-
-	@see PxGeometry PxGeometryType getGeometryType()
-	*/
-	virtual		bool					getCapsuleGeometry(PxCapsuleGeometry& geometry) const = 0;
-
-	/**
-	\brief Fetch the geometry of the shape.
-
-	\note If the type of geometry to extract does not match the geometry type of the shape
-	then the method will return false and the passed in geometry descriptor is not modified.
-
-	\param[in] geometry The descriptor to save the shape's geometry data to.
-	\return True on success else false
-
-	@see PxGeometry PxGeometryType getGeometryType()
-	*/
-	virtual		bool					getPlaneGeometry(PxPlaneGeometry& geometry) const = 0;
-
-	/**
-	\brief Fetch the geometry of the shape.
-
-	\note If the type of geometry to extract does not match the geometry type of the shape
-	then the method will return false and the passed in geometry descriptor is not modified.
-
-	\param[in] geometry The descriptor to save the shape's geometry data to.
-	\return True on success else false
-
-	@see PxGeometry PxGeometryType getGeometryType()
-	*/
-	virtual		bool					getConvexMeshGeometry(PxConvexMeshGeometry& geometry) const = 0;
-
-	/**
-	\brief Fetch the geometry of the shape.
-
-	\note If the type of geometry to extract does not match the geometry type of the shape
-	then the method will return false and the passed in geometry descriptor is not modified.
-
-	\param[in] geometry The descriptor to save the shape's geometry data to.
-	\return True on success else false
-
-	@see PxGeometry PxGeometryType getGeometryType()
-	*/
-	virtual		bool					getTriangleMeshGeometry(PxTriangleMeshGeometry& geometry) const = 0;
-
-	/**
-	\brief Fetch the geometry of the shape.
-
-	\note If the type of geometry to extract does not match the geometry type of the shape
-	then the method will return false and the passed in geometry descriptor is not modified.
-
-	\param[in] geometry The descriptor to save the shape's geometry data to.
-	\return True on success else false
-
-	@see PxGeometry PxGeometryType getGeometryType()
-	*/
-	virtual		bool					getHeightFieldGeometry(PxHeightFieldGeometry& geometry) const = 0;
+	virtual		const PxGeometry&	getGeometry() const = 0;
 
 	/**
 	\brief Retrieves the actor which this shape is associated with.
 
-	\return The actor this shape is associated with.
+	\return The actor this shape is associated with, if it is an exclusive shape, else NULL
 
-	@see PxRigidStatic, PxRigidDynamic, PxArticulationLink
+	\see PxRigidStatic, PxRigidDynamic, PxArticulationLink
 	*/
-	virtual		PxRigidActor&			getActor() const = 0;
-
-	/**
-	\brief Retrieves the axis aligned bounding box enclosing the shape.
-
-	\return The shape's bounding box.
-
-	@see PxBounds3
-	*/
-	virtual		PxBounds3				getWorldBounds() const = 0;
+	virtual		PxRigidActor*	getActor() const = 0;
 
 /************************************************************************************************/
 
-/** @name Pose Manipulation
+/** \name Pose Manipulation
 */
-//@{
+//\{
 
 	/**
-	\brief Sets the pose of the shape in actor space, i.e. relative to the actor they are owned by.
+	\brief Sets the pose of the shape in actor space, i.e. relative to the actors to which they are attached.
 	
 	This transformation is identity by default.
+
+	The local pose is an attribute of the shape, and so will apply to all actors to which the shape is attached.
 
 	<b>Sleeping:</b> Does <b>NOT</b> wake the associated actor up automatically.
 
@@ -320,9 +210,9 @@ public:
 
 	\param[in] pose	The new transform from the actor frame to the shape frame. <b>Range:</b> rigid body transform
 
-	@see getLocalPose() 
+	\see getLocalPose() 
 	*/
-	virtual		void					setLocalPose(const PxTransform& pose)		= 0;
+	virtual		void	setLocalPose(const PxTransform& pose)		= 0;
 
 	/**
 	\brief Retrieves the pose of the shape in actor space, i.e. relative to the actor they are owned by.
@@ -331,16 +221,16 @@ public:
 
 	\return Pose of shape relative to the actor's frame.
 
-	@see setLocalPose() 
+	\see setLocalPose() 
 	*/
-	virtual		PxTransform				getLocalPose()					const	= 0;
+	virtual		PxTransform	getLocalPose()	const	= 0;
 
-//@}
+//\}
 /************************************************************************************************/
 
-/** @name Collision Filtering
+/** \name Collision Filtering
 */
-//@{
+//\{
 
 	/**
 	\brief Sets the user definable collision filter data.
@@ -350,70 +240,72 @@ public:
 
 	<b>Default:</b> (0,0,0,0)
 
-	@see getSimulationFilterData() 
+	\see getSimulationFilterData() 
 	*/
-	virtual		void					setSimulationFilterData(const PxFilterData& data)	= 0;
+	virtual		void	setSimulationFilterData(const PxFilterData& data)	= 0;
 
 	/**
 	\brief Retrieves the shape's collision filter data.
 
-	@see setSimulationFilterData() 
+	\see setSimulationFilterData() 
 	*/
-	virtual		PxFilterData			getSimulationFilterData()					const	= 0;
-
-	/**
-	\brief Marks the object to reset interactions and re-run collision filters in the next simulation step.
-	
-	This call forces the object to remove all existing collision interactions, to search anew for existing contact
-	pairs and to run the collision filters again for found collision pairs.
-
-	\note All persistent state of existing interactions will be lost and can not be retrieved even if the same collison pair
-	is found again in the next step. This will mean, for example, that you will not get notified about persistent contact
-	for such an interaction (see #PxPairFlag::eNOTIFY_TOUCH_PERSISTS), the contact pair will be interpreted as newly found instead.
-
-	\note Lost touch contact reports will be sent for every collision pair which includes this shape, if they have
-	been requested through #PxPairFlag::eNOTIFY_TOUCH_LOST or #PxPairFlag::eNOTIFY_THRESHOLD_FORCE_LOST.
-
-	\note This is an expensive operation, don't use it if you don't have to.
-
-	\note Can be used to retrieve collision pairs that were killed by the collision filters (see #PxFilterFlag::eKILL)
-
-	<b>Sleeping:</b> Does wake up the actor.
-
-	@see PxSimulationFilterShader PxSimulationFilterCallback
-	*/
-	virtual		void					resetFiltering()						= 0;
+	virtual		PxFilterData	getSimulationFilterData()	const	= 0;
 
 	/**
 	\brief Sets the user definable query filter data.
 
 	<b>Default:</b> (0,0,0,0)
 
-	@see getQueryFilterData() 
+	\see getQueryFilterData() 
 	*/
-	virtual		void					setQueryFilterData(const PxFilterData& data)	= 0;
+	virtual		void	setQueryFilterData(const PxFilterData& data)	= 0;
 
 	/**
 	\brief Retrieves the shape's Query filter data.
 
-	@see setQueryFilterData() 
+	\see setQueryFilterData() 
 	*/
-	virtual		PxFilterData			getQueryFilterData()					const	= 0;
+	virtual		PxFilterData	getQueryFilterData()	const	= 0;
 
-//@}
+//\}
 /************************************************************************************************/
 
 	/**
-	\brief Assigns material(s) to the shape.
+	\brief Assigns material(s) to the shape. Will remove existing materials from the shape.
 	
 	<b>Sleeping:</b> Does <b>NOT</b> wake the associated actor up automatically.
 
 	\param[in] materials List of material pointers to assign to the shape. See #PxMaterial
 	\param[in] materialCount The number of materials provided.
 
-	@see PxPhysics.createMaterial() getMaterials() 
+	\see PxPhysics.createMaterial() getMaterials() 
 	*/
-	virtual		void					setMaterials(PxMaterial*const* materials, PxU32 materialCount)	= 0;
+	virtual		void	setMaterials(PxMaterial*const* materials, PxU16 materialCount) = 0;
+
+	/**
+	\brief Assigns FEM soft body material(s) to the shape. Will remove existing materials from the shape.
+
+	<b>Sleeping:</b> Does <b>NOT</b> wake the associated actor up automatically.
+
+	\param[in] materials List of material pointers to assign to the shape. See #PxFEMSoftBodyMaterial
+	\param[in] materialCount The number of materials provided.
+
+	\see PxPhysics.createFEMSoftBodyMaterial() getSoftBodyMaterials() 
+	*/
+	virtual		void	setSoftBodyMaterials(PxFEMSoftBodyMaterial*const* materials, PxU16 materialCount) = 0;
+
+	/**
+	\brief Assigns FEM cloth material(s) to the shape. Will remove existing materials from the shape.
+	\warning Feature under development, only for internal usage.
+
+	<b>Sleeping:</b> Does <b>NOT</b> wake the associated actor up automatically.
+
+	\param[in] materials List of material pointers to assign to the shape. See #PxFEMClothMaterial
+	\param[in] materialCount The number of materials provided.
+
+	\see PxPhysics.createFEMClothMaterial() getClothMaterials() 
+	*/
+	virtual		void	setClothMaterials(PxFEMClothMaterial*const* materials, PxU16 materialCount) = 0;
 
 	/**
 	\brief Returns the number of materials assigned to the shape.
@@ -422,25 +314,59 @@ public:
 
 	\return Number of materials associated with this shape.
 
-	@see PxMaterial getMaterials()
+	\see PxMaterial getMaterials()
 	*/
-	virtual		PxU32					getNbMaterials()		const	= 0;
+	virtual		PxU16	getNbMaterials()		const	= 0;
 
 	/**
 	\brief Retrieve all the material pointers associated with the shape.
 
 	You can retrieve the number of material pointers by calling #getNbMaterials()
 
-	Note: Removing materials with #PxMaterial::release() will invalidate the pointer of the released material.
+	Note: The returned data may contain invalid pointers if you release materials using #PxMaterial::release().
 
 	\param[out] userBuffer The buffer to store the material pointers.
 	\param[in] bufferSize Size of provided user buffer.
+	\param[in] startIndex Index of first material pointer to be retrieved
 	\return Number of material pointers written to the buffer.
 
-	@see PxMaterial getNbMaterials() PxMaterial::release()
+	\see PxMaterial getNbMaterials() PxMaterial::release()
 	*/
-	virtual		PxU32					getMaterials(PxMaterial** userBuffer, PxU32 bufferSize) const				= 0;
-	
+	virtual		PxU32	getMaterials(PxMaterial** userBuffer, PxU32 bufferSize, PxU32 startIndex=0) const = 0;
+
+	/**
+	\brief Retrieve all the FEM soft body material pointers associated with the shape.
+
+	You can retrieve the number of material pointers by calling #getNbMaterials()
+
+	Note: The returned data may contain invalid pointers if you release materials using #PxMaterial::release().
+
+	\param[out] userBuffer The buffer to store the material pointers.
+	\param[in] bufferSize Size of provided user buffer.
+	\param[in] startIndex Index of first material pointer to be retrieved
+	\return Number of material pointers written to the buffer.
+
+	\see PxFEMSoftBodyMaterial getNbMaterials() PxMaterial::release()
+	*/
+	virtual		PxU32	getSoftBodyMaterials(PxFEMSoftBodyMaterial** userBuffer, PxU32 bufferSize, PxU32 startIndex = 0) const = 0;
+
+	/**
+	\brief Retrieve all the FEM cloth material pointers associated with the shape.
+	\warning Feature under development, only for internal usage.
+
+	You can retrieve the number of material pointers by calling #getNbMaterials()
+
+	Note: The returned data may contain invalid pointers if you release materials using #PxMaterial::release().
+
+	\param[out] userBuffer The buffer to store the material pointers.
+	\param[in] bufferSize Size of provided user buffer.
+	\param[in] startIndex Index of first material pointer to be retrieved
+	\return Number of material pointers written to the buffer.
+
+	\see PxFEMClothMaterial getNbMaterials() PxMaterial::release()
+	*/
+	virtual		PxU32	getClothMaterials(PxFEMClothMaterial** userBuffer, PxU32 bufferSize, PxU32 startIndex = 0) const = 0;
+
 	/**
 	\brief Retrieve material from given triangle index.
 
@@ -448,15 +374,18 @@ public:
 	returned to users by various SDK functions such as raycasts.
 	
 	This function is only useful for triangle meshes or heightfields, which have per-triangle
-	materials. For other shapes the function returns the single material associated with the
-	shape, regardless of the index.
+	materials. For other shapes or SDF triangle meshes, the function returns the single material
+	associated with the	shape, regardless of the index.
 
 	\param[in] faceIndex The internal triangle index whose material you want to retrieve.
 	\return Material from input triangle
 
-	@see PxMaterial getNbMaterials() PxMaterial::release()
+	\note If faceIndex value of 0xFFFFffff is passed as an input for mesh and heightfield shapes, this function will issue a warning and return NULL.
+	\note Scene queries set the value of PxQueryHit::faceIndex to 0xFFFFffff whenever it is undefined or does not apply.
+
+	\see PxMaterial getNbMaterials() PxMaterial::release()
 	*/
-	virtual		PxMaterial*				getMaterialFromInternalFaceIndex(PxU32 faceIndex) const = 0;
+	virtual		PxBaseMaterial*		getMaterialFromInternalFaceIndex(PxU32 faceIndex) const = 0;
 
 	/**
 	\brief Sets the contact offset.
@@ -470,20 +399,20 @@ public:
 
 	<b>Sleeping:</b> Does <b>NOT</b> wake the associated actor up automatically.
 
-	\param[in] contactOffset <b>Range:</b> (maximum(0,restOffset),inf)
+	\param[in] contactOffset <b>Range:</b> [maximum(0,restOffset), PX_MAX_F32)
 
-	@see getContactOffset PxTolerancesScale setRestOffset
+	\see getContactOffset PxTolerancesScale setRestOffset
 	*/
-	virtual		void					setContactOffset(PxReal contactOffset)	= 0;
+	virtual		void	setContactOffset(PxReal contactOffset)	= 0;
 
 	/**
 	\brief Retrieves the contact offset. 
 
 	\return The contact offset of the shape.
 
-	@see setContactOffset()
+	\see setContactOffset()
 	*/
-	virtual		PxReal					getContactOffset() const	= 0;
+	virtual		PxReal	getContactOffset() const	= 0;
 
 	/**
 	\brief Sets the rest offset. 
@@ -496,20 +425,122 @@ public:
 
 	<b>Sleeping:</b> Does <b>NOT</b> wake the associated actor up automatically.
 
-	\param[in] restOffset	<b>Range:</b> (-inf,contactOffset)
+	\param[in] restOffset	<b>Range:</b> (-PX_MAX_F32, contactOffset)
 
-	@see getRestOffset setContactOffset
+	\see getRestOffset setContactOffset
 	*/
-	virtual		void					setRestOffset(PxReal restOffset)	= 0;
+	virtual		void	setRestOffset(PxReal restOffset)	= 0;
 
 	/**
 	\brief Retrieves the rest offset. 
 
 	\return The rest offset of the shape.
 
-	@see setRestOffset()
+	\see setRestOffset()
 	*/
-	virtual		PxReal					getRestOffset() const	= 0;
+	virtual		PxReal	getRestOffset() const	= 0;
+
+	/**
+	\brief Sets the density used to interact with fluids.
+
+	To be physically accurate, the density of a rigid body should be computed as its mass divided by its volume. To
+	simplify tuning the interaction of fluid and rigid bodies, the density for fluid can differ from the real density. This
+	allows to create floating bodies, even if they are supposed to sink with their mass and volume.
+
+	<b>Default:</b> 800.0f
+
+	\param[in] densityForFluid	<b>Range:</b> (0, PX_MAX_F32)
+
+	\see getDensityForFluid
+	*/
+	virtual		void	setDensityForFluid(PxReal densityForFluid)	= 0;
+
+	/**
+	\brief Retrieves the density used to interact with fluids.
+
+	\return The density of the body when interacting with fluid.
+
+	\see setDensityForFluid()
+	*/
+	virtual		PxReal	getDensityForFluid() const	= 0;
+
+	/**
+	\brief Sets torsional patch radius.
+	
+	This defines the radius of the contact patch used to apply torsional friction. If the radius is 0 (and minTorsionalPatchRadius
+	is 0 too, see #setMinTorsionalPatchRadius), no torsional friction will be applied. If the radius is > 0, some torsional friction
+	will be applied. This is proportional to the penetration depth so, if the shapes are separated or penetration is zero, no
+	torsional friction will be applied. It is used to approximate rotational friction introduced by the compression of contacting surfaces.
+
+	\note Will only be active, if the friction patch has a single anchor point only. This is for example the case, if a contact patch
+	      has a single contact point.
+
+	\note Only supported in combination with solver type PxSolverType::eTGS.
+
+	<b>Default:</b> 0.0
+
+	\param[in] radius	<b>Range:</b> [0, PX_MAX_F32)
+	*/
+	virtual		void	setTorsionalPatchRadius(PxReal radius) = 0;
+
+	/**
+	\brief Gets torsional patch radius.
+
+	See #setTorsionalPatchRadius for more info.
+
+	\return The torsional patch radius of the shape.
+	*/
+	virtual		PxReal	getTorsionalPatchRadius() const = 0;
+
+	/**
+	\brief Sets minimum torsional patch radius.
+
+	This defines the minimum radius of the contact patch used to apply torsional friction. If the radius is 0, the amount of torsional friction
+	that will be applied will be entirely dependent on the value of torsionalPatchRadius. 
+	
+	If the radius is > 0, some torsional friction will be applied regardless of the value of torsionalPatchRadius or the amount of penetration.
+
+	\note Will only be active in certain cases, see #setTorsionalPatchRadius for details.
+
+	<b>Default:</b> 0.0
+
+	\param[in] radius	<b>Range:</b> [0, PX_MAX_F32)
+	*/
+	virtual		void	setMinTorsionalPatchRadius(PxReal radius) = 0;
+
+	/**
+	\brief Gets minimum torsional patch radius.
+
+	See #setMinTorsionalPatchRadius for more info.
+
+	\return The minimum torsional patch radius of the shape.
+	*/
+	virtual		PxReal	getMinTorsionalPatchRadius() const = 0;
+
+	/**
+	\brief Gets internal shape id
+
+	The internal shape id can be used to reference a specific shape when processing data on the gpu.
+
+	This is not supported on the CPU, and the function will return PX_INVALID_U32;
+	
+	\return The shape id
+
+	\see PxScene evaluateSDFDistances()
+	\deprecated, use getGPUIndex() instead.
+	*/
+	virtual	PX_DEPRECATED	PxU32	getInternalShapeIndex() const = 0;
+
+	/**
+	\brief Returns the GPU shape index.
+
+	\note This function only returns valid results if GPU dynamics is enabled.
+
+	\return The GPU index, or 0xFFFFFFFF if the shape is not attached to a PxActor that is inserted into a PxScene.
+
+	\see PxDirectGPUAPI::evaluateSDFDistances().
+	*/
+	virtual PxShapeGPUIndex  getGPUIndex() const = 0;
 
 /************************************************************************************************/
 
@@ -523,25 +554,32 @@ public:
 
 	<b>Default:</b> PxShapeFlag::eVISUALIZATION | PxShapeFlag::eSIMULATION_SHAPE | PxShapeFlag::eSCENE_QUERY_SHAPE
 
-	@see PxShapeFlag getFlags()
+	\see PxShapeFlag getFlags()
 	*/
-	virtual		void					setFlag(PxShapeFlag::Enum flag, bool value) = 0;
+	virtual		void	setFlag(PxShapeFlag::Enum flag, bool value) = 0;
 
 	/**
 	\brief Sets shape flags
 
-	@see PxShapeFlag getFlags()
+	\see PxShapeFlag getFlags()
 	*/
-	virtual		void					setFlags(  PxShapeFlags inFlags ) = 0;
+	virtual		void	setFlags(PxShapeFlags inFlags) = 0;
 
 	/**
 	\brief Retrieves shape flags.
 
 	\return The values of the shape flags.
 
-	@see PxShapeFlag setFlag()
+	\see PxShapeFlag setFlag()
 	*/
-	virtual		PxShapeFlags			getFlags() const = 0;
+	virtual		PxShapeFlags	getFlags() const = 0;
+
+	/**
+	\brief Returns true if the shape is exclusive to an actor.
+	
+	\see PxPhysics::createShape()
+	*/
+	virtual		bool	isExclusive() const	= 0;
 
 	/**
 	\brief Sets a name string for the object that can be retrieved with #getName().
@@ -553,86 +591,34 @@ public:
 	
 	\param[in] name The name string to set the objects name to.
 
-	@see getName()
+	\see getName()
 	*/
-	virtual		void					setName(const char* name)		= 0;
+	virtual		void	setName(const char* name)		= 0;
 
 	/**
 	\brief retrieves the name string set with setName().
 	\return The name associated with the shape.
 
-	@see setName()
+	\see setName()
 	*/
-	virtual		const char*				getName()			const	= 0;
+	virtual		const char*	getName()			const	= 0;
+
+
+	virtual		const char*	getConcreteTypeName() const	{ return "PxShape"; }
 
 /************************************************************************************************/
 
-	/**
-	\brief Raycast test against the shape.
-
-	\param[in] rayOrigin The origin of the ray to test the geometry object against
-	\param[in] rayDir The direction of the ray to test the geometry object against
-	\param[in] maxDist Maximum ray length
-	\param[in] hintFlags Specification of the kind of information to retrieve on hit. Combination of #PxSceneQueryFlag flags
-	\param[in] maxHits max number of returned hits = size of 'rayHits' buffer
-	\param[out] rayHits Raycast hits information
-	\param[in] firstHit Set to false if the closest hit point should be computed, else the query aborts as soon as the first valid hit point is found.
-	\param[in] shapePose Optional pose for the PxShape object. If NULL, the shape's global pose is used.
-	\return Number of hits between the ray and the shape
-
-	@see RaycastHit PxTransform
-	*/
-	virtual		PxU32					raycast(const PxVec3& rayOrigin, const PxVec3& rayDir, PxReal maxDist, PxSceneQueryFlags hintFlags,
-												PxU32 maxHits, PxRaycastHit* rayHits, bool firstHit, const PxTransform* shapePose=NULL)	const	= 0;
-
-	/**
-	\brief Test overlap between the shape and a geometry object
-
-	\param[in] otherGeom The other geometry object to test overlap with
-	\param[in] otherGeomPose Pose of the other geometry object
-	\param[in] shapePose Optional pose for the PxShape object. If NULL, the shape's global pose is used.
-	\return True if the shape overlaps the geometry object
-
-	@see PxGeometry PxTransform
-	*/
-	virtual		bool					overlap(const PxGeometry& otherGeom, const PxTransform& otherGeomPose, const PxTransform* shapePose=NULL)	const	= 0;
-
-	/**
-	\brief Sweep a geometry object against the shape.
-
-	Currently only box, sphere, capsule and convex mesh shapes are supported, i.e. the swept geometry object must be one of those types.
-
-	\param[in] unitDir Normalized direction along which the geometry object should be swept.
-	\param[in] distance Sweep distance. Needs to be larger than 0.
-	\param[in] otherGeom The geometry object to sweep against the shape
-	\param[in] otherGeomPose Pose of the geometry object
-	\param[out] sweepHit The sweep hit information. Only valid if this method returns true.
-	\param[in] hintFlags Specification of the kind of information to retrieve on hit. Combination of #PxSceneQueryFlag flags
-	\param[in] shapePose Optional pose for the PxShape object. If NULL, the shape's global pose is used.
-	\return True if the swept geometry object hits the shape
-
-	@see PxGeometry PxTransform PxSweepHit
-	*/
-	virtual		bool					sweep(	const PxVec3& unitDir, const PxReal distance, const PxGeometry& otherGeom, const PxTransform& otherGeomPose,
-												PxSweepHit& sweepHit, PxSceneQueryFlags hintFlags, const PxTransform* shapePose=NULL)	const	= 0;
-
-	virtual		const char*				getConcreteTypeName() const					{	return "PxShape"; }
-
-/************************************************************************************************/
-
-				void*					userData;	//!< user can assign this to whatever, usually to create a 1:1 relationship with a user object.
+				void*		userData;	//!< user can assign this to whatever, usually to create a 1:1 relationship with a user object.
 
 protected:
-										PxShape(PxRefResolver& v)	: PxSerializable(v)	{}
-	PX_INLINE							PxShape() : userData(NULL)	{}
-	virtual								~PxShape()	{}
-	virtual		bool					isKindOf(const char* name)	const		{	return !strcmp("PxShape", name) || PxSerializable::isKindOf(name); }
-
+	PX_INLINE				PxShape(PxBaseFlags baseFlags) : PxRefCounted(baseFlags) {}
+	PX_INLINE				PxShape(PxType concreteType, PxBaseFlags baseFlags) : PxRefCounted(concreteType, baseFlags), userData(NULL) {}
+	virtual					~PxShape() {}
+	virtual		bool		isKindOf(const char* name) const { PX_IS_KIND_OF(name, "PxShape", PxRefCounted); }
 };
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

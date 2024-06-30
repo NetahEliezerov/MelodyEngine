@@ -1,43 +1,37 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
-// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
 
-
-#ifndef PX_FOUNDATION_PX_TRANSFORM_H
-#define PX_FOUNDATION_PX_TRANSFORM_H
-/** \addtogroup foundation
-  @{
-*/
+#ifndef PX_TRANSFORM_H
+#define PX_TRANSFORM_H
 
 #include "foundation/PxQuat.h"
-#include "foundation/PxPlane.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
@@ -46,160 +40,219 @@ namespace physx
 \brief class representing a rigid euclidean transform as a quaternion and a vector
 */
 
-class PxTransform
+template<class Type>
+class PxTransformT
 {
-public:
-	PxQuat q;
-	PxVec3 p;
+  public:
+	PxQuatT<Type>	q;
+	PxVec3T<Type>	p;
 
-//#define PXTRANSFORM_DEFAULT_CONSTRUCT_NAN
-
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransform() 
-#ifdef PXTRANSFORM_DEFAULT_CONSTRUCT_IDENTITY
-		: q(0, 0, 0, 1), p(0, 0, 0)
-#elif defined(PXTRANSFORM_DEFAULT_CONSTRUCT_NAN)
-#define invalid PxSqrt(-1.0f)
-		: q(invalid, invalid, invalid, invalid), p(invalid, invalid, invalid)
-#undef invalid
-#endif
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransformT()
 	{
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE explicit PxTransform(const PxVec3& position): q(0, 0, 0, 1), p(position)
+	PX_CUDA_CALLABLE PX_FORCE_INLINE explicit PxTransformT(PxIDENTITY) : q(PxIdentity), p(PxZero)
 	{
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE explicit PxTransform(const PxQuat& orientation): q(orientation), p(0, 0, 0)
+	PX_CUDA_CALLABLE PX_FORCE_INLINE explicit PxTransformT(const PxVec3T<Type>& position) : q(PxIdentity), p(position)
+	{
+	}
+
+	PX_CUDA_CALLABLE PX_FORCE_INLINE explicit PxTransformT(const PxQuatT<Type>& orientation) : q(orientation), p(Type(0))
 	{
 		PX_ASSERT(orientation.isSane());
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransform(const PxVec3& p0, const PxQuat& q0): q(q0), p(p0) 
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransformT(Type x, Type y, Type z, PxQuatT<Type> aQ = PxQuatT<Type>(PxIdentity)) : q(aQ), p(x, y, z)
+	{
+	}
+
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransformT(const PxVec3T<Type>& p0, const PxQuatT<Type>& q0) : q(q0), p(p0)
 	{
 		PX_ASSERT(q0.isSane());
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE explicit PxTransform(const PxMat44& m);	// defined in PxMat44.h
-	
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransform operator*(const PxTransform& x) const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE explicit PxTransformT(const PxMat44T<Type>& m); // defined in PxMat44.h
+
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransformT(const PxTransformT& other)
+	{
+		p = other.p;
+		q = other.q;
+	}
+
+	PX_CUDA_CALLABLE PX_FORCE_INLINE void operator=(const PxTransformT& other)
+	{
+		p = other.p;
+		q = other.q;
+	}
+
+	/**
+	\brief returns true if the two transforms are exactly equal
+	*/
+	PX_CUDA_CALLABLE PX_INLINE bool operator==(const PxTransformT& t) const
+	{
+		return p == t.p && q == t.q;
+	}
+
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransformT operator*(const PxTransformT& x) const
 	{
 		PX_ASSERT(x.isSane());
 		return transform(x);
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransform getInverse() const
+	//! Equals matrix multiplication
+	PX_CUDA_CALLABLE PX_INLINE PxTransformT& operator*=(const PxTransformT& other)
 	{
-		PX_ASSERT(isFinite());
-		return PxTransform(q.rotateInv(-p),q.getConjugate());
+		*this = *this * other;
+		return *this;
 	}
 
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransformT getInverse() const
+	{
+		PX_ASSERT(isFinite());
+		return PxTransformT(q.rotateInv(-p), q.getConjugate());
+	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3 transform(const PxVec3& input) const
+	/**
+	\brief return a normalized transform (i.e. one in which the quaternion has unit magnitude)
+	*/
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransformT getNormalized() const
+	{
+		return PxTransformT(p, q.getNormalized());
+	}
+
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3T<Type> transform(const PxVec3T<Type>& input) const
 	{
 		PX_ASSERT(isFinite());
 		return q.rotate(input) + p;
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3 transformInv(const PxVec3& input) const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3T<Type> transformInv(const PxVec3T<Type>& input) const
 	{
 		PX_ASSERT(isFinite());
-		return q.rotateInv(input-p);
+		return q.rotateInv(input - p);
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3 rotate(const PxVec3& input) const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3T<Type> rotate(const PxVec3T<Type>& input) const
 	{
 		PX_ASSERT(isFinite());
 		return q.rotate(input);
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3 rotateInv(const PxVec3& input) const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3T<Type> rotateInv(const PxVec3T<Type>& input) const
 	{
 		PX_ASSERT(isFinite());
 		return q.rotateInv(input);
 	}
 
 	//! Transform transform to parent (returns compound transform: first src, then *this)
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransform transform(const PxTransform& src) const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransformT transform(const PxTransformT& src) const
 	{
 		PX_ASSERT(src.isSane());
 		PX_ASSERT(isSane());
 		// src = [srct, srcr] -> [r*srct + t, r*srcr]
-		return PxTransform(q.rotate(src.p) + p, q*src.q);
+		return PxTransformT(q.rotate(src.p) + p, q * src.q);
+	}
+
+	//! Transform transform from parent (returns compound transform: first src, then this->inverse)
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransformT transformInv(const PxTransformT& src) const
+	{
+		PX_ASSERT(src.isSane());
+		PX_ASSERT(isFinite());
+		// src = [srct, srcr] -> [r^-1*(srct-t), r^-1*srcr]
+		const PxQuatT<Type> qinv = q.getConjugate();
+		return PxTransformT(qinv.rotate(src.p - p), qinv * src.q);
 	}
 
 	/**
 	\brief returns true if finite and q is a unit quaternion
 	*/
-
 	PX_CUDA_CALLABLE bool isValid() const
 	{
 		return p.isFinite() && q.isFinite() && q.isUnit();
 	}
 
 	/**
-	\brief returns true if finite and quat magnitude is reasonably close to unit to allow for some accumulation of error vs isValid
+	\brief returns true if finite and quat magnitude is reasonably close to unit to allow for some accumulation of error
+	vs isValid
 	*/
-
 	PX_CUDA_CALLABLE bool isSane() const
 	{
-	      return isFinite() && q.isSane();
+		return isFinite() && q.isSane();
 	}
-
 
 	/**
 	\brief returns true if all elems are finite (not NAN or INF, etc.)
 	*/
-	PX_CUDA_CALLABLE PX_FORCE_INLINE bool isFinite() const { return p.isFinite() && q.isFinite(); }
-
-	//! Transform transform from parent (returns compound transform: first src, then this->inverse)
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransform transformInv(const PxTransform& src) const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE bool isFinite() const
 	{
-		PX_ASSERT(src.isSane());
-		PX_ASSERT(isFinite());
-		// src = [srct, srcr] -> [r^-1*(srct-t), r^-1*srcr]
-		PxQuat qinv = q.getConjugate();
-		return PxTransform(qinv.rotate(src.p - p), qinv*src.q);
+		return p.isFinite() && q.isFinite();
 	}
-
-	PX_CUDA_CALLABLE static PX_FORCE_INLINE PxTransform createIdentity() 
-	{ 
-		return PxTransform(PxVec3(0)); 
-	}
-
-	/**
-	\brief transform plane
-	*/
-
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxPlane transform(const PxPlane& plane) const
-	{
-		PxVec3 transformedNormal = rotate(plane.n);
-		return PxPlane(transformedNormal, plane.d - p.dot(transformedNormal));
-	}
-
-	/**
-	\brief inverse-transform plane
-	*/
-
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxPlane inverseTransform(const PxPlane& plane) const
-	{
-		PxVec3 transformedNormal = rotateInv(plane.n);
-		return PxPlane(transformedNormal, plane.d + p.dot(plane.n));
-	}
-
-
-	/**
-	\brief return a normalized transform (i.e. one in which the quaternion has unit magnitude)
-	*/
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxTransform getNormalized() const
-	{
-		return PxTransform(p, q.getNormalized());
-	}
-
 };
 
-#ifndef PX_DOXYGEN
+typedef PxTransformT<float>		PxTransform;
+typedef PxTransformT<double>	PxTransformd;
+
+/*!
+\brief	A generic padded & aligned transform class.
+
+This can be used for safe faster loads & stores, and faster address computations
+(the default PxTransformT often generating imuls for this otherwise). Padding bytes
+can be reused to store useful data if needed.
+*/
+struct PX_ALIGN_PREFIX(16) PxTransformPadded : PxTransform
+{
+	PX_FORCE_INLINE PxTransformPadded()
+	{
+	}
+
+	PX_FORCE_INLINE PxTransformPadded(const PxTransformPadded& other) : PxTransform(other)
+	{
+	}
+
+	PX_FORCE_INLINE explicit PxTransformPadded(const PxTransform& other) : PxTransform(other)
+	{
+	}
+
+	PX_FORCE_INLINE explicit PxTransformPadded(PxIDENTITY) : PxTransform(PxIdentity)
+	{
+	}
+
+	PX_FORCE_INLINE explicit PxTransformPadded(const PxVec3& position) : PxTransform(position)
+	{
+	}
+
+	PX_FORCE_INLINE explicit PxTransformPadded(const PxQuat& orientation) : PxTransform(orientation)
+	{
+	}
+
+	PX_FORCE_INLINE PxTransformPadded(const PxVec3& p0, const PxQuat& q0) : PxTransform(p0, q0)
+	{
+	}
+
+	PX_FORCE_INLINE void operator=(const PxTransformPadded& other)
+	{
+		p = other.p;
+		q = other.q;
+	}
+
+	PX_FORCE_INLINE void operator=(const PxTransform& other)
+	{
+		p = other.p;
+		q = other.q;
+	}
+
+	PxU32		padding;
+}
+PX_ALIGN_SUFFIX(16);
+PX_COMPILE_TIME_ASSERT(sizeof(PxTransformPadded)==32);
+
+typedef PxTransformPadded	PxTransform32;
+
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
-#endif // PX_FOUNDATION_PX_TRANSFORM_H
+#endif
+

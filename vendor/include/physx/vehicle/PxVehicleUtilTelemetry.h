@@ -1,50 +1,49 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-#ifndef PX_VEHICLE_UTILSTELEMETRY_H
-#define PX_VEHICLE_UTILSTELEMETRY_H
-/** \addtogroup vehicle
-  @{
-*/
+#ifndef PX_VEHICLE_UTIL_TELEMETRY_H
+#define PX_VEHICLE_UTIL_TELEMETRY_H
 
 #include "vehicle/PxVehicleSDK.h"
 #include "foundation/PxSimpleTypes.h"
 #include "foundation/PxVec3.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 
 #if PX_DEBUG_VEHICLE_ON
 
-class PxVehicleGraphDesc
+/**
+ \deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+ */
+class PX_DEPRECATED PxVehicleGraphDesc
 {
 
 	friend class PxVehicleGraph;
@@ -90,7 +89,10 @@ private:
 	bool isValid() const;
 };
 
-struct PxVehicleGraphChannelDesc
+/**
+ \deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+ */
+struct PX_DEPRECATED PxVehicleGraphChannelDesc
 {
 public:
 
@@ -110,7 +112,7 @@ public:
 
 	/**
 	\brief Data values greater than mMidY will be drawn with color mColorHigh.
-	\brief Data values less than mMidY will be drawn with color mColorLow.
+	Data values less than mMidY will be drawn with color mColorLow.
 	*/	
 	PxReal mMidY;
 
@@ -134,7 +136,64 @@ private:
 	bool isValid() const;
 };
 
-class PxVehicleGraph
+/**
+ \deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+ */
+struct PX_DEPRECATED PxVehicleWheelGraphChannel
+{
+	enum Enum
+	{
+		eJOUNCE=0,
+		eSUSPFORCE,
+		eTIRELOAD,
+		eNORMALIZED_TIRELOAD,
+		eWHEEL_OMEGA, 
+		eTIRE_FRICTION,
+		eTIRE_LONG_SLIP,
+		eNORM_TIRE_LONG_FORCE,
+		eTIRE_LAT_SLIP,
+		eNORM_TIRE_LAT_FORCE,
+		eNORM_TIRE_ALIGNING_MOMENT,
+		eMAX_NB_WHEEL_CHANNELS
+	};
+};
+
+/**
+ \deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+ */
+struct PX_DEPRECATED PxVehicleDriveGraphChannel
+{
+	enum Enum
+	{
+		eENGINE_REVS=0,
+		eENGINE_DRIVE_TORQUE,
+		eCLUTCH_SLIP,
+		eACCEL_CONTROL,					//TANK_ACCEL
+		eBRAKE_CONTROL,					//TANK_BRAKE_LEFT
+		eHANDBRAKE_CONTROL,				//TANK_BRAKE_RIGHT
+		eSTEER_LEFT_CONTROL,			//TANK_THRUST_LEFT
+		eSTEER_RIGHT_CONTROL,			//TANK_THRUST_RIGHT
+		eGEAR_RATIO,
+		eMAX_NB_DRIVE_CHANNELS
+	};
+};
+
+/**
+ \deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+ */
+struct PX_DEPRECATED PxVehicleGraphType
+{
+	enum Enum
+	{
+		eWHEEL=0,
+		eDRIVE
+	};
+};
+
+/**
+ \deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+ */
+class PX_DEPRECATED PxVehicleGraph
 {
 public:
 
@@ -143,59 +202,23 @@ public:
 
 	enum
 	{
-		eMAX_NUM_SAMPLES=256
+		eMAX_NB_SAMPLES=256
 	};
 
 	enum
 	{
-		eMAX_NUM_TITLE_CHARS=256
+		eMAX_NB_TITLE_CHARS=256
 	};
 
 	enum
 	{
-		eCHANNEL_JOUNCE=0,
-		eCHANNEL_SUSPFORCE,
-		eCHANNEL_TIRELOAD,
-		eCHANNEL_NORMALIZED_TIRELOAD,
-		eCHANNEL_WHEEL_OMEGA, 
-		eCHANNEL_TIRE_FRICTION,
-		eCHANNEL_TIRE_LONG_SLIP,
-		eCHANNEL_NORM_TIRE_LONG_FORCE,
-		eCHANNEL_TIRE_LAT_SLIP,
-		eCHANNEL_NORM_TIRE_LAT_FORCE,
-		eCHANNEL_NORM_TIRE_ALIGNING_MOMENT,
-		eMAX_NUM_WHEEL_CHANNELS
-	};
-
-	enum
-	{
-		eCHANNEL_ENGINE_REVS=0,
-		eCHANNEL_ENGINE_DRIVE_TORQUE,
-		eCHANNEL_CLUTCH_SLIP,
-		eCHANNEL_ACCEL_CONTROL,					//TANK_ACCEL
-		eCHANNEL_BRAKE_CONTROL,					//TANK_BRAKE_LEFT
-		eCHANNEL_HANDBRAKE_CONTROL,				//TANK_BRAKE_RIGHT
-		eCHANNEL_STEER_LEFT_CONTROL,			//TANK_THRUST_LEFT
-		eCHANNEL_STEER_RIGHT_CONTROL,			//TANK_THRUST_RIGHT
-		eCHANNEL_GEAR_RATIO,
-		eMAX_NUM_ENGINE_CHANNELS
-	};
-
-	enum
-	{
-		eMAX_NUM_CHANNELS=12
-	};
-
-	enum eGraphType
-	{
-		eGRAPH_TYPE_WHEEL=0,
-		eGRAPH_TYPE_ENGINE
+		eMAX_NB_CHANNELS=12
 	};
 
 	/**
 	\brief Setup a graph from a descriptor.
 	*/
-	void setup(const PxVehicleGraphDesc& desc, const eGraphType graphType);
+	void setup(const PxVehicleGraphDesc& desc, const PxVehicleGraphType::Enum graphType);
 
 	/**
 	\brief Clear all data recorded in a graph.
@@ -214,31 +237,50 @@ public:
 
 	/**
 	\brief Get the coordinates of the graph background.  Used for rendering a graph
+
+	\param[out] xMin is the x-coord of the lower-left corner
+	\param[out] yMin is the y-coord of the lower-left corner
+	\param[out] xMax is the x-coord of the upper-right corner
+	\param[out] yMax is the y-coord of the upper-right corner
 	*/	
 	void getBackgroundCoords(PxReal& xMin, PxReal& yMin, PxReal& xMax, PxReal& yMax) const {xMin = mBackgroundMinX;xMax = mBackgroundMaxX;yMin = mBackgroundMinY;yMax = mBackgroundMaxY;}
 
 	/**
 	\brief Compute the coordinates of the graph data of a specific graph channel.
-	\brief xy is the graph data stored in order x0,y0,x1,y1,x2,y2...xn,yn.
-	\brief colors stores the color of each point on the graph.
-	\brief title is the title of the graph.
+
+	\param[out] xy is an array of graph sample coordinates stored in order x0,y0,x1,y1,x2,y2...xn,yn.
+	\param[out] colors stores the color of each point on the graph.
+	\param[out] title is the title of the graph.
 	*/
 	void computeGraphChannel(const PxU32 channel, PxReal* xy, PxVec3* colors, char* title) const;
+
+	/**
+	\brief Return the latest value stored in the specified graph channel
+	*/
+	PxF32 getLatestValue(const PxU32 channel) const ;
+
+	/**
+	\brief Get the raw data of a specific graph channel.
+
+	\param[in] channel is the ID of the graph channel to get data from.
+	\param[out] values is the buffer to write the data to. Minimum required size is eMAX_NB_SAMPLES.
+	*/
+	void getRawData(const PxU32 channel, PxReal* values) const;
 
 private:
 
 	//Min and max of each sample.
-	PxReal mChannelMinY[eMAX_NUM_CHANNELS];
-	PxReal mChannelMaxY[eMAX_NUM_CHANNELS];
+	PxReal mChannelMinY[eMAX_NB_CHANNELS];
+	PxReal mChannelMaxY[eMAX_NB_CHANNELS];
 	//Discriminate between high and low values with different colors.
-	PxReal mChannelMidY[eMAX_NUM_CHANNELS];
+	PxReal mChannelMidY[eMAX_NB_CHANNELS];
 	//Different colors for values than midY and less than midY.
-	PxVec3 mChannelColorLow[eMAX_NUM_CHANNELS];
-	PxVec3 mChannelColorHigh[eMAX_NUM_CHANNELS];
+	PxVec3 mChannelColorLow[eMAX_NB_CHANNELS];
+	PxVec3 mChannelColorHigh[eMAX_NB_CHANNELS];
 	//Title of graph
-	char mChannelTitle[eMAX_NUM_CHANNELS][eMAX_NUM_TITLE_CHARS];
+	char mChannelTitle[eMAX_NB_CHANNELS][eMAX_NB_TITLE_CHARS];
 	//Graph data.
-	PxReal mChannelSamples[eMAX_NUM_CHANNELS][eMAX_NUM_SAMPLES];
+	PxReal mChannelSamples[eMAX_NB_CHANNELS][eMAX_NB_SAMPLES];
 
 	//Background color,alpha,coords
 	PxVec3 mBackgroundColor;
@@ -250,7 +292,7 @@ private:
 
 	PxU32 mSampleTide;
 
-	PxU32 mNumChannels;
+	PxU32 mNbChannels;
 
 	PxU32 mPad[2];
 
@@ -276,24 +318,27 @@ private:
 	PxVehicleGraph();
 	~PxVehicleGraph();
 };
-PX_COMPILE_TIME_ASSERT(PxU32(PxVehicleGraph::eMAX_NUM_CHANNELS) >= PxU32(PxVehicleGraph::eMAX_NUM_WHEEL_CHANNELS) && PxU32(PxVehicleGraph::eMAX_NUM_CHANNELS) >= PxU32(PxVehicleGraph::eMAX_NUM_ENGINE_CHANNELS));
+PX_COMPILE_TIME_ASSERT(PxU32(PxVehicleGraph::eMAX_NB_CHANNELS) >= PxU32(PxVehicleWheelGraphChannel::eMAX_NB_WHEEL_CHANNELS) && PxU32(PxVehicleGraph::eMAX_NB_CHANNELS) >= PxU32(PxVehicleDriveGraphChannel::eMAX_NB_DRIVE_CHANNELS));
 PX_COMPILE_TIME_ASSERT(0==(sizeof(PxVehicleGraph) & 15));
 
-class PxVehicleTelemetryData
+/**
+ \deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+ */
+class PX_DEPRECATED PxVehicleTelemetryData
 {
 public:
 
 	friend class PxVehicleUpdate;
 
 	/**
-	\brief Allocate a PxVehicleNWTelemetryData instance for a vehicle with 4*numSuspWheelTire4 wheels.
-	@see PxVehicleNWTelemetryDataFree
+	\brief Allocate a PxVehicleNWTelemetryData instance for a vehicle with nbWheels
+	\see PxVehicleNWTelemetryDataFree
 	*/
-	static PxVehicleTelemetryData* allocate(const PxU32 numWheels);
+	static PxVehicleTelemetryData* allocate(const PxU32 nbWheels);
 
 	/**
 	\brief Free a PxVehicleNWTelemetryData instance for a vehicle.
-	@see PxVehicleNWTelemetryDataAllocate
+	\see PxVehicleNWTelemetryDataAllocate
 	*/
 	void free();
 
@@ -319,7 +364,7 @@ public:
 	/**
 	\brief Get the number of wheel graphs
 	*/
-	PxU32 getNumWheelGraphs() const {return mNumActiveWheels;}
+	PxU32 getNbWheelGraphs() const {return mNbActiveWheels;}
 
 	/**
 	\brief Get the graph data for the kth wheel
@@ -340,15 +385,15 @@ private:
 
 	/**
 	\brief Graph data for engine.
-	\brief Used for storing single timeslices of debug data for engine graph.
-	@see PxVehicleGraph
+	Used for storing single timeslices of debug data for engine graph.
+	\see PxVehicleGraph
 	*/
 	PxVehicleGraph* mEngineGraph;
 
 	/**
 	\brief Graph data for each wheel.
-	\brief Used for storing single timeslices of debug data for wheel graphs.
-	@see PxVehicleGraph
+	Used for storing single timeslices of debug data for wheel graphs.
+	\see PxVehicleGraph
 	*/
 	PxVehicleGraph* mWheelGraphs;
 
@@ -365,7 +410,7 @@ private:
 	/**
 	\brief Total number of active wheels 
 	*/
-	PxU32 mNumActiveWheels;
+	PxU32 mNbActiveWheels;
 
 	PxU32 mPad[3];
 
@@ -381,9 +426,8 @@ PX_COMPILE_TIME_ASSERT(0==(sizeof(PxVehicleTelemetryData) & 15));
 
 //#endif // PX_DEBUG_VEHICLE_ON
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
-#endif //PX_VEHICLE_UTILSTELEMETRY_H
+#endif

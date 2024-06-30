@@ -1,52 +1,49 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
-// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+
+#ifndef PX_FOUNDATION_H
+#define PX_FOUNDATION_H
 
 
-#ifndef PX_FOUNDATION_PX_FOUNDATION_H
-#define PX_FOUNDATION_PX_FOUNDATION_H
-
-/** \addtogroup foundation
-  @{
-*/
-
-#include "foundation/PxVersionNumber.h"
+#include "foundation/Px.h"
+#include "foundation/PxErrors.h"
+#include "foundation/PxFoundationConfig.h"
 #include "foundation/PxErrors.h"
 
-#ifndef PX_DOXYGEN
+#include <stdarg.h>
+
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 
+class PxAllocationListener;
 class PxErrorCallback;
-class PxAllocatorCallback;
-class PxProfilingZone;
-class PxBroadcastingAllocator;
 
 /**
 \brief Foundation SDK singleton class.
@@ -55,21 +52,21 @@ You need to have an instance of this class to instance the higher level SDKs.
 */
 class PX_FOUNDATION_API PxFoundation
 {
-public:
+  public:
 	/**
 	\brief Destroys the instance it is called on.
 
-	The operation will fail, if there are still modules referencing the foundation object. Release all dependent modules prior
-	to calling this method.
+	The operation will fail, if there are still modules referencing the foundation object. Release all dependent modules
+	prior to calling this method.
 
-	@see PxCreateFoundation()
+	\see PxCreateFoundation()
 	*/
-	virtual	void release() = 0;
+	virtual void release() = 0;
 
 	/**
 	retrieves error callback
 	*/
-	virtual PxErrorCallback& getErrorCallback() const = 0;
+	virtual PxErrorCallback& getErrorCallback() = 0;
 
 	/**
 	Sets mask of errors to report.
@@ -82,14 +79,9 @@ public:
 	virtual PxErrorCode::Enum getErrorLevel() const = 0;
 
 	/**
-	retrieves the current allocator.
-	*/
-	virtual PxBroadcastingAllocator& getAllocator() const = 0;
-	
-	/**
 	Retrieves the allocator this object was created with.
 	*/
-	virtual PxAllocatorCallback& getAllocatorCallback() const = 0;
+	virtual PxAllocatorCallback& getAllocatorCallback() = 0;
 
 	/**
 	Retrieves if allocation names are being passed to allocator callback.
@@ -102,40 +94,140 @@ public:
 	*/
 	virtual void setReportAllocationNames(bool value) = 0;
 
-protected:
-	virtual ~PxFoundation() {}
+	virtual void registerAllocationListener(PxAllocationListener& listener) = 0;
+
+	virtual void deregisterAllocationListener(PxAllocationListener& listener) = 0;
+
+	virtual void registerErrorCallback(PxErrorCallback& callback) = 0;
+
+	virtual void deregisterErrorCallback(PxErrorCallback& callback) = 0;
+
+	virtual bool error(PxErrorCode::Enum c, const char* file, int line, const char* messageFmt, ...) = 0;
+
+	virtual bool error(PxErrorCode::Enum, const char* file, int line, const char* messageFmt, va_list) = 0;
+
+  protected:
+	virtual ~PxFoundation()
+	{
+	}
 };
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
+// PT: use this to make generated code shorter (e.g. from 52 to 24 bytes of assembly (10 to 4 instructions))
+// We must use a macro here to let __FILE__ expand to the proper filename (it doesn't work with an inlined function).
+#define PX_IMPLEMENT_OUTPUT_ERROR															\
+template<const int errorCode>																\
+static PX_NOINLINE bool outputError(int line, const char* message)							\
+{																							\
+	return PxGetFoundation().error(PxErrorCode::Enum(errorCode), __FILE__, line, message);	\
+}
 
 /**
 \brief Creates an instance of the foundation class
 
 The foundation class is needed to initialize higher level SDKs. There may be only one instance per process.
-Calling this method after an instance has been created already will result in an error message and NULL will be returned.
+Calling this method after an instance has been created already will result in an error message and NULL will be
+returned.
 
-\param version Version number we are expecting (should be PX_PHYSICS_VERSION)
+\param version Version number we are expecting (should be #PX_PHYSICS_VERSION)
 \param allocator User supplied interface for allocating memory(see #PxAllocatorCallback)
 \param errorCallback User supplied interface for reporting errors and displaying messages(see #PxErrorCallback)
 \return Foundation instance on success, NULL if operation failed
 
-@see PxFoundation
+\see PxFoundation
 */
+PX_C_EXPORT PX_FOUNDATION_API physx::PxFoundation* PX_CALL_CONV PxCreateFoundation(physx::PxU32 version, physx::PxAllocatorCallback& allocator, physx::PxErrorCallback& errorCallback);
 
-PX_C_EXPORT PX_FOUNDATION_API physx::PxFoundation* PX_CALL_CONV PxCreateFoundation(physx::PxU32 version,
-																			     physx::PxAllocatorCallback& allocator,
-																			     physx::PxErrorCallback& errorCallback);
+
+PX_C_EXPORT PX_FOUNDATION_API void PX_CALL_CONV PxSetFoundationInstance(physx::PxFoundation& foundation);
+
+
 /**
 \brief Retrieves the Foundation SDK after it has been created.
 
 \note The behavior of this method is undefined if the foundation instance has not been created already.
 
-@see PxCreateFoundation()
+\see PxCreateFoundation(), PxIsFoundationValid()
 */
+#if PX_CLANG
+#if PX_LINUX
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif // PX_LINUX
+#endif // PX_CLANG
 PX_C_EXPORT PX_FOUNDATION_API physx::PxFoundation& PX_CALL_CONV PxGetFoundation();
+#if PX_CLANG
+#if PX_LINUX
+#pragma clang diagnostic pop
+#endif // PX_LINUX
+#endif // PX_CLANG
 
- /** @} */
-#endif // PX_FOUNDATION_PX_FOUNDATION_H
+/**
+\brief Similar to PxGetFoundation() except it handles the case if the foundation was not created already.
+\return Pointer to the foundation if an instance is currently available, otherwise null.
+
+\see PxCreateFoundation(), PxGetFoundation()
+*/
+PX_C_EXPORT PX_FOUNDATION_API physx::PxFoundation* PX_CALL_CONV PxIsFoundationValid();
+
+#if !PX_DOXYGEN
+namespace physx
+{
+#endif
+class PxProfilerCallback;
+class PxAllocatorCallback;
+class PxErrorCallback;
+#if !PX_DOXYGEN
+} // namespace physx
+#endif
+
+/**
+\brief Get the callback that will be used for all profiling.
+*/
+PX_C_EXPORT PX_FOUNDATION_API physx::PxProfilerCallback* PX_CALL_CONV PxGetProfilerCallback();
+
+/**
+\brief Set the callback that will be used for all profiling.
+*/
+PX_C_EXPORT PX_FOUNDATION_API void PX_CALL_CONV PxSetProfilerCallback(physx::PxProfilerCallback* profiler);
+
+/**
+\brief Get the allocator callback
+*/
+PX_C_EXPORT PX_FOUNDATION_API physx::PxAllocatorCallback* PX_CALL_CONV PxGetAllocatorCallback();
+
+/**
+\brief Get the broadcasting allocator callback
+*/
+PX_C_EXPORT PX_FOUNDATION_API physx::PxAllocatorCallback* PX_CALL_CONV PxGetBroadcastAllocator(bool* reportAllocationNames = NULL);
+
+/**
+\brief Get the error callback
+*/
+PX_C_EXPORT PX_FOUNDATION_API physx::PxErrorCallback* PX_CALL_CONV PxGetErrorCallback();
+
+/**
+\brief Get the broadcasting error callback
+*/
+PX_C_EXPORT PX_FOUNDATION_API physx::PxErrorCallback* PX_CALL_CONV PxGetBroadcastError();
+
+/**
+\brief Get the warn once timestamp
+*/
+PX_C_EXPORT PX_FOUNDATION_API physx::PxU32 PX_CALL_CONV PxGetWarnOnceTimeStamp();
+
+/**
+\brief Decrement the ref count of PxFoundation
+*/
+PX_C_EXPORT PX_FOUNDATION_API void PX_CALL_CONV PxDecFoundationRefCount();
+
+/**
+\brief Increment the ref count of PxFoundation
+*/
+PX_C_EXPORT PX_FOUNDATION_API void PX_CALL_CONV PxIncFoundationRefCount();
+
+#endif
+

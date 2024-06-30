@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Core\Physics\Physics.cpp" />
     <ClCompile Include="src\Game\Game.cpp" />
     <ClCompile Include="src\Core\LightPoint.cpp" />
     <ClCompile Include="src\Core\Model3D.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="src\Core\Animations\AnimatedMesh.hpp" />
     <ClInclude Include="src\Core\AudioManager.hpp" />
     <ClInclude Include="src\Core\Physics\ConvexMesh.hpp" />
+    <ClInclude Include="src\Core\Physics\Physics.h" />
     <ClInclude Include="src\Core\Shader.hpp" />
     <ClInclude Include="src\Debugging\Hierarchy.hpp" />
     <ClInclude Include="src\Debugging\Log.hpp" />

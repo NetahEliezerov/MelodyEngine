@@ -1,53 +1,50 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-#ifndef PX_PHYSICS_CCT_OBSTACLES
-#define PX_PHYSICS_CCT_OBSTACLES
-/** \addtogroup character
-  @{
-*/
+#ifndef PX_CONTROLLER_OBSTACLES_H
+#define PX_CONTROLLER_OBSTACLES_H
 
-#include "characterkinematic/PxCharacter.h"
 #include "characterkinematic/PxExtended.h"
 #include "geometry/PxGeometry.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 
-	#define INVALID_OBSTACLE_HANDLE	0xffffffff
+	class PxControllerManager;
+
+	#define PX_INVALID_OBSTACLE_HANDLE	0xffffffff
 
 	/**
 	\brief Base class for obstacles.
 
-	@see PxBoxObstacle PxCapsuleObstacle PxObstacleContext
+	\see PxBoxObstacle PxCapsuleObstacle PxObstacleContext
 	*/
 	class PxObstacle
 	{
@@ -56,9 +53,8 @@ namespace physx
 													mType		(PxGeometryType::eINVALID),
 													mUserData	(NULL),
 													mPos		(0.0, 0.0, 0.0),
-													mRot		(PxQuat::createIdentity())
+													mRot		(PxQuat(PxIdentity))
 												{}
-												~PxObstacle()					{}
 
 						PxGeometryType::Enum	mType; 
 		public:
@@ -73,7 +69,7 @@ namespace physx
 	/**
 	\brief A box obstacle.
 
-	@see PxObstacle PxCapsuleObstacle PxObstacleContext
+	\see PxObstacle PxCapsuleObstacle PxObstacleContext
 	*/
 	class PxBoxObstacle : public PxObstacle
 	{
@@ -81,7 +77,6 @@ namespace physx
 												PxBoxObstacle() :
 													mHalfExtents(0.0f)
 												{ mType = PxGeometryType::eBOX;		 }
-												~PxBoxObstacle()		{}
 
 						PxVec3					mHalfExtents;
 	};
@@ -89,7 +84,7 @@ namespace physx
 	/**
 	\brief A capsule obstacle.
 
-	@see PxBoxObstacle PxObstacle PxObstacleContext
+	\see PxBoxObstacle PxObstacle PxObstacleContext
 	*/
 	class PxCapsuleObstacle : public PxObstacle
 	{
@@ -98,20 +93,19 @@ namespace physx
 													mHalfHeight	(0.0f),
 													mRadius		(0.0f)
 												{ mType = PxGeometryType::eCAPSULE;	 }
-												~PxCapsuleObstacle()								{}
 
 						PxReal					mHalfHeight;
 						PxReal					mRadius;
 	};
 
-	typedef PxU32	ObstacleHandle;
+	typedef PxU32	PxObstacleHandle;
 
 	/**
 	\brief Context class for obstacles.
 
 	An obstacle context class contains and manages a set of user-defined obstacles.
 
-	@see PxBoxObstacle PxCapsuleObstacle PxObstacle
+	\see PxBoxObstacle PxCapsuleObstacle PxObstacle
 	*/
 	class PxObstacleContext
 	{
@@ -125,13 +119,20 @@ namespace physx
 		virtual	void				release()															= 0;
 
 		/**
+		\brief Retrieves the controller manager associated with this context.
+
+		\return The associated controller manager
+		*/
+		virtual PxControllerManager&	getControllerManager() const									= 0;
+
+		/**
 		\brief Adds an obstacle to the context.
 
 		\param	[in]	obstacle	Obstacle data for the new obstacle. The data gets copied.
 
 		\return Handle for newly-added obstacle
 		*/
-		virtual	ObstacleHandle		addObstacle(const PxObstacle& obstacle)								= 0;
+		virtual	PxObstacleHandle	addObstacle(const PxObstacle& obstacle)								= 0;
 
 		/**
 		\brief Removes an obstacle from the context.
@@ -140,7 +141,7 @@ namespace physx
 
 		\return True if success
 		*/
-		virtual	bool				removeObstacle(ObstacleHandle handle)								= 0;
+		virtual	bool				removeObstacle(PxObstacleHandle handle)								= 0;
 
 		/**
 		\brief Updates data for an existing obstacle.
@@ -150,7 +151,7 @@ namespace physx
 
 		\return True if success
 		*/
-		virtual	bool				updateObstacle(ObstacleHandle handle, const PxObstacle& obstacle)	= 0;
+		virtual	bool				updateObstacle(PxObstacleHandle handle, const PxObstacle& obstacle)	= 0;
 
 		/**
 		\brief Retrieves number of obstacles in the context.
@@ -171,16 +172,15 @@ namespace physx
 		/**
 		\brief Retrieves desired obstacle by given handle.
 
-		\param	[in]	handle		Obstacle handle
+		\param	[in]	handle			Obstacle handle
 
 		\return Desired obstacle
 		*/
-		virtual	const PxObstacle*	getObstacleByHandle(ObstacleHandle handle)										const	= 0;
+		virtual	const PxObstacle*	getObstacleByHandle(PxObstacleHandle handle)				const	= 0;
 	};
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 }
 #endif
 
-/** @} */
 #endif

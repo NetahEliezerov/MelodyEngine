@@ -1,49 +1,44 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-
-#ifndef PX_COLLISION_NXHEIGHTFIELDFLAG
-#define PX_COLLISION_NXHEIGHTFIELDFLAG
-/** \addtogroup geomutils
-@{
-*/
+#ifndef PX_HEIGHT_FIELD_FLAG_H
+#define PX_HEIGHT_FIELD_FLAG_H
 
 #include "foundation/PxFlags.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 
 /**
 \brief Describes the format of height field samples.
-@see PxHeightFieldDesc.format PxHeightFieldDesc.samples
+\see PxHeightFieldDesc.format PxHeightFieldDesc.samples
 */
 struct PxHeightFieldFormat
 {
@@ -67,15 +62,15 @@ struct PxHeightFieldFormat
 
 		This is the only format supported at the moment.
 
-		@see PxHeightFieldDesc.format PxHeightFieldDesc.samples
+		\see PxHeightFieldDesc.format PxHeightFieldDesc.samples
 		*/
-		eS16_TM = (1 << 0),
+		eS16_TM = (1 << 0)
 	};
 };
 
 /** 
 \brief Determines the tessellation of height field cells.
-@see PxHeightFieldDesc.format PxHeightFieldDesc.samples
+\see PxHeightFieldDesc.format PxHeightFieldDesc.samples
 */
 struct PxHeightFieldTessFlag
 {
@@ -118,13 +113,7 @@ struct PxHeightFieldTessFlag
 		V row
 		</pre>
 		
-		<b>Platform:</b>
-		\li PC SW: Yes
-		\li PS3  : Yes
-		\li XB360: Yes
-		\li WII	 : Yes
-
-		@see PxHeightFieldDesc.format PxHeightFieldDesc.samples
+		\see PxHeightFieldDesc.format PxHeightFieldDesc.samples
 		*/
 		e0TH_VERTEX_SHARED = (1 << 0)
 	};
@@ -146,27 +135,22 @@ struct PxHeightFieldFlag
 
 		This flag is ignored in contact generation with sphere and capsule shapes.
 
-		@see PxHeightFieldDesc.flags
+		\see PxHeightFieldDesc.flags
 		*/
-		eNO_BOUNDARY_EDGES = (1 << 0),
+		eNO_BOUNDARY_EDGES = (1 << 0)
 	};
 };
 
 /**
 \brief collection of set bits defined in PxHeightFieldFlag.
 
-@see PxHeightFieldFlag
+\see PxHeightFieldFlag
 */
-#if defined(PX_WINDOWS)
-template class PxFlags<PxHeightFieldFlag::Enum,PxU16>;  // needed for dll export
-#endif
-
 typedef PxFlags<PxHeightFieldFlag::Enum,PxU16> PxHeightFieldFlags;
-PX_FLAGS_OPERATORS(PxHeightFieldFlag::Enum,PxU16);
+PX_FLAGS_OPERATORS(PxHeightFieldFlag::Enum,PxU16)
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

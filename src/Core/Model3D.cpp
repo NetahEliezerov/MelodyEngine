@@ -10,6 +10,7 @@
 #include "../Game/Game.h"
 #include "../Player/Player.h"
 #include "../World/WorldLevel.h"
+#include "Physics/Physics.h"
 
 #include <chrono>
 #include <thread>
@@ -93,7 +94,10 @@ void Model3D::Init(ObjectSettings settings, WorldLevel* recLevel)
     if (recLevel == nullptr)
         std::cout << "NULL: " << settings.label;
     if (recLevel != nullptr)
+    {
         recLevel->sceneHierarchy.push_back(this);
+        PPhysicsWorld::state.objects.push_back({ label, scale, transform, 1 });
+    }
 }
 
 
@@ -121,6 +125,13 @@ void Model3D::Update(glm::vec3 cameraPos, LightPoint* light, float deltaTime)
     if (visibility)
     {
         glUseProgram(shader);
+
+        glUniform3fv(glGetUniformLocation(Game::state.character->shader, "spotLightPos"), 1, glm::value_ptr(light->spotLightPos));
+        glUniform3fv(glGetUniformLocation(Game::state.character->shader, "spotLightDir"), 1, glm::value_ptr(light->spotLightDir));
+        glUniform1f(glGetUniformLocation(Game::state.character->shader, "spotLightCutoff"), glm::cos(glm::radians(light->spotLightCutoff)));
+        glUniform1f(glGetUniformLocation(Game::state.character->shader, "spotLightOuterCutoff"), glm::cos(glm::radians(light->spotLightOuterCutoff)));
+        
+        glUniform1f(glGetUniformLocation(Game::state.character->shader, "isSpotlight"), light->isSpotlight);
 
         if (isSelected)
             glUniform1i(glGetUniformLocation(shader, "whiteTint"), true);

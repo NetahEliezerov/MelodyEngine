@@ -1,111 +1,86 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
-// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
 
+#ifndef PX_ASSERT_H
+#define PX_ASSERT_H
 
-#ifndef PX_FOUNDATION_PX_ASSERT_H
-#define PX_FOUNDATION_PX_ASSERT_H
-
-/** \addtogroup foundation 
-@{ */
-
+#include "foundation/PxFoundationConfig.h"
 #include "foundation/Px.h"
 
-#ifdef PX_WINDOWS
 
-#include <stdio.h>
-#include <crtdbg.h>
-
-extern void __debugbreak();
-#ifndef PX_DOXYGEN
-
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
-		PX_INLINE void PxAssert(const char* exp, const char* file, int line, bool* ignore)
-		{
-			//printf("Assertion failed: %s, file %s, line %d\n", exp, file, line);
-#ifdef _DEBUG
-			if (ignore != NULL)
-			{
-				int reportType = _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_REPORT_MODE);
-				// PH: _CrtDbgReport returns -1 on error, 0 on 'ignore', 1 on 'retry'. Hitting 'abort' will terminate the process immediately.
-				// If the mode is not 'Window', we just always break.
-				*ignore = *ignore || ((reportType == _CRTDBG_MODE_WNDW) && (_CrtDbgReport(_CRT_ASSERT, file, line, NULL, "%s", exp) == 0));
-			}
 
-			if(ignore == NULL || !*ignore)
+/**
+ * \brief  Built-in assert function
+ */
+PX_FOUNDATION_API void PxAssert(const char* exp, const char* file, int line, bool& ignore);
+
+#if !PX_ENABLE_ASSERTS
+	#define PX_ASSERT(exp) ((void)0)
+	#define PX_ALWAYS_ASSERT_MESSAGE(exp) ((void)0)
+	#define PX_ASSERT_WITH_MESSAGE(condition, message) ((void)0)
 #else
-			PX_FORCE_PARAMETER_REFERENCE(exp);
-			PX_FORCE_PARAMETER_REFERENCE(file);
-			PX_FORCE_PARAMETER_REFERENCE(line);
-			PX_FORCE_PARAMETER_REFERENCE(ignore);
+#if PX_VC
+	#define PX_CODE_ANALYSIS_ASSUME(exp)	\
+		__analysis_assume(!!(exp)) // This macro will be used to get rid of analysis warning messages if a PX_ASSERT is used
+	// to "guard" illegal mem access, for example.
+#else
+	#define PX_CODE_ANALYSIS_ASSUME(exp)
 #endif
-				__debugbreak();
+	#define PX_ASSERT(exp)																			\
+		{																							\
+			static bool _ignore = false;															\
+			((void)((!!(exp)) || (!_ignore && (physx::PxAssert(#exp, PX_FL, _ignore), false))));	\
+			PX_CODE_ANALYSIS_ASSUME(exp);															\
 		}
-
-#ifndef PX_DOXYGEN
-} // namespace physx
-#endif
-
-#ifdef __CUDACC__
-#	define PX_ASSERT(exp)					((void)0)
-#	define PX_ALWAYS_ASSERT_MESSAGE(exp)	((void)0)
-#else
-#ifndef NDEBUG
-#	define PX_ASSERT(exp)					{ static bool ignore = false; (void)( (!!(exp)) || (physx::PxAssert(#exp, __FILE__, __LINE__, &ignore), false) ); }
-#	define PX_ALWAYS_ASSERT_MESSAGE(exp)	{ static bool ignore = false; (void)( (physx::PxAssert(#exp, __FILE__, __LINE__, &ignore), false) ); }
-#else
-#	define PX_ASSERT(exp)					((void)0)
-#	define PX_ALWAYS_ASSERT_MESSAGE(exp)	((void)0)
-#endif
-#endif
-
-#elif defined(PX_PS3)
-#include "foundation/ps3/PxPS3Assert.h"
-#elif defined(PX_ANDROID)
-#include <assert.h>
-#ifndef NDEBUG
-#	include <android/log.h>
-#	define PX_ASSERT(exp)					{ if(!(exp)) __android_log_print(ANDROID_LOG_INFO, "PX_ASSERT", "%s: %s:%d\n", #exp, __FILE__, __LINE__); assert(exp); }
-#	define PX_ALWAYS_ASSERT_MESSAGE(exp)	{ __android_log_print(ANDROID_LOG_INFO, "PX_ASSERT", "%s: %s:%d\n", #exp, __FILE__, __LINE__); assert((exp) && false); }
-#else
-#	define PX_ASSERT(exp)					((void)0)
-#	define PX_ALWAYS_ASSERT_MESSAGE(exp)	((void)0)
-#endif
-#else // PX_WINDOWS, other platforms just forward to standard assert
-#include <assert.h>
-#define PX_ASSERT(exp)						assert(exp)
-#define PX_ALWAYS_ASSERT_MESSAGE(exp)		assert((exp) && false)
-#endif
-
+	#define PX_ALWAYS_ASSERT_MESSAGE(exp)															\
+		{																							\
+			static bool _ignore = false;															\
+			if(!_ignore)																			\
+				physx::PxAssert(exp, PX_FL, _ignore);												\
+		}
+	#define PX_ASSERT_WITH_MESSAGE(exp, message)													\
+		{																							\
+			static bool _ignore = false;															\
+			((void)((!!(exp)) || (!_ignore && (physx::PxAssert(message, PX_FL, _ignore), false))));	\
+			PX_CODE_ANALYSIS_ASSUME(exp);															\
+		}
+#endif // !PX_ENABLE_ASSERTS
 
 #define PX_ALWAYS_ASSERT() PX_ASSERT(0)
 
- /** @} */
-#endif // PX_FOUNDATION_PX_ASSERT_H
+#if !PX_DOXYGEN
+} // namespace physx
+#endif
+
+
+#endif
+

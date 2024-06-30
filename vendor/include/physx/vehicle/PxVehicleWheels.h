@@ -1,113 +1,194 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-
 #ifndef PX_VEHICLE_WHEELS_H
 #define PX_VEHICLE_WHEELS_H
-/** \addtogroup vehicle
-  @{
-*/
 
-#include "PxFiltering.h"
 #include "foundation/PxSimpleTypes.h"
 #include "vehicle/PxVehicleShaders.h"
 #include "vehicle/PxVehicleComponents.h"
+#include "common/PxBase.h"
+#include "PxRigidDynamic.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 
 class PxVehicleWheels4SimData;
 class PxVehicleWheels4DynData;
-class PxRigidDynamic;
+class PxVehicleTireForceCalculator;
 class PxShape;
 class PxPhysics;
 class PxMaterial;
 
 /**
-\brief Data structure describing configuration data of a vehicle with up to 20 wheels,
+\deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+\brief Flags to configure the vehicle wheel simulation.
+
+\see PxVehicleWheelsSimData::setFlags(), PxVehicleWheelsSimData::getFlags()
+*/
+struct PX_DEPRECATED PxVehicleWheelsSimFlag
+{
+	enum Enum
+	{
+		/**
+		\brief Limit the suspension expansion velocity.
+
+		For extreme damping ratios, large damping forces might result in the vehicle sticking to the ground where
+		one would rather expect to see the vehicle lift off. While it is highly recommended to use somewhat realistic 
+		damping ratios, this flag can be used to limit the velocity of the suspension. In more detail, the simulation 
+		will check whether the suspension can extend to the target length in the given simulation time step. If that 
+		is the case, the suspension force will be computed as usual, else the force will be set to zero. Enabling 
+		this feature gives a slightly more realisitic behavior at the potential cost of more easily losing control 
+		when steering the vehicle.
+		*/
+		eLIMIT_SUSPENSION_EXPANSION_VELOCITY = (1 << 0),
+
+		/**
+		\brief Disable internal cylinder-plane intersection test.
+
+		By default the internal code runs a post-process on sweep results, approximating the wheel shape with a
+		cylinder and tweaking the sweep hit results accordingly. This can produce artefacts in certain cases, in
+		particular when the swept shape is very different from a cylinder - e.g. with swept spheres. This flag
+		tells the system to disable this internal test, and reuse the direct user-provided sweep results.
+
+		The default code refines the sweep results in each substep. Enabling this flag makes the system partially
+		reuse the same sweep results over each substep, which could potentially create other artefacts.
+		*/
+		eDISABLE_INTERNAL_CYLINDER_PLANE_INTERSECTION_TEST = (1 << 1),
+
+		/**
+		\brief Disable suspension force projection.
+
+		By default the internal code modulates the suspension force with the contact normal, i.e. the more the contact
+		normal is aligned with the suspension direction, the bigger the force. This can create issues when using a
+		single blocking hit, whose unique contact normal sometimes does not accurately capture the reality of the
+		surrounding geometry. For example it can weaken the suspension force too much, which visually makes the wheel
+		move up and down against e.g. a kerb. Enabling this flag tells the system to disable the modulation of the
+		suspension force by the contact normal.
+		
+		The rationale is that a real tire has a deformed contact patch containing multiple normals, and even if some
+		of these normals are bent when colliding against a kerb, there would still be a large area of the contact patch
+		touching the ground, and getting normals aligned with the suspension. This is difficult to capture with simple
+		sweep results, especially with a single sweep hit whose normal is computed by a less than accurate algorithm
+		like GJK. Using this flag shortcuts these issues, which can improves the behavior when driving over kerbs or
+		small obstacles.
+		*/
+		eDISABLE_SUSPENSION_FORCE_PROJECTION = (1 << 2),
+
+		/**
+		\brief Disable check for sprung mass values summing up to chassis mass.
+
+		Generally, the sum of the suspension sprung mass values should match the chassis mass. However, there can be
+		scenarios where this is not necessarily desired. Taking a semi-trailer truck as an example, a large part of
+		the trailer mass will rest on the tractor unit and not the trailer wheels. This flag allows the user to set
+		the values as desired without error messages being sent.
+		*/
+		eDISABLE_SPRUNG_MASS_SUM_CHECK = (1 << 3)
+	};
+};
+
+/**
+\brief Collection of set bits defined in #PxVehicleWheelsSimFlag.
+
+\see PxVehicleWheelsSimFlag
+*/
+typedef PxFlags<PxVehicleWheelsSimFlag::Enum, PxU32> PxVehicleWheelsSimFlags;
+PX_FLAGS_OPERATORS(PxVehicleWheelsSimFlag::Enum, PxU32)
+
+/**
+\deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+\brief Data structure describing configuration data of a vehicle with up to 20 wheels.
 */
 
-class PxVehicleWheelsSimData
+class PX_DEPRECATED PxVehicleWheelsSimData
 {
 public:
 
 	friend class PxVehicleWheels;
+	friend class PxVehicleNoDrive;
 	friend class PxVehicleDrive4W;
 	friend class PxVehicleDriveTank;
 	friend class PxVehicleUpdate;
 
 	/**
-	\brief Allocate a PxVehicleWheelsSimData instance for with numWheels.
-	@see free
+	\brief Allocate a PxVehicleWheelsSimData instance for with nbWheels.
+	\see free
 	*/
-	static PxVehicleWheelsSimData* allocate(const PxU32 numWheels);
+	static PxVehicleWheelsSimData* allocate(const PxU32 nbWheels);
 
 	/**
 	\brief Setup with mass information that can be applied to the default values of the suspensions, wheels, and tires
 	set in their respective constructors.
-	This function assumes that the suspensions equally share the load of the chassis mass.  It also
+
+	\param chassisMass is the mass of the chassis.
+
+	\note This function assumes that the suspensions equally share the load of the chassis mass.  It also
 	assumes that the suspension will have a particular natural frequency and damping ratio that is typical
 	of a standard car.  If either of these assumptions is broken then each suspension will need to 
 	be individually configured with custom strength, damping rate, and sprung mass.
-	@see allocate
+
+	\see allocate
 	*/
 	void setChassisMass(const PxF32 chassisMass);
 
 	/**
 	\brief Free a PxVehicleWheelsSimData instance 
-	@see allocate
+	\see allocate
 	*/
 	void free();
 
 	/**
 	\brief Copy wheel simulation data.
+	\note The number of wheels on both instances of PxVehicleWheelsSimData must match.
 	*/
 	PxVehicleWheelsSimData& operator=(const PxVehicleWheelsSimData& src);
 
 	/**
 	\brief Copy the data of a single wheel unit (wheel, suspension, tire) from srcWheel of src to trgWheel.
+	\param[in] src is the data to be copied.
+	\param[in] srcWheel is the wheel whose data will be copied from src.
+	\param[in] trgWheel is the wheel that will be assigned the copied data.
 	*/
 	void copy(const PxVehicleWheelsSimData& src, const PxU32 srcWheel, const PxU32 trgWheel);
 
 	/**
 	\brief Return the number of wheels 
-	@see allocate
+	\see allocate
 	*/
-	PxU32 getNumWheels() const {return mNumActiveWheels;}
+	PxU32 getNbWheels() const {return mNbActiveWheels;}
 
 	/**
 	\brief Return the suspension data of the idth wheel
 	*/
 	const PxVehicleSuspensionData& getSuspensionData(const PxU32 id) const;
-
+		
 	/**
 	\brief Return the wheel data of the idth wheel
 	*/
@@ -117,31 +198,66 @@ public:
 	\brief Return the tire data of the idth wheel
 	*/
 	const PxVehicleTireData& getTireData(const PxU32 id) const;
-
+	
 	/**
 	\brief Return the direction of travel of the suspension of the idth wheel
 	*/
 	const PxVec3& getSuspTravelDirection(const PxU32 id) const;
 
 	/**
-	\brief Return the application point of the suspension force of the suspension of the idth wheel.
-	\brief Specified relative to the centre of mass of the rigid body
+	\brief Return the application point of the suspension force of the suspension of the idth wheel as an offset from the rigid body center of mass.
+	\note Specified relative to the center of mass of the rigid body
 	*/
 	const PxVec3& getSuspForceAppPointOffset(const PxU32 id) const;
 
 	/**
-	\brief Return the application point of the tire force of the tire of the idth wheel.
-	\brief Specified relative to the centre of mass of the rigid body
+	\brief Return the application point of the tire force of the tire of the idth wheel as an offset from the rigid body center of mass.
+	\note Specified relative to the centre of mass of the rigid body
 	*/
 	const PxVec3& getTireForceAppPointOffset(const PxU32 id) const;
-
+		
 	/**
 	\brief Return the offset from the rigid body centre of mass to the centre of the idth wheel.
 	*/
 	const PxVec3& getWheelCentreOffset(const PxU32 id) const;	
 
 	/**
-	\brief Return the data that describes the filtering of the tire load to produce smoother handling at large timesteps.
+	\brief Return the wheel mapping for the ith wheel.  
+	
+	\note The return value is the element in the array of 
+	shapes of the vehicle's PxRigidDynamic that corresponds to the ith wheel.  A return value of -1 means
+	that the wheel is not mapped to a PxShape.
+
+	\see PxRigidActor.getShapes
+	*/
+	PxI32 getWheelShapeMapping(const PxU32 wheelId) const;
+
+	/**
+	\brief Return the scene query filter data used by the specified suspension line
+	*/
+	const PxFilterData& getSceneQueryFilterData(const PxU32 suspId) const;
+
+	/**
+	\brief Return the number of unique anti-roll bars that have been added with addAntiRollBarData
+	\see PxVehicleWheelsSimData::addAntiRollBarData
+	*/
+	PxU32 getNbAntiRollBars() const 
+	{
+		return mNbActiveAntiRollBars;
+	}
+
+	/**
+	\brief Return a specific anti-roll bar.
+	\param antiRollId is the unique id of the anti-roll bar
+	\note The return value of addAntiRollBarData is a unique id for that specific anti-roll bar 
+	and can be used as input parameter for getAntiRollBarData in order to query the same anti-roll bar.  
+	Alternatively, it is possible to iterate over all anti-roll bars by choosing antiRollId 
+	in range (0, getNbAntiRollBars()).
+	*/
+	const PxVehicleAntiRollBarData& getAntiRollBarData(const PxU32 antiRollId) const;
+	
+	/**
+	\brief Return the data that describes the filtering of the tire load to produce smoother handling at large time-steps.
 	*/
 	PX_FORCE_INLINE const PxVehicleTireLoadFilterData& getTireLoadFilterData() const 
 	{
@@ -150,99 +266,238 @@ public:
 
 	/**
 	\brief Set the suspension data of the idth wheel
+	\param[in] id is the wheel index.
+	\param[in] susp is the suspension data to be applied.
 	*/
 	void setSuspensionData(const PxU32 id, const PxVehicleSuspensionData& susp);
 
 	/**
 	\brief Set the wheel data of the idth wheel
+	\param[in] id is the wheel index.
+	\param[in] wheel is the wheel data to be applied.
 	*/
 	void setWheelData(const PxU32 id, const PxVehicleWheelData& wheel);
 
 	/**
 	\brief Set the tire data of the idth wheel
+	\param[in] id is the wheel index.
+	\param[in] tire is the tire data to be applied.
 	*/
 	void setTireData(const PxU32 id, const PxVehicleTireData& tire);
 
 	/**
 	\brief Set the direction of travel of the suspension of the idth wheel
+	\param[in] id is the wheel index
+	\param[in] dir is the suspension travel direction to be applied.
 	*/
 	void setSuspTravelDirection(const PxU32 id, const PxVec3& dir);
 	
 	/**
 	\brief Set the application point of the suspension force of the suspension of the idth wheel.
-	\brief Specified relative to the centre of mass of the rigid body
+	\param[in] id is the wheel index
+	\param[in] offset is the offset from the rigid body center of mass to the application point of the suspension force.
+	\note Specified relative to the centre of mass of the rigid body
 	*/
 	void setSuspForceAppPointOffset(const PxU32 id, const PxVec3& offset);									
 	
 	/**
 	\brief Set the application point of the tire force of the tire of the idth wheel.
-	\brief Specified relative to the centre of mass of the rigid body
+	\param[in] id is the wheel index
+	\param[in] offset is the offset from the rigid body center of mass to the application point of the tire force.
+	\note Specified relative to the centre of mass of the rigid body
 	*/
 	void setTireForceAppPointOffset(const PxU32 id, const PxVec3& offset);
 
 	/**
 	\brief Set the offset from the rigid body centre of mass to the centre of the idth wheel.
+	\param[in] id is the wheel index
+	\param[in] offset is the offset from the rigid body center of mass to the center of the wheel at rest.
+	\note Specified relative to the centre of mass of the rigid body
 	*/
-	void setWheelCentreOffset(const PxU32 id, const PxVec3& offset);									
+	void setWheelCentreOffset(const PxU32 id, const PxVec3& offset);	
+
+	/**
+	\brief Set mapping between wheel id and position of corresponding wheel shape in the list of actor shapes.
+	
+	\note This mapping is used to pose the correct wheel shapes with the latest wheel rotation angle, steer angle, and suspension travel
+	while allowing arbitrary ordering of the wheel shapes in the actor's list of shapes.
+	
+	\note Use setWheelShapeMapping(i,-1) to register that there is no wheel shape corresponding to the ith wheel
+	
+	\note Set setWheelShapeMapping(i,k) to register that the ith wheel corresponds to the kth shape in the actor's list of shapes.
+	
+	\note The default values correspond to setWheelShapeMapping(i,i) for all wheels.
+	
+	\note Calling this function will also pose the relevant PxShape at the rest position of the wheel.
+
+	\param wheelId is the wheel index
+
+	\param shapeId is the shape index.
+	
+	\see PxVehicleUpdates, PxVehicleDrive4W::setup, PxVehicleDriveTank::setup, PxVehicleNoDrive::setup, setSceneQueryFilterData, PxRigidActor::getShapes
+	*/
+	void setWheelShapeMapping(const PxU32 wheelId, const PxI32 shapeId);
+
+	/**
+	\brief Set the scene query filter data that will be used for raycasts along the travel
+	direction of the specified suspension. The default value is PxFilterData(0,0,0,0)
+	\param suspId is the wheel index
+	\param sqFilterData is the raycast filter data for the suspension raycast.
+	\see setWheelShapeMapping
+	*/
+	void setSceneQueryFilterData(const PxU32 suspId, const PxFilterData& sqFilterData);
 
 	/**
 	\brief Set the data that describes the filtering of the tire load to produce smoother handling at large timesteps.
+	\param tireLoadFilter is the smoothing function data.
 	*/
 	void setTireLoadFilterData(const PxVehicleTireLoadFilterData& tireLoadFilter);
 
 	/**
+	\brief Set the anti-roll suspension for a pair of wheels.
+
+	\param antiRoll is the anti-roll suspension.
+
+	\note If an anti-roll bar has already been set for the same logical wheel pair 
+	(independent of wheel index order specified by PxVehicleAntiRollBar.mWheel0 and PxVehicleAntiRollBar.mWheel0) 
+	then the existing anti-roll bar is updated with a new stiffness parameter antiRoll.mStiffness.  
+
+	\note If the wheel pair specified by antiRoll does not yet have an anti-roll bar then antiRoll is added to 
+	a list of anti-roll bars for the vehicle.
+
+	\return If antiRoll represents a new wheel pair then a unique id is assigned to the anti-roll bar and returned. 
+	If antiRoll represents an existing wheel pair then the unique id of the existing anti-roll bar is returned.
+	The return value is always in range (0, getNbAntiRollBars()).
+
+	\note The return value can be used to query the anti-roll bar with getAntiRollBarData(id).
+
+	\note The number of possible anti-roll bars is limited to half the wheel count.
+
+	\note An existing anti-roll bar can be disabled by calling antiRoll.mStiffness to zero.
+
+	\see PxVehicleWheelsSimData::getAntiRollBarData, PxVehicleAntiRollBarData
+	*/
+	PxU32 addAntiRollBarData(const PxVehicleAntiRollBarData& antiRoll);
+
+	/**
 	\brief Disable a wheel so that zero suspension forces and zero tire forces are applied to the rigid body from this wheel.
 
-	If the vehicle is of type PxVehicle4W then the differential (PxVehicleDifferential4WData)
+	\note If the vehicle has a differential (PxVehicleNW/PxVehicle4W) then the differential (PxVehicleDifferentialNWData/PxVehicleDifferential4WData)
 	needs to be configured so that no drive torque is delivered to the disabled wheel.
-	If the vehicle is of type PxVehicleNoDrive then zero drive torque must be applied to the disabled wheel.
-	For tanks (PxVehicleDriveTank) any drive torque that could be delivered to the wheel through the tank differential will be 
+	
+	\note If the vehicle is of type PxVehicleNoDrive then zero drive torque must be applied to the disabled wheel.
+	
+	\note For tanks (PxVehicleDriveTank) any drive torque that could be delivered to the wheel through the tank differential will be 
 	re-directed to the remaining enabled wheels.
-	@see enableWheel
-	@see PxVehicleDifferential4WData::mFrontLeftRightSplit, PxVehicleDifferential4WData::mRearLeftRightSplit, PxVehicleDifferential4WData::mType
-	@see PxVehicleNoDrive::setDriveTorque
-	@see PxVehicle4WEnable3WTadpoleMode, PxVehicle4WEnable3WDeltaMode
 
-	If a PxShape is associated with the disabled wheel then the association must be broken by calling PxVehicleWheels::setWheelShapeMapping(wheelId, -1). 
-	@see PxVehicleWheels::setWheelShapeMapping
+	\see enableWheel
+	\see PxVehicleDifferentialNWData::setDrivenWheel
+	\see PxVehicleDifferential4WData::mFrontLeftRightSplit, PxVehicleDifferential4WData::mRearLeftRightSplit, PxVehicleDifferential4WData::mType
+	\see PxVehicleNoDrive::setDriveTorque
+	\see PxVehicle4WEnable3WTadpoleMode, PxVehicle4WEnable3WDeltaMode
+
+	\note If a PxShape is associated with the disabled wheel then the association must be broken by calling setWheelShapeMapping(wheelId, -1). 
+	\see setWheelShapeMapping
+
+	\note A wheel that is disabled must also simultaneously be given zero wheel rotation speed.
+	\see PxVehicleWheelsDynData::setWheelRotationSpeed
 
 	\note Care must be taken with the sprung mass supported by the remaining enabled wheels.  Depending on the desired effect, the mass of the rigid body 
 	might need to be distributed among the remaining enabled wheels and suspensions.
+
+	\param[in] wheel is the wheel index.
 	*/
 	void disableWheel(const PxU32 wheel);
 
 	/**
 	\brief Enable a wheel so that suspension forces and tire forces are applied to the rigid body.
 	All wheels are enabled by default and remain enabled until they are disabled.
-	@see disableWheel
+	\param[in] wheel is the wheel index.
+	\see disableWheel
 	*/
 	void enableWheel(const PxU32 wheel);
 
 	/**
 	\brief Test if a wheel has been disabled.
+	\param[in] wheel is the wheel index.
 	*/
 	bool getIsWheelDisabled(const PxU32 wheel) const;
 
 	/**
 	\brief Set the number of vehicle sub-steps that will be performed when the vehicle's longitudinal 
 	speed is below and above a threshold longitudinal speed.
-	More sub-steps provides better stability but with greater computational cost.
-	Typically, vehicle's require more sub-steps at very low forward speeds.
-	The threshold longitudinal speed has a default value of 5.
-	The sub-step count below the threshold longitudinal speed has a default of 3.
-	The sub-step count above the threshold longitudinal speed has a default of 1.
-	\note thresholdLongitudinalSpeed specified in metres per second (m s^-1)
+	
+	\note More sub-steps provides better stability but with greater computational cost.
+	
+	\note Typically, vehicles require more sub-steps at very low forward speeds.
+	
+	\note The threshold longitudinal speed has a default value that is the equivalent of 5 metres per second after accounting for 
+	the length scale set in PxTolerancesScale.  
+
+	\note The sub-step count below the threshold longitudinal speed has a default of 3.
+	
+	\note The sub-step count above the threshold longitudinal speed has a default of 1.
+	
+	\note Each sub-step has time advancement equal to the time-step passed to PxVehicleUpdates divided by the number of required sub-steps.
+	
+	\note The contact planes of the most recent suspension line raycast are reused across all sub-steps.
+	
+	\note Each sub-step computes tire and suspension forces and then advances a velocity, angular velocity and transform.
+	
+	\note At the end of all sub-steps the vehicle actor is given the velocity and angular velocity that would move the actor from its start transform prior
+	to the first sub-step to the transform computed at the end of the last substep, assuming it doesn't collide with anything along the way in the next PhysX SDK update.
+	
+	\note The global pose of the actor is left unchanged throughout the sub-steps.
+
+	\param[in] thresholdLongitudinalSpeed is a threshold speed that is used to categorize vehicle speed as low speed or high speed.
+	\param[in] lowForwardSpeedSubStepCount is the number of sub-steps performed in PxVehicleUpates for vehicles that have longitudinal speed lower than thresholdLongitudinalSpeed.
+	\param[in] highForwardSpeedSubStepCount is the number of sub-steps performed in PxVehicleUpdates for vehicles that have longitudinal speed graeter than thresholdLongitudinalSpeed.
 	*/
 	void setSubStepCount(const PxReal thresholdLongitudinalSpeed, const PxU32 lowForwardSpeedSubStepCount, const PxU32 highForwardSpeedSubStepCount);
 
-private:
+	/**
+	\brief Set the minimum denominator used in the longitudinal slip calculation.
 
-	PxVehicleWheelsSimData(){}
-	~PxVehicleWheelsSimData(){}
+	\note The longitudinal slip has a theoretical value of (w*r - vz)/|vz|, where w is the angular speed of the wheel; r is the radius of the wheel; 
+	and vz is the component of rigid body velocity (computed at the wheel base) that lies along the longitudinal wheel direction. The term |vz|
+	normalizes the slip, while preserving the sign of the longitudinal tire slip.   The difficulty here is that when |vz| approaches zero the 
+	longitudinal slip approaches infinity. A solution to this problem is to replace the denominator (|vz|) with a value that never falls below a chosen threshold. 
+	The longitudinal slip is then calculated with (w*r - vz)/PxMax(|vz|, minLongSlipDenominator).
+
+	\note The default value is the equivalent of 4 metres per second after accounting for the length scale set in PxTolerancesScale.  
+
+	\note Adjust this value upwards if a vehicle has difficulty coming to rest.
+
+	\note Decreasing the timestep (or increasing the number of sub-steps at low longitudinal speed with setSubStepCount) should allow stable stable 
+	behavior with smaller values of minLongSlipDenominator.
+	*/
+	void setMinLongSlipDenominator(const PxReal minLongSlipDenominator);
+
+	/**
+	\brief Set the vehicle wheel simulation flags.
+
+	\param[in] flags The flags to set (see #PxVehicleWheelsSimFlags).
+
+	<b>Default:</b> no flag set
+
+	\see PxVehicleWheelsSimFlag
+	*/
+	void setFlags(PxVehicleWheelsSimFlags flags);
+
+	/**
+	\brief Return the vehicle wheel simulation flags.
+
+	\return The values of the flags.
+
+	\see PxVehicleWheelsSimFlag
+	*/
+	PxVehicleWheelsSimFlags getFlags() const;
+
+private:
 
 	/**
 	\brief Graph to filter normalised load
-	@see setTireLoadFilterData, getTireLoadFilterData
+	\see setTireLoadFilterData, getTireLoadFilterData
 	*/
 	PxVehicleTireLoadFilterData mNormalisedLoadFilter;
 
@@ -254,18 +509,33 @@ private:
 	/**
 	\brief Number of blocks of 4 wheels.
 	*/
-	PxU32 mNumWheels4;
+	PxU32 mNbWheels4;
 
 	/**
-	\brief Number of actual wheels (<=(mNumWheels4*4))
+	\brief Number of actual wheels (<=(mNbWheels4*4))
 	*/
-	PxU32 mNumActiveWheels;
+	PxU32 mNbActiveWheels;
 
 	/**
-	\brief Which of the mNumActiveWheels are active or disabled?
+	\brief Anti-roll bars
+	*/
+	PxVehicleAntiRollBarData* mAntiRollBars;
+
+	/**
+	\brief 2 anti-rollbars allocated for each block of 4 wheels.
+	*/
+	PxU32 mNbAntiRollBars4;
+
+	/**
+	\brief Number of active anti-roll bars.
+	*/
+	PxU32 mNbActiveAntiRollBars;
+
+	/**
+	\brief Which of the mNbActiveWheels are active or disabled?
 	The default is that all mNbActiveWheels wheels are active.
 	*/
-	PxU32 mActiveWheelsBitmapBuffer[((PX_MAX_NUM_WHEELS + 31) & ~31) >> 5];
+	PxU32 mActiveWheelsBitmapBuffer[((PX_MAX_NB_WHEELS + 31) & ~31) >> 5];
 
 	/**
 	\brief Threshold longitudinal speed used to decide whether to use 
@@ -286,7 +556,19 @@ private:
 	*/
 	PxU32 mHighForwardSpeedSubStepCount;
 
-#ifndef PX_X64
+	/**
+	\brief Minimum long slip denominator
+	*/
+	PxF32 mMinLongSlipDenominator;
+
+	/**
+	\brief The vehicle wheel simulation flags.
+
+	\see PxVehicleWheelsSimFlags
+	*/
+	PxU32 mFlags;
+
+#if PX_P64_FAMILY
 	PxU32 mPad[1];
 #endif
 
@@ -294,14 +576,66 @@ private:
 	\brief Test if wheel simulation data has been setup with legal values.
 	*/
 	bool isValid() const;
+
+	/**
+	\brief see PxVehicleWheels::allocate
+	*/
+	static PxU32 computeByteSize(const PxU32 numWheels);
+	static PxU8* patchUpPointers(const PxU32 numWheels, PxVehicleWheelsSimData* simData, PxU8* ptrIn);
+	PxVehicleWheelsSimData(const PxU32 numWheels);
+
+//serialization
+public:
+	PxVehicleWheelsSimData(const PxEMPTY) : mNormalisedLoadFilter(PxEmpty) {}
+	static void getBinaryMetaData(PxOutputStream& stream);
+	PxU32 getNbWheels4() const { return mNbWheels4; }	
+	PxU32 getNbSuspensionData() const { return mNbActiveWheels; }
+	PxU32 getNbWheelData() const {	return mNbActiveWheels; }	
+	PxU32 getNbSuspTravelDirection() const	{ return mNbActiveWheels; }
+	PxU32 getNbTireData() const	{ return mNbActiveWheels;	}	
+	PxU32 getNbSuspForceAppPointOffset() const	{ return mNbActiveWheels;	}
+	PxU32 getNbTireForceAppPointOffset() const	{ return mNbActiveWheels;	}
+	PxU32 getNbWheelCentreOffset() const { return mNbActiveWheels;	}
+	PxU32 getNbWheelShapeMapping() const { return mNbActiveWheels; }
+	PxU32 getNbSceneQueryFilterData() const { return mNbActiveWheels; }
+	PxF32 getMinLongSlipDenominator() const {return mMinLongSlipDenominator;}
+	void setThresholdLongSpeed(const PxF32 f) {mThresholdLongitudinalSpeed = f;}
+	PxF32 getThresholdLongSpeed() const {return mThresholdLongitudinalSpeed;}
+	void setLowForwardSpeedSubStepCount(const PxU32 f) {mLowForwardSpeedSubStepCount = f;}
+	PxU32 getLowForwardSpeedSubStepCount() const {return mLowForwardSpeedSubStepCount;}
+	void setHighForwardSpeedSubStepCount(const PxU32 f) {mHighForwardSpeedSubStepCount = f;}
+	PxU32 getHighForwardSpeedSubStepCount() const {return mHighForwardSpeedSubStepCount;}
+	void setWheelEnabledState(const PxU32 wheel, const bool state) {if(state) {enableWheel(wheel);} else {disableWheel(wheel);}}
+	bool getWheelEnabledState(const PxU32 wheel) const {return !getIsWheelDisabled(wheel);}
+	PxU32 getNbWheelEnabledState() const {return mNbActiveWheels;}
+	PxU32 getNbAntiRollBars4() const { return mNbAntiRollBars4; }	
+	PxU32 getNbAntiRollBarData() const {return mNbActiveAntiRollBars;}
+	void setAntiRollBarData(const PxU32 id, const PxVehicleAntiRollBarData& antiRoll);
+	PxVehicleWheelsSimData(){}
+	~PxVehicleWheelsSimData(){}
+//~serialization
 };
 PX_COMPILE_TIME_ASSERT(0==(sizeof(PxVehicleWheelsSimData) & 15));
 
 
 /**
+\deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+\brief Description of the per wheel intersection method to be used by PxVehicleWheelsDynData::setTireContacts()
+*/
+struct PX_DEPRECATED PxTireContactIntersectionMethod
+{
+	enum Enum
+	{
+		eRAY = 0,
+		eCYLINDER
+	};
+};
+
+/**
+\deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
 \brief Data structure with instanced dynamics data for wheels
 */
-class PxVehicleWheelsDynData
+class PX_DEPRECATED PxVehicleWheelsDynData
 {
 public:
 
@@ -310,19 +644,25 @@ public:
 	friend class PxVehicleDriveTank;
 	friend class PxVehicleUpdate;
 
+	PxVehicleWheelsDynData(){}
+	~PxVehicleWheelsDynData(){}
+
 	/**
 	\brief Set all wheels to their rest state.
-	@see setup
+	\see setup
 	*/
 	void setToRestState();
 
 	/**
 	\brief Set the tire force shader function
+	\param[in] tireForceShaderFn is the shader function that will be used to compute tire forces.
 	*/
 	void setTireForceShaderFunction(PxVehicleComputeTireForce tireForceShaderFn);
 
 	/**
 	\brief Set the tire force shader data for a specific tire
+	\param[in] tireId is the wheel index
+	\param[in] tireForceShaderData is the data describing the tire.
 	*/
 	void setTireForceShaderData(const PxU32 tireId, const void* tireForceShaderData);
 
@@ -332,122 +672,34 @@ public:
 	const void* getTireForceShaderData(const PxU32 tireId) const;
 
 	/**
-	\brief Set the wheel rotation speed (radians per second)
+	\brief Set the wheel rotation speed (radians per second) about the rolling axis for the specified wheel.
+	\param[in] wheelIdx is the wheel index
+	\param[in] speed is the rotation speed to be applied to the wheel.
 	*/
 	void setWheelRotationSpeed(const PxU32 wheelIdx, const PxReal speed);
 
 	/**
-	\brief Return the rotation speed of a specified wheel.
+	\brief Return the rotation speed about the rolling axis of a specified wheel .
 	*/
 	PxReal getWheelRotationSpeed(const PxU32 wheelIdx) const;
-
+	
 	/**
-	\brief Return the steer angle of a specified wheel.
+	\brief Set the wheel rotation angle (radians) about the rolling axis of the specified wheel.
+	\param[in] wheelIdx is the wheel index
+	\param[in] angle is the rotation angle to be applied to the wheel.
 	*/
-	PxReal getSteer(const PxU32 wheelIdx) const;
+	void setWheelRotationAngle(const PxU32 wheelIdx, const PxReal angle);
 
 	/**
-	\brief Set the wheel rotation angle (radians)
-	*/
-	void setWheelRotationAngle(const PxU32 wheelIdx, const PxReal speed);
-
-	/**
-	\brief Return the rotation angle of the specified wheel about the axis of rolling rotation.
+	\brief Return the rotation angle about the rolling axis for the specified wheel.
 	*/
 	PxReal getWheelRotationAngle(const PxU32 wheelIdx) const;
 
 	/**
-	\brief Return the susp jounce of the specified suspension.
-	*/
-	PxReal getSuspJounce(const PxU32 suspIdx) const;
-
-	/**
-	\brief Return the longitudinal slip of the specified tire
-	*/
-	PxReal getTireLongSlip(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the lateral slip of the specified tire
-	*/
-	PxReal getTireLatSlip(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the friction applied to the specified tire
-	*/
-	PxReal getTireFriction(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the drivable surface type underneath the specified tire
-	*/
-	PxU32 getTireDrivableSurfaceType(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the PxMaterial instance pointer of the drivable surface experienced by the specified tire in 
-	the most recent call to PxVehicleUpdates.
-	No guarantees are made that the PxMaterial referenced by the stored pointer has not been released in-between 
-	recording the hit material in the most recent PxVehicleUpdates call and any subsequent getTireDrivableSurfaceMaterial query.
-	*/
-	const PxMaterial* getTireDrivableSurfaceMaterial(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the contact point on the drivable surface experienced by the specified tire.
-	(0,0,0) is returned if the tire isn't touching a drivable surface.
-	*/
-	PxVec3 getTireDrivableSurfaceContactPoint(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the contact normal on the drivable surface experienced by the specified tire.
-	(0,0,0) is returned if the tire isn't touching a drivable surface.
-	*/
-	PxVec3 getTireDrivableSurfaceContactNormal(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the longitudinal direction of the tire as used in the calculation of the longitudinal slip.
-	(0,0,0) is returned if the tire isn't touching a drivable surface.
-	*/
-	PxVec3 getTireLongitudinalDir(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the lateral direction of the specified tire as used in the calculation of the lateral slip.
-	(0,0,0) is returned if the tire isn't touching a drivable surface.
-	*/
-	PxVec3 getTireLateralDir(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the suspension force applied by the specified suspension.
-	//The force is directed negatively along the suspension travel direction 
-	0 is returned if the tire isn't touching a drivable surface.
-	@see getSuspLineDir
-	*/
-	PxReal getSuspensionForce(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the PxShape instance pointer of the drivable surface experienced by the specified tire in 
-	the last call to PxVehicleUpdates involving this vehicle.
-	No guarantees are made that the PxShape referenced by the pointer has not been released in-between recording the hit shape in the 
-	most recent PxVehicleUpdates call and any subsequent getTireDrivableSurfaceShape query.
-	NULL is returned if the tire isn't touching a drivable surface.
-	*/
-	const PxShape* getTireDrivableSurfaceShape(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the raycast start, direction, and length of the specified suspension line.
-	*/
-	void getSuspRaycast(const PxU32 suspIdx, PxVec3& start, PxVec3& dir, PxReal& length) const;
-
-	/**
-	\brief Return the suspension line start
-	*/
-	PxVec3 getSuspLineStart(const PxU32 tireIdx) const;
-
-	/**
-	\brief Return the suspension line dir
-	*/
-	PxVec3 getSuspLineDir(const PxU32 tireIdx) const;
-
-	/**
 	\brief Set the user data pointer for the specified wheel
-	It has a default value of NULL
+	It has a default value of NULL.
+	\param[in] tireIdx is the wheel index
+	\param[in] userData is the data to be associated with the wheel.
 	*/
 	void setUserData(const PxU32 tireIdx, void* userData);
 
@@ -456,55 +708,115 @@ public:
 	*/
 	void* getUserData(const PxU32 tireIdx) const;
 
+	/**
+	\brief Copy the dynamics data of a single wheel unit (wheel, suspension, tire) from srcWheel of src to trgWheel.
+	\param[in] src is the data to be copied.
+	\param[in] srcWheel is the wheel whose data will be copied from src.
+	\param[in] trgWheel is the wheel that will be assigned the copied data.
+	*/
+	void copy(const PxVehicleWheelsDynData& src, const PxU32 srcWheel, const PxU32 trgWheel);
+
+	/**
+	\brief Directly set tire contact plane and friction for all tires on the vehicle as an alternative to using PxVehicleSuspensionSweeps() or PxVehicleSuspensionRaycasts().
+	\param[in] nbHits is an array describing whether each tire has a contact plane or not. Each element of the array is either 0 (no contact) or 1 (contact).
+	\param[in] contactPlanes is an array of contact planes describing the contact plane per tire.  
+	\param[in] contactFrictions is the friction value of each tire contact with the drivable surface.
+	\param[in] intersectionMethods describes how each tire will individually interact with its contact plane in order to compute the spring 
+	compression that places the tire on the contact plane. A value of eCYLINDER will compute the spring compression by intersecting the wheel's 
+	cylindrical shape with the contact plane. A value of eRAY will compute the spring compression by casting a ray through the wheel center
+	and along the suspension direction until it hits the contact plane. 
+	\param[in] nbWheels is the length of the arrays nbContacts, contactPlanes, contactFrictions and intersectionMethods.
+	\note Each contact plane (n, d) obeys the rule that all points P on the plane satisfy n.dot(P) + d = 0.0.
+	\note The contact planes specified by setTireContacts() will persist as driving surfaces until either the next call to setTireContacts() or the next call to 
+	\note The friction values are scaled by PxVehicleTireData::mFrictionVsSlipGraph before being applied to the tire.
+	\note The vehicle model assumes that the tire contacts are with static objects.
+	PxVehicleSuspensionSweeps() or PxVehicleSuspensionRaycasts().
+	*/
+	void setTireContacts(const PxU32* nbHits, const PxPlane* contactPlanes, const PxReal* contactFrictions, const PxTireContactIntersectionMethod::Enum* intersectionMethods, const PxU32 nbWheels);
+
 private:
+
+    /**
+	\brief Dynamics data arranged in blocks of 4 wheels.
+	*/
+	PxVehicleWheels4DynData* mWheels4DynData;
 
 	/**
 	\brief Test if wheel dynamics data have legal values.
 	*/
 	bool isValid() const;
 
-	PxVehicleWheelsDynData(){}
-	~PxVehicleWheelsDynData(){}
-
-	/**
-	\brief Dynamics data arranged in blocks of 4 wheels.
-	*/
-	PxVehicleWheels4DynData* mWheels4DynData;
-
 	/**
 	\brief Shader data and function for tire force calculations.
 	*/
 	PxVehicleTireForceCalculator* mTireForceCalculators;
-
+	
 	/**
 	\brief A userData pointer can be stored for each wheel.
-	@see setUserData, getUserData
+	\see setUserData, getUserData
 	*/
 	void** mUserDatas;
 
 	/**
 	\brief Number of blocks of 4 wheels.
 	*/
-	PxU32 mNumWheels4;
+	PxU32 mNbWheels4;
 
 	/**
-	\brief Number of wheels (mNumActiveWheels <= (mNumWheels4*4))
+	\brief Number of wheels (mNbActiveWheels <= (mNbWheels4*4))
 	*/
-	PxU32 mNumActiveWheels;
+	PxU32 mNbActiveWheels;
 
-#ifdef PX_X64
 	PxU32 mPad[3];
-#else
-	PxU32 mPad[3];
-#endif
+
+	/**
+	\brief see PxVehicleWheels::allocate
+	*/
+	static PxU32 computeByteSize(const PxU32 numWheels);
+	static PxU8* patchUpPointers(const PxU32 numWheels, PxVehicleWheelsDynData* dynData, PxU8* ptr);
+	PxVehicleWheelsDynData(const PxU32 numWheels);
+
+//serialization
+public:
+	static void getBinaryMetaData(PxOutputStream& stream);	
+	PxU32 getNbWheelRotationSpeed() const {	return mNbActiveWheels; }
+	PxU32 getNbWheelRotationAngle() const {	return mNbActiveWheels; }	
+	PxVehicleWheels4DynData* getWheel4DynData() const { return mWheels4DynData; }
+//~serialization
+
+	/**
+	\brief Retrieve the number of PxConstraint objects associated with the vehicle.
+
+	You can use #getConstraints() to retrieve the constraint pointers.
+
+	\return Number of constraints associated with this vehicle.
+
+	\see PxConstraint getConstraints()
+	*/
+	PxU32 getNbConstraints() const { return mNbWheels4; }
+
+	/**
+	\brief Retrieve all the PxConstraint objects associated with the vehicle.
+
+	There is one PxConstraint per block of 4 wheels. The count can be extracted through #getNbConstraints()
+
+	\param[out] userBuffer The buffer to store the constraint pointers.
+	\param[in] bufferSize Size of provided user buffer.
+	\param[in] startIndex Index of first constraint pointer to be retrieved
+	\return Number of constraint pointers written to the buffer.
+
+	\see PxConstraint getNbConstraints()
+	*/
+	PxU32 getConstraints(PxConstraint** userBuffer, PxU32 bufferSize, PxU32 startIndex = 0) const;
 };
 PX_COMPILE_TIME_ASSERT(0==(sizeof(PxVehicleWheelsDynData) & 15));
 
 /**
+\deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
 \brief Data structure with instanced dynamics data and configuration data of a vehicle with just wheels
-@see PxVehicleDrive, PxVehicleDrive4W, PxVehicleDriveTank
+\see PxVehicleDrive, PxVehicleDrive4W, PxVehicleDriveTank
 */
-class PxVehicleWheels
+class PX_DEPRECATED PxVehicleWheels : public PxBase
 {
 public:
 
@@ -513,7 +825,7 @@ public:
 
 	/**
 	\brief Return the type of vehicle 
-	@see PxVehicleTypes
+	\see PxVehicleTypes
 	*/
 	PX_FORCE_INLINE PxU32 getVehicleType() const {return mType;}
 
@@ -523,61 +835,27 @@ public:
 	PX_FORCE_INLINE PxRigidDynamic* getRigidDynamicActor() {return mActor;}
 
 	/**
-	\brief Get non-const ptr to PxRigidDynamic instance that is the vehicle's physx representation
+	\brief Get const ptr to PxRigidDynamic instance that is the vehicle's physx representation
 	*/
 	PX_FORCE_INLINE const PxRigidDynamic* getRigidDynamicActor() const {return mActor;}
+	
+	/**
+	\brief Compute the rigid body velocity component along the forward vector of the rigid body transform.
+
+	\param[in] forwardAxis The axis denoting the local space forward direction of the vehicle.
+
+	\see PxVehicleSetBasisVectors
+	*/
+	PxReal computeForwardSpeed(const PxVec3& forwardAxis = PxVehicleGetDefaultContext().forwardAxis) const;
 
 	/**
-	\brief Set mapping between wheel id and position of corresponding wheel shape in the list of actor shapes.
-	This mapping is used to pose the correct wheel shapes with the latest wheel rotation angle, steer angle, and suspension travel
-	while allowing arbitrary ordering of the wheel shapes in the actor's list of shapes.
-	Use setWheelShapeMapping(i,-1) to register that there is no wheel shape corresponding to the ith wheel
-	Set setWheelShapeMapping(i,k) to register that the ith wheel corresponds to the kth shape in the actor's list of shapes.
-	The default values correspond to setWheelShapeMapping(i,-1) for all wheels.
-	Calling this function will also pose the relevant PxShape at the rest position of the wheel.
-	@see PxVehicleUpdates, PxVehicleDrive4W::setup, PxVehicleDriveTank::setup, PxVehicleNoDrive::setup, setSceneQueryFilterData
-	*/
-	void setWheelShapeMapping(const PxU32 wheelId, const PxI32 shapeId);
+	\brief Compute the rigid body velocity component along the right vector of the rigid body transform.
 
-	/**
-	\brief Return the wheel mapping for the ith wheel.  The return value is the element in the array of 
-	shapes of the vehicle's PxRigidDynamic that corresponds to the ith wheel.  A return value of -1 means
-	that the wheel is not mapped to a PxShape.
-	@see PxRigidActor.getShapes
-	*/
-	PxI32 getWheelShapeMapping(const PxU32 wheelId) const;
+	\param[in] sideAxis The axis denoting the local space side direction of the vehicle.
 
-	/**
-	\brief Set the scene query filter data that will be used for raycasts along the travel
-	direction of the specified suspension. The default value is PxFilterData(0,0,0,0)
-	@see setWheelShapeMapping
+	\see PxVehicleSetBasisVectors
 	*/
-	void setSceneQueryFilterData(const PxU32 suspId, const PxFilterData& sqFilterData);
-
-	/**
-	\brief Return the scene query filter data used by the specified suspension line
-	*/
-	PxFilterData getSceneQueryFilterData(const PxU32 suspId) const;
-
-	/**
-	\brief Compute the rigid body velocity component along the forward vector.
-	*/
-	PxReal computeForwardSpeed() const;
-
-	/**
-	\brief Compute the rigid body velocity component along the right vector.
-	*/
-	PxReal computeSidewaysSpeed() const;
-
-	/**
-	\brief Test if all wheels are off the ground.
-	*/
-	bool isInAir() const;
-
-	/**
-	\brief Test if a specific wheel is off the ground.
-	*/
-	bool isInAir(const PxU32 wheelId) const;
+	PxReal computeSidewaysSpeed(const PxVec3& sideAxis = PxVehicleGetDefaultContext().sideAxis) const;
 
 	/**
 	\brief Data describing the setup of all the wheels/suspensions/tires.
@@ -602,52 +880,35 @@ protected:
 	bool isValid() const;
 
 	/**
-	@see PxVehicleDrive4W::allocate, PxVehicleDriveTank::allocate
+	\see PxVehicleDrive4W::allocate, PxVehicleDriveTank::allocate
 	*/
-	static PxU32 computeByteSize(const PxU32 numWheels4);
-
-	/**
-	@see PxVehicleDrive4W::allocate, PxVehicleDriveTank::allocate
-	*/
-	static PxU8* patchupPointers(PxVehicleWheels* veh, PxU8* ptr, const PxU32 numWheels4, const PxU32 numWheels);
+	static PxU32 computeByteSize(const PxU32 nbWheels);
+	static PxU8* patchupPointers(const PxU32 nbWheels, PxVehicleWheels* vehWheels, PxU8* ptr);
+	virtual void init(const PxU32 numWheels);
 
 	/**
 	\brief Deallocate a PxVehicleWheels instance.
-	@see PxVehicleDrive4W::free, PxVehicleDriveTank::free
+	\see PxVehicleDrive4W::free, PxVehicleDriveTank::free
 	*/
 	void free();
 
+	/*
+	\brief Deferred deletion.
+	*/
+	void onConstraintRelease();
+
 	/**
-	@see PxVehicleDrive4W::setup, PxVehicleDriveTank::setup
+	\see PxVehicleDrive4W::setup, PxVehicleDriveTank::setup
 	*/
 	void setup
 		(PxPhysics* physics, PxRigidDynamic* vehActor, 
 		 const PxVehicleWheelsSimData& wheelsData,
-		 const PxU32 numDrivenWheels, const PxU32 numNonDrivenWheels);
-
+		 const PxU32 nbDrivenWheels, const PxU32 nbNonDrivenWheels);
+	
+	/**
+	\brief The rigid body actor that represents the vehicle in the PhysX SDK.
+	*/
 	PxRigidDynamic* mActor;
-
-	/**
-	\brief Scene query filter data used by each suspension line.
-	Anything relating to the actor belongs in PxVehicleWheels.
-	*/
-	PxFilterData* mSqFilterData;
-
-	/**
-	\brief Mapping between wheel id and shape id.
-	The PxShape that corresponds to the ith wheel can be found with 
-	If mWheelShapeMap[i]<0 then the wheel has no corresponding shape.
-	Otherwise, the shape corresponds to:
-	PxShape* shapeBuffer[1];
-	mActor->getShapes(shapeBuffer,1,mWheelShapeMap[i]);
-	Anything relating to the actor belongs in PxVehicleWheels.
-	*/
-	PxU8 mWheelShapeMap[PX_MAX_NUM_WHEELS];
-
-	/**
-	\brief Vehicle type (eVehicleDriveTypes)
-	*/
-	PxU8 mType;
 
 private:
 
@@ -655,19 +916,44 @@ private:
 	\brief Count the number of constraint connectors that have hit their callback when deleting a vehicle.
 	Can only delete the vehicle's memory when all constraint connectors have hit their callback.
 	*/
+	PxU32 mNbNonDrivenWheels;
+	
 	PxU8 mOnConstraintReleaseCounter;
 
-#ifndef PX_X64
-	PxU8 mPad[2];
+protected:
+
+	/**
+	\brief Vehicle type (eVehicleDriveTypes)
+	*/
+	PxU8 mType;
+		
+#if PX_P64_FAMILY
+	PxU8 mPad0[14];
 #else
-	PxU8 mPad[10];
+	PxU8 mPad0[8];
 #endif
+
+//serialization
+public:
+	virtual		void			requiresObjects(PxProcessPxBaseCallback& c);
+	virtual		const char*		getConcreteTypeName() const				{	return "PxVehicleWheels"; }
+	virtual		bool			isKindOf(const char* name)	const		{	PX_IS_KIND_OF(name, "PxVehicleWheels", PxBase); }
+	virtual		void			preExportDataReset() {}
+	virtual		void			exportExtraData(PxSerializationContext&);	
+				void			importExtraData(PxDeserializationContext&);
+				void			resolveReferences(PxDeserializationContext&);
+	static		void			getBinaryMetaData(PxOutputStream& stream);
+	PX_FORCE_INLINE PxU32 getNbNonDrivenWheels() const { return mNbNonDrivenWheels; }
+	PxVehicleWheels(PxType concreteType, PxBaseFlags baseFlags) : PxBase(concreteType, baseFlags) {}
+	PxVehicleWheels(PxBaseFlags baseFlags) : PxBase(baseFlags), mWheelsSimData(PxEmpty) {}
+	virtual ~PxVehicleWheels() {}
+	virtual void release() { free(); }
+//~serialization
 };
 PX_COMPILE_TIME_ASSERT(0==(sizeof(PxVehicleWheels) & 15));
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
-#endif //PX_VEHICLE_WHEELS_H
+#endif

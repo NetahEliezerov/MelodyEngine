@@ -1,122 +1,42 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-
-#ifndef PX_CORE_UTILTY_TYPES_H
-#define PX_CORE_UTILTY_TYPES_H
-/** \addtogroup common
-@{
-*/
+#ifndef PX_CORE_UTILITY_TYPES_H
+#define PX_CORE_UTILITY_TYPES_H
 
 #include "foundation/PxAssert.h"
+#include "foundation/PxMemory.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 
-/** 
- *	An array of pointers.  Used for at least materials and shapes
- *	in the descriptor hierarchy.
- */
-template<typename TDataType>
-class PxPtrArray
-{
-	PxU32 count;
-	TDataType*const* items;
-	TDataType* singleItem;
-public:
-
-	PX_INLINE PxPtrArray()
-		: count ( 0 )
-		, items ( NULL )
-		, singleItem ( NULL )
-	{
-	}
-	PX_INLINE PxPtrArray( const PxPtrArray<TDataType>& inOther )
-	{
-		(*this) = inOther;
-	}
-
-	PX_INLINE PxPtrArray<TDataType>& operator=( const PxPtrArray<TDataType>& inOther )
-	{
-		//This is harder to get right than it would seem
-		//The problem is if you have a vector of these items
-		//and they are being copied around.  Then the pointer to
-		//a previous item's single item is probably bad.  Thus
-		//you need to reconstruct the single item chain.
-		//CN
-		count = inOther.count;
-		if ( count == 1 )
-		{
-			singleItem = inOther.items[0];
-			items = &singleItem;
-		}
-		else
-		{
-			singleItem = NULL;
-			items = inOther.items;
-		}
-		return *this;
-	}
-
-	/**
-	 * set the contents to be a list of ptr-to-ptr-to-items.
-	 */
-	PX_INLINE void set(TDataType*const* items_, PxU32 count_)
-	{
-		items = items_;
-		count = count_;
-	}
-
-	/**
-	\brief set a single item as the content of the reference array
-	*/
-	PX_INLINE void setSingle(TDataType* item_)
-	{
-		singleItem = item_;
-		items = &singleItem;
-		count = 1;
-	}
-
-	PX_INLINE bool isValid() const 
-	{ 
-		if ( count ) 
-			return items != NULL; 
-		return items == NULL;
-	}
-	
-	PX_INLINE PxU32 getCount() const { return count; }
-	PX_INLINE TDataType*const* getItems() const { return items; }
-
-	PX_INLINE TDataType* operator[]( PxU32 idx ) const { return items[idx]; }
-};
 
 struct PxStridedData
 {
@@ -153,6 +73,20 @@ struct PxTypedStridedData
 	{
 	}
 
+	PxTypedStridedData(const TDataType* data_, PxU32 stride_ = 0)
+		: stride(stride_)
+		, data(data_)
+	{
+	}
+	
+	PX_INLINE const TDataType& at(PxU32 idx) const
+	{
+		PxU32 theStride(stride);
+		if (theStride == 0)
+			theStride = sizeof(TDataType);
+		PxU32 offset(theStride * idx);
+		return *(reinterpret_cast<const TDataType*>(reinterpret_cast<const PxU8*>(data) + offset));
+	}
 };
 
 struct PxBoundedData : public PxStridedData
@@ -172,26 +106,27 @@ struct PxPadding
 	}
 };
 
-
-template <PxU32 NUM_ELEMENTS> class PxFixedSizeLookupTable
+template <PxU32 NB_ELEMENTS> class PxFixedSizeLookupTable
 {
 public:
 	
 	PxFixedSizeLookupTable() 
-		: mNumDataPairs(0)
+		: mNbDataPairs(0)
 	{
 	}
 
+	PxFixedSizeLookupTable(const PxEMPTY) {}
+
 	PxFixedSizeLookupTable(const PxReal* dataPairs, const PxU32 numDataPairs)
 	{
-		memcpy(mDataPairs,dataPairs,sizeof(PxReal)*2*numDataPairs);
-		mNumDataPairs=numDataPairs;
+		PxMemCopy(mDataPairs,dataPairs,sizeof(PxReal)*2*numDataPairs);
+		mNbDataPairs=numDataPairs;
 	}
 
 	PxFixedSizeLookupTable(const PxFixedSizeLookupTable& src)
 	{
-		memcpy(mDataPairs,src.mDataPairs,sizeof(PxReal)*2*src.mNumDataPairs);
-		mNumDataPairs=src.mNumDataPairs;
+		PxMemCopy(mDataPairs,src.mDataPairs,sizeof(PxReal)*2*src.mNbDataPairs);
+		mNbDataPairs=src.mNbDataPairs;
 	}
 
 	~PxFixedSizeLookupTable()
@@ -200,28 +135,28 @@ public:
 
 	PxFixedSizeLookupTable& operator=(const PxFixedSizeLookupTable& src)
 	{
-		memcpy(mDataPairs,src.mDataPairs,sizeof(PxReal)*2*src.mNumDataPairs);
-		mNumDataPairs=src.mNumDataPairs;
+		PxMemCopy(mDataPairs,src.mDataPairs,sizeof(PxReal)*2*src.mNbDataPairs);
+		mNbDataPairs=src.mNbDataPairs;
 		return *this;
 	}
 
 	PX_FORCE_INLINE void addPair(const PxReal x, const PxReal y)
 	{
-		PX_ASSERT(mNumDataPairs<NUM_ELEMENTS);
-		mDataPairs[2*mNumDataPairs+0]=x;
-		mDataPairs[2*mNumDataPairs+1]=y;
-		mNumDataPairs++;
+		PX_ASSERT(mNbDataPairs<NB_ELEMENTS);
+		mDataPairs[2*mNbDataPairs+0]=x;
+		mDataPairs[2*mNbDataPairs+1]=y;
+		mNbDataPairs++;
 	}
 
 	PX_FORCE_INLINE PxReal getYVal(const PxReal x) const
 	{
-		if(0==mNumDataPairs)
+		if(0==mNbDataPairs)
 		{
 			PX_ASSERT(false);
 			return 0;
 		}
 
-		if(1==mNumDataPairs || x<getX(0))
+		if(1==mNbDataPairs || x<getX(0))
 		{
 			return getY(0);
 		}
@@ -229,7 +164,7 @@ public:
 		PxReal x0=getX(0);
 		PxReal y0=getY(0);
 
-		for(PxU32 i=1;i<mNumDataPairs;i++)
+		for(PxU32 i=1;i<mNbDataPairs;i++)
 		{
 			const PxReal x1=getX(i);
 			const PxReal y1=getY(i);
@@ -243,17 +178,17 @@ public:
 			y0=y1;
 		}
 
-		PX_ASSERT(x>=getX(mNumDataPairs-1));
-		return getY(mNumDataPairs-1);
+		PX_ASSERT(x>=getX(mNbDataPairs-1));
+		return getY(mNbDataPairs-1);
 	}
 
-	PxU32 getNumDataPairs() const {return mNumDataPairs;}
-
-private:
-
-	PxReal mDataPairs[2*NUM_ELEMENTS];
-	PxU32 mNumDataPairs;
-	PxU32 mPad[3];
+	PxU32 getNbDataPairs() const {return mNbDataPairs;}
+	
+	void clear()
+	{
+		PxMemSet(mDataPairs, 0, NB_ELEMENTS*2*sizeof(PxReal));
+		mNbDataPairs = 0;
+	}
 
 	PX_FORCE_INLINE PxReal getX(const PxU32 i) const
 	{
@@ -263,11 +198,16 @@ private:
 	{
 		return mDataPairs[2*i+1];
 	}
+
+	PxReal mDataPairs[2*NB_ELEMENTS];
+	PxU32 mNbDataPairs;
+	PxU32 mPad[3];
+
+	
 };
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

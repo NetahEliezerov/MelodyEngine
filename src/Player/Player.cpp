@@ -12,6 +12,8 @@
 #include "../World/WorldLevel.h"
 #include <stb/stb_image.h>
 
+#include "../Core/Physics/Physics.h"
+
 #include "../Core/AudioManager.hpp"
 
 AudioManager audioManager;
@@ -204,6 +206,12 @@ void Player::Update(float deltaTime, int* isGradingLow)
             if (Input::inputState.keys[GLFW_KEY_W] || Input::inputState.keys[GLFW_KEY_S] || Input::inputState.keys[GLFW_KEY_A] || Input::inputState.keys[GLFW_KEY_D])
             {
                 moveDirection.y = 0;
+                //std::cout << "START" << std::endl;
+                //for (PGameObject& item : PPhysicsWorld::state.objects)
+                //{
+                //    std::cout << "TRANSFORM: " << item.transform.x << " " << item.transform.y << " " << item.transform.z << ", SCALE: " << item.scale.x << " " << item.scale.y << " " << item.scale.z << ", IDX: " << item.idx << std::endl;
+                //}
+                //std::cout << "END" << std::endl;
             }
             glm::vec3 newPosition = movement.position;
 

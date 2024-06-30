@@ -303,7 +303,7 @@ int main(void) {
     static int Selecteditem = 0;
 
 
-    float vignetteIntensity = 0.5f;
+    float vignetteIntensity = 0.8f;
     float vignetteRadius = 0.3f;
     float vignetteSmooth = -0.75f;
 
@@ -315,14 +315,14 @@ int main(void) {
     float colorGradingIntensity = 0;
 
     float bloomIntensity = 0.8f;
-    float gammaIntensity = 1.f;
+    float gammaIntensity = 0.8f;
 
     float grainIntensity = 0.08f;
 
     float grainSize = 0.01f;
 
     float specularStrength = 1;
-    float ambientStrength = 0.2;
+    float ambientStrength = 0.1;
 
     static float fog[3] = { character.fogColor.x, character.fogColor.y, character.fogColor.z };
     static float tone[3] = { character.toneColor.x, character.toneColor.y, character.toneColor.z };
@@ -369,7 +369,7 @@ int main(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
-    float near_plane = 1.0f, far_plane = 10.0f;
+    float near_plane = 1.0f, far_plane = 100000.0f;
 
     glm::vec3 something1 = glm::vec3(0);
     glm::vec3 something2 = glm::vec3(0);
@@ -584,7 +584,7 @@ int main(void) {
 
         if (Game::state.currentLetter != nullptr)
         {
-            overAllVignetteIntensity = 2500;
+            overAllVignetteIntensity = 4500;
             overAllVignetteRadius = 1.3;
             overAllVignetteSmooth = -0.75;
             renderText("[ESCAPE]", 0, Game::state.HEIGHT / 2 + 300, 1.f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, true);
@@ -600,7 +600,7 @@ int main(void) {
 
         if (isShowingInventory)
         {
-            overAllVignetteIntensity = 2500;
+            overAllVignetteIntensity = 4500;
             overAllVignetteRadius = 1.3;
             overAllVignetteSmooth = -0.75;
             renderText("[TAB]", 0, Game::state.HEIGHT / 2 + 300, 1.f, glm::vec3(1.0f, 0.3f, 0.3f), textShader, true);

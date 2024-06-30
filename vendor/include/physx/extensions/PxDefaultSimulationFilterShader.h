@@ -1,61 +1,57 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
+#ifndef PX_DEFAULT_SIMULATION_FILTER_SHADER_H
+#define PX_DEFAULT_SIMULATION_FILTER_SHADER_H
 
-#ifndef PX_PHYSICS_EXTENSIONS_DEFAULTSIMULATIONFILTERSHADER_H
-#define PX_PHYSICS_EXTENSIONS_DEFAULTSIMULATIONFILTERSHADER_H
-/** \addtogroup extensions
-  @{
-*/
-
-#include "PxPhysX.h"
+#include "PxPhysXConfig.h"
 
 #include "PxFiltering.h"
-#include "PxRigidActor.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 
+class PxActor;
+
 /**
 \brief 64-bit mask used for collision filtering.
 
-The collision filtering equation for 2 shapes S0 and S1 is:
+The collision filtering equation for 2 objects o0 and o1 is:
 
 <pre> (G0 op0 K0) op2 (G1 op1 K1) == b </pre>
 
 with
 
 <ul>
-<li> G0 = PxGroupsMask for shape S0. See PxSetGroupsMask </li>
-<li> G1 = PxGroupsMask for shape S1. See PxSetGroupsMask </li>
+<li> G0 = PxGroupsMask for object o0. See PxSetGroupsMask </li>
+<li> G1 = PxGroupsMask for object o1. See PxSetGroupsMask </li>
 <li> K0 = filtering constant 0. See PxSetFilterConstants </li>
 <li> K1 = filtering constant 1. See PxSetFilterConstants </li>
 <li> b = filtering boolean. See PxSetFilterBool </li>
@@ -64,7 +60,7 @@ with
 
 If the filtering equation is true, collision detection is enabled.
 
-@see PxSetFilterOps()
+\see PxSetFilterOps()
 */
 class PxGroupsMask
 {
@@ -78,7 +74,7 @@ public:
 /**
 \brief Collision filtering operations.
 
-@see PxGroupsMask
+\see PxGroupsMask
 */
 struct PxFilterOp
 {
@@ -90,7 +86,6 @@ struct PxFilterOp
 		PX_FILTEROP_NAND,
 		PX_FILTEROP_NOR,
 		PX_FILTEROP_NXOR,
-		//UBISOFT : FILTERING
 		PX_FILTEROP_SWAP_AND
 	};
 };
@@ -110,7 +105,7 @@ conditions are met:
 	1) Collision groups of the pair are enabled
 	2) Collision filtering equation is satisfied
 
-@see PxSimulationFilterShader
+\see PxSimulationFilterShader
 */
 
 PxFilterFlags PxDefaultSimulationFilterShader(
@@ -132,12 +127,12 @@ PxFilterFlags PxDefaultSimulationFilterShader(
 
 	\return True if the groups could collide
 
-	@see PxSetGroupCollisionFlag
+	\see PxSetGroupCollisionFlag
 */
 bool PxGetGroupCollisionFlag(const PxU16 group1, const PxU16 group2);
 
 /**
-	\brief Specifies if collision should be performed by a pair of shape groups
+	\brief Specifies if collision should be performed by a pair of groups
 
 	\note Collision group is an integer between 0 and 31.
 
@@ -145,7 +140,7 @@ bool PxGetGroupCollisionFlag(const PxU16 group1, const PxU16 group2);
 	\param[in] group2 Second Group
 	\param[in] enable True to enable collision between the groups
 
-	@see PxGetGroupCollisionFlag
+	\see PxGetGroupCollisionFlag
 */
 void PxSetGroupCollisionFlag(const PxU16 group1, const PxU16 group2, const bool enable);
 
@@ -154,25 +149,25 @@ void PxSetGroupCollisionFlag(const PxU16 group1, const PxU16 group2, const bool 
 
 	\note Collision group is an integer between 0 and 31.
 
-	\param[in] actor Rigid body actor
+	\param[in] actor The actor
 
 	\return The collision group this actor belongs to
 
-	@see PxSetGroup
+	\see PxSetGroup
 */
-PxU16 PxGetGroup(const PxRigidActor& actor);
+PxU16 PxGetGroup(const PxActor& actor);
 
 /**
 	\brief Sets which collision group this actor is part of
 
 	\note Collision group is an integer between 0 and 31.
 
-	\param[in] actor Rigid body actor
+	\param[in] actor The actor
 	\param[in] collisionGroup Collision group this actor belongs to
 
-	@see PxGetGroup
+	\see PxGetGroup
 */
-void PxSetGroup(const PxRigidActor& actor, const PxU16 collisionGroup);
+void PxSetGroup(PxActor& actor, const PxU16 collisionGroup);
 
 /**
 \brief Retrieves filtering operation. See comments for PxGroupsMask
@@ -181,9 +176,7 @@ void PxSetGroup(const PxRigidActor& actor, const PxU16 collisionGroup);
 \param[out] op1 Second filter operator.
 \param[out] op2 Third filter operator.
 
-\return the filter operations requested
-
-@see PxSetFilterOps PxSetFilterBool PxSetFilterConstants
+\see PxSetFilterOps PxSetFilterBool PxSetFilterConstants
 */
 void PxGetFilterOps(PxFilterOp::Enum& op0, PxFilterOp::Enum& op1, PxFilterOp::Enum& op2);
 
@@ -194,7 +187,7 @@ void PxGetFilterOps(PxFilterOp::Enum& op0, PxFilterOp::Enum& op1, PxFilterOp::En
 \param[in] op1 Filter op 1.
 \param[in] op2 Filter op 2.
 
-@see PxSetFilterBool PxSetFilterConstants
+\see PxSetFilterBool PxSetFilterConstants
 */
 void PxSetFilterOps(const PxFilterOp::Enum& op0, const PxFilterOp::Enum& op1, const PxFilterOp::Enum& op2);
 
@@ -203,7 +196,7 @@ void PxSetFilterOps(const PxFilterOp::Enum& op0, const PxFilterOp::Enum& op1, co
 
 \return flag Boolean value for filter.
 
-@see PxSetFilterBool PxSetFilterConstants
+\see PxSetFilterBool PxSetFilterConstants
 */
 bool PxGetFilterBool();
 
@@ -212,16 +205,17 @@ bool PxGetFilterBool();
 
 \param[in] enable Boolean value for filter.
 
-@see PxSetFilterOps PxSsetFilterConstants
+\see PxSetFilterOps PxSsetFilterConstants
 */
 void PxSetFilterBool(const bool enable);
 
 /**
 \brief Gets filtering constant K0 and K1. See comments for PxGroupsMask
 
-\return the filtering constants, as a mask. See #PxGroupsMask.
+\param[out] c0 the filtering constants, as a mask. See #PxGroupsMask.
+\param[out] c1 the filtering constants, as a mask. See #PxGroupsMask.
 
-@see PxSetFilterOps PxSetFilterBool PxSetFilterConstants
+\see PxSetFilterOps PxSetFilterBool PxSetFilterConstants
 */
 void PxGetFilterConstants(PxGroupsMask& c0, PxGroupsMask& c1);
 
@@ -231,34 +225,33 @@ void PxGetFilterConstants(PxGroupsMask& c0, PxGroupsMask& c1);
 \param[in] c0 The new group mask. See #PxGroupsMask.
 \param[in] c1 The new group mask. See #PxGroupsMask.
 
-@see PxSetFilterOps PxSetFilterBool PxGetFilterConstants
+\see PxSetFilterOps PxSetFilterBool PxGetFilterConstants
 */
 void PxSetFilterConstants(const PxGroupsMask& c0, const PxGroupsMask& c1);
 
 /**
 \brief Gets 64-bit mask used for collision filtering. See comments for PxGroupsMask
 
-\param[in] actor Rigid body actor
+\param[in] actor The actor
 
-\return The group mask for the shape.
+\return The group mask for the actor.
 
-@see PxSetGroupsMask()
+\see PxSetGroupsMask()
 */
-PxGroupsMask PxGetGroupsMask(const PxRigidActor& actor);
+PxGroupsMask PxGetGroupsMask(const PxActor& actor);
 
 /**
 \brief Sets 64-bit mask used for collision filtering. See comments for PxGroupsMask
 
-\param[in] actor Rigid body actor
-\param[in] mask The group mask to set for the shape.
+\param[in] actor The actor
+\param[in] mask The group mask to set for the actor.
 
-@see PxGetGroupsMask()
+\see PxGetGroupsMask()
 */
-void PxSetGroupsMask(const PxRigidActor& actor, const PxGroupsMask& mask);
+void PxSetGroupsMask(PxActor& actor, const PxGroupsMask& mask);
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

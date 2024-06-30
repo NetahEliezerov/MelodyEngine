@@ -1,41 +1,38 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
+#ifndef PX_VISUALIZATION_PARAMETER_H
+#define PX_VISUALIZATION_PARAMETER_H
 
-#ifndef PX_PHYSICS_NX_DEBUG_VISUALIZATION_PARAMETER
-#define PX_PHYSICS_NX_DEBUG_VISUALIZATION_PARAMETER
+#include "foundation/PxPreprocessor.h"
 
-/** \addtogroup physics
-@{
-*/
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
@@ -52,7 +49,10 @@ eNUM_VALUES, which should be one higher than the maximum value in the enum.
 /**
 \brief Debug visualization parameters.
 
-@see PxScene.setVisualizationParameter() PxScene.getVisualizationParameter()
+#PxVisualizationParameter::eSCALE is the master switch for enabling visualization, please read the corresponding documentation
+for further details.
+
+\see PxScene.setVisualizationParameter() PxScene.getVisualizationParameter() PxScene.getRenderBuffer()
 */
 struct PxVisualizationParameter
 {
@@ -61,14 +61,13 @@ struct PxVisualizationParameter
 	/* RigidBody-related parameters  */
 
 		/**
-		\brief This overall visualization scale gets multiplied with the individual scales. Setting to zero turns ignores all visualizations. Default is 0.
+		\brief This overall visualization scale gets multiplied with the individual scales. Setting to zero ignores all visualizations. Default is 0.
 
 		The below settings permit the debug visualization of various simulation properties. 
 		The setting is either zero, in which case the property is not drawn. Otherwise it is a scaling factor
 		that determines the size of the visualization widgets.
 
-		Only objects for which visualization is turned on using setFlag(VISUALIZE) are visualized.
-		Contacts are visualized if they involve a body which is being visualized.
+		Only objects for which visualization is turned on using setFlag(eVISUALIZATION) are visualized (see #PxActorFlag::eVISUALIZATION, #PxShapeFlag::eVISUALIZATION, ...).
 		Default is 0.
 
 		Notes:
@@ -82,12 +81,11 @@ struct PxVisualizationParameter
 		triangles & polygons themselves, and there's no point in scaling that. So the visualization widgets
 		are only scaled when it makes sense.
 
-		<b>Range:</b> [0, inf)<br>
+		<b>Range:</b> [0, PX_MAX_F32)<br>
 		<b>Default:</b> 0
 		*/
 		eSCALE,
 
-		
 		/**
 		\brief Visualize the world axes.
 		*/
@@ -98,7 +96,7 @@ struct PxVisualizationParameter
 		/**
 		\brief Visualize a bodies axes.
 
-		@see PxActor.globalPose PxActor
+		\see PxActor.globalPose PxActor
 		*/
 		eBODY_AXES,
 		
@@ -109,31 +107,23 @@ struct PxVisualizationParameter
 		black, while awake bodies are drawn in white. If the body is sleeping and part of a sleeping group, it is
 		drawn in red.
 
-		@see PxBodyDesc.massLocalPose PxActor
+		\see PxBodyDesc.massLocalPose PxActor
 		*/
 		eBODY_MASS_AXES,
 		
 		/**
 		\brief Visualize the bodies linear velocity.
 
-		@see PxBodyDesc.linearVelocity PxActor
+		\see PxBodyDesc.linearVelocity PxActor
 		*/
 		eBODY_LIN_VELOCITY,
 		
 		/**
 		\brief Visualize the bodies angular velocity.
 
-		@see PxBodyDesc.angularVelocity PxActor
+		\see PxBodyDesc.angularVelocity PxActor
 		*/
 		eBODY_ANG_VELOCITY,
-
-
-		/**
-		\brief Visualize the bodies joint projection group.
-
-		@see PxBodyDesc.angularVelocity PxActor
-		*/
-		eBODY_JOINT_GROUPS,
 
 	/* Contact visualisations */
 
@@ -157,15 +147,13 @@ struct PxVisualizationParameter
 		*/
 		eCONTACT_FORCE,
 
-		
 		/**
 		\brief Visualize actor axes.
 
-		@see PxRigidStatic PxRigidDynamic PxArticulationLink
+		\see PxRigidStatic PxRigidDynamic PxArticulationLink
 		*/
 		eACTOR_AXES,
 
-		
 		/**
 		\brief Visualize bounds (AABBs in world space)
 		*/
@@ -174,14 +162,14 @@ struct PxVisualizationParameter
 		/**
 		\brief Shape visualization
 
-		@see PxShape
+		\see PxShape
 		*/
 		eCOLLISION_SHAPES,
 		
 		/**
 		\brief Shape axis visualization
 
-		@see PxShape
+		\see PxShape
 		*/
 		eCOLLISION_AXES,
 
@@ -193,14 +181,14 @@ struct PxVisualizationParameter
 		/**
 		\brief Mesh & convex face normals
 
-		@see PxTriangleMesh PxConvexMesh
+		\see PxTriangleMesh PxConvexMesh
 		*/
 		eCOLLISION_FNORMALS,
 		
 		/**
 		\brief Active edges for meshes
 
-		@see PxTriangleMesh
+		\see PxTriangleMesh
 		*/
 		eCOLLISION_EDGES,
 
@@ -215,65 +203,34 @@ struct PxVisualizationParameter
 		eCOLLISION_DYNAMIC,
 
 		/**
-		\brief Visualizes pairwise state.
-
-		*/
-		eCOLLISION_PAIRS,
-
-		/**
 		\brief Joint local axes
 		*/
 		eJOINT_LOCAL_FRAMES,
 
 		/** 
-		brief Joint limits
+		\brief Joint limits
 		*/
 		eJOINT_LIMITS,
-
-
-	/* ParticleSystem visualizations */
-		
-		/**
-		\brief Particle position visualization.
-		*/
-		ePARTICLE_SYSTEM_POSITION,
-		
-		/**
-		\brief Particle velocity visualization.
-		*/
-		ePARTICLE_SYSTEM_VELOCITY,
-
-		/**
-		\brief Particle collision normal visualization.
-		*/
-		ePARTICLE_SYSTEM_COLLISION_NORMAL,
-		
-		/**
-		\brief ParticleSystem AABB visualization.
-		*/
-		ePARTICLE_SYSTEM_BOUNDS,
-
-		/**
-		\brief Particle grid visualization.
-		*/
-		ePARTICLE_SYSTEM_GRID,
-		
-		/**
-		\brief Particle system broad phase bounds.
-		*/
-		ePARTICLE_SYSTEM_BROADPHASE_BOUNDS,
-
-		/**
-		\brief ParticleSystem maximum motion distance visualization.
-		*/
-		ePARTICLE_SYSTEM_MAX_MOTION_DISTANCE,
 	
-	/* Visualization subscene (culling box) */
-
 		/**
-		\brief Debug visualization culling
+		\brief Visualize culling box
 		*/
 		eCULL_BOX,
+
+		/**
+		\brief MBP regions
+		*/
+		eMBP_REGIONS,
+
+		/**
+		\brief Renders the simulation mesh instead of the collision mesh (only available for tetmeshes)
+		*/
+		eSIMULATION_MESH,
+
+		/**
+		\brief Renders the SDF of a mesh instead of the collision mesh (only available for triangle meshes with SDFs)
+		*/
+		eSDF,
 
 		/**
 		\brief This is not a parameter, it just records the current number of parameters (as maximum(PxVisualizationParameter)+1) for use in loops.
@@ -284,9 +241,8 @@ struct PxVisualizationParameter
 	};
 };
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

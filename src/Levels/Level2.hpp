@@ -46,7 +46,7 @@ public:
         ObjectSettings boxSettings = { "Box", "assets/meshes/Box/box.fbx", {"assets/meshes/Box/box_BaseColor.png"}, glm::vec3(1, 1, 1), glm::vec3(-3, -4, -1), glm::vec3(270,0,56) };
         ObjectSettings wall1Settings = { "Exterior", "assets/meshes/cube.obj", {"assets/textures/Wall/images.jpg"}, glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0) };
         ObjectSettings targetCubeSettings = { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98) };
-        LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(1, 0, 2) };
+        LightSettings lightSettings = { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(1, 0, 2), true };
 
 
         wall.Init(wall1Settings, this);
@@ -65,6 +65,9 @@ public:
     virtual void Update(float deltaTime) override
     {
         // FlickLight(deltaTime);
+        light.spotLightPos = character->movement.position - character->movement.lookingAngle - glm::vec3(0, 1, 0);
+        light.transform = character->movement.position - character->movement.lookingAngle - glm::vec3(0, 1, 0);
+        light.spotLightDir = character->movement.lookingAngle;
 
         targetCube.rotation.z += 7.5 * deltaTime;
     };

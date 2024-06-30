@@ -1,74 +1,104 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
-// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+
+#ifndef PX_H
+#define PX_H
 
 
-#ifndef PX_FOUNDATION_PX_H
-#define PX_FOUNDATION_PX_H
-
-/** \addtogroup foundation
-@{
-*/
-
-#include "foundation/PxVersionNumber.h"
 #include "foundation/PxSimpleTypes.h"
 
 /** files to always include */
 #include <string.h>
 #include <stdlib.h>
 
-#if defined(PX_LINUX) || defined(PX_ANDROID) || defined(PX_PSP2)
-#include <stdint.h> // uintptr_t
-#endif
-
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
-		class PxVec2;
-		class PxVec3;
-		class PxVec4;
-		class PxMat33;
-		class PxMat44;
-		class PxQuat;
-		class PxTransform;
-		class PxBounds3;
 
-		class PxAllocatorCallback;
-		class PxErrorCallback;
+class PxAllocatorCallback;
+class PxErrorCallback;
+struct PxErrorCode;
 
-		class PxFoundation;
+class PxInputStream;
+class PxInputData;
+class PxOutputStream;
 
-		class PxEmpty;
+#if !PX_DOXYGEN  // need to exclude, confuses api doc build about duplicate declaration
+template<class Type>	class PxVec2T;
+typedef PxVec2T<float>	PxVec2;
 
-#ifndef PX_DOXYGEN
+template<class Type>	class PxVec3T;
+typedef PxVec3T<float>	PxVec3;
+
+template<class Type>	class PxVec4T;
+typedef PxVec4T<float>	PxVec4;
+
+template<class Type>	class PxQuatT;
+typedef PxQuatT<float>	PxQuat;
+
+template<class Type>	class PxMat33T;
+typedef PxMat33T<float>	PxMat33;
+
+template<class Type>	class PxMat34T;
+typedef PxMat34T<float>	PxMat34;
+
+template<class Type>	class PxMat44T;
+typedef PxMat44T<float>	PxMat44;
+
+template<class Type>	class PxTransformT;
+typedef PxTransformT<float>	PxTransform;
+#endif
+
+class PxPlane;
+class PxBounds3;
+
+/** enum for empty constructor tag*/
+enum PxEMPTY
+{
+	PxEmpty
+};
+
+/** enum for zero constructor tag for vectors and matrices */
+enum PxZERO
+{
+	PxZero
+};
+
+/** enum for identity constructor flag for quaternions, transforms, and matrices */
+enum PxIDENTITY
+{
+	PxIdentity
+};
+
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif
+

@@ -1,75 +1,96 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
-// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
+
+#ifndef PX_WINDOWS_DELAY_LOAD_HOOK_H
+#define PX_WINDOWS_DELAY_LOAD_HOOK_H
+
+#include "foundation/PxPreprocessor.h"
+#include "common/PxPhysXCommonConfig.h"
 
 
-#ifndef PX_PHYSICS_DELAY_LOAD_HOOK
-#define PX_PHYSICS_DELAY_LOAD_HOOK
-
-#include <common/PxPhysXCommon.h>
-
-/** \addtogroup foundation
-@{
-*/
-
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 	/**
-	\brief PxDelayLoadHook
+ 	\brief PxDelayLoadHook
 
-	PxDelayLoadHook class is a helper class for delay load dll. It suppose to get the names of the common dll's which can be delay loaded inside PhysX and PhysXCooking dll.
+	This is a helper class for delay loading the PhysXCommon dll and PhysXFoundation dll. 
+	If a PhysXCommon dll or PhysXFoundation dll with a non-default file name needs to be loaded, 
+	PxDelayLoadHook can be sub-classed to provide the custom filenames.
 
-	Once the names are set, the instance must be set for PhysX and PhysXCooking dlls.
+	Once the names are set, the instance must be set for use by PhysX.dll using PxSetPhysXDelayLoadHook(), 
+	PhysXCooking.dll using PxSetPhysXCookingDelayLoadHook()	or by PhysXCommon.dll using PxSetPhysXCommonDelayLoadHook().
 
-	@see Startup documentation
-	*/
+	\see PxSetPhysXDelayLoadHook(), PxSetPhysXCookingDelayLoadHook(), PxSetPhysXCommonDelayLoadHook()
+ 	*/
 	class PxDelayLoadHook
 	{
 	public:
 		PxDelayLoadHook() {}
 		virtual ~PxDelayLoadHook() {}
 
-		virtual const char* GetPhysXCommonDEBUGDllName() const = 0;
-		virtual const char* GetPhysXCommonCHECKEDDllName() const = 0;
-		virtual const char* GetPhysXCommonPROFILEDllName() const = 0;
-		virtual const char* GetPhysXCommonDllName() const = 0;
-	
-		PX_PHYSX_CORE_API static void SetPhysXInstance(const PxDelayLoadHook* hook);
-		PX_PHYSX_CORE_API static void SetPhysXCookingInstance(const PxDelayLoadHook* hook);
+		virtual const char* getPhysXFoundationDllName() const = 0;
+		
+		virtual const char* getPhysXCommonDllName() const = 0;
+
 	protected:
 	private:
 	};
-		
 
-#ifndef PX_DOXYGEN
+	/**
+	\brief Sets delay load hook instance for PhysX dll.
+
+	\param[in] hook Delay load hook.
+
+	\see PxDelayLoadHook
+	*/
+	PX_C_EXPORT PX_PHYSX_CORE_API void PX_CALL_CONV PxSetPhysXDelayLoadHook(const physx::PxDelayLoadHook* hook);
+
+	/**
+	\brief Sets delay load hook instance for PhysXCooking dll.
+
+	\param[in] hook Delay load hook.
+
+	\see PxDelayLoadHook
+	*/
+	PX_C_EXPORT PX_PHYSX_CORE_API void PX_CALL_CONV PxSetPhysXCookingDelayLoadHook(const physx::PxDelayLoadHook* hook);
+
+	/**
+	\brief Sets delay load hook instance for PhysXCommon dll.
+
+	\param[in] hook Delay load hook.
+
+	\see PxDelayLoadHook
+	*/
+	PX_C_EXPORT PX_PHYSX_COMMON_API void PX_CALL_CONV PxSetPhysXCommonDelayLoadHook(const physx::PxDelayLoadHook* hook);
+
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
-/** @} */
 #endif

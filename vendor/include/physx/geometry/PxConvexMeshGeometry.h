@@ -1,47 +1,65 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-
-#ifndef PX_PHYSICS_NX_CONVEXMESH_GEOMETRY
-#define PX_PHYSICS_NX_CONVEXMESH_GEOMETRY
-/** \addtogroup geomutils
-@{
-*/
+#ifndef PX_CONVEX_MESH_GEOMETRY_H
+#define PX_CONVEX_MESH_GEOMETRY_H
 #include "geometry/PxGeometry.h"
 #include "geometry/PxMeshScale.h"
+#include "common/PxCoreUtilityTypes.h"
+#include "geometry/PxConvexMesh.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 
 class PxConvexMesh;
+
+/**
+\brief Flags controlling the simulated behavior of the convex mesh geometry.
+
+Used in ::PxConvexMeshGeometryFlags.
+*/
+struct PxConvexMeshGeometryFlag
+{
+	enum Enum
+	{
+		eTIGHT_BOUNDS = (1<<0)	//!< Use tighter (but more expensive to compute) bounds around the convex geometry.
+	};
+};
+
+/**
+\brief collection of set bits defined in PxConvexMeshGeometryFlag.
+
+\see PxConvexMeshGeometryFlag
+*/
+typedef PxFlags<PxConvexMeshGeometryFlag::Enum,PxU8> PxConvexMeshGeometryFlags;
+PX_FLAGS_OPERATORS(PxConvexMeshGeometryFlag::Enum,PxU8)
 
 /**
 \brief Convex mesh geometry class.
@@ -58,66 +76,83 @@ class PxConvexMeshGeometry : public PxGeometry
 {
 public:
 	/**
-	\brief Default constructor.
+	\brief Constructor. By default creates an empty object with a NULL mesh and identity scale.
 
-	Creates an empty object with a NULL mesh and identity scale.
+	\param[in] mesh		Mesh pointer. May be NULL, though this will not make the object valid for shape construction.
+	\param[in] scaling	Scale factor.
+	\param[in] flags	Mesh flags.
+	\
 	*/
-	PX_INLINE PxConvexMeshGeometry() :
-		PxGeometry(PxGeometryType::eCONVEXMESH),
-		scale(PxMeshScale::createIdentity()),
-		convexMesh(NULL)
-	{}
+	PX_INLINE PxConvexMeshGeometry(	PxConvexMesh* mesh = NULL,
+									const PxMeshScale& scaling = PxMeshScale(),
+									PxConvexMeshGeometryFlags flags = PxConvexMeshGeometryFlag::eTIGHT_BOUNDS) :
+		PxGeometry	(PxGeometryType::eCONVEXMESH),
+		scale		(scaling),
+		convexMesh	(mesh),
+		meshFlags	(flags)
+	{
+	}
 
-		/**
-		\brief Constructor.
-		\param[in] mesh The Mesh pointer.  May be NULL, though this will not make the object valid for shape construction.
-		\param[in] scaling The scale factor.
-		\
-		*/
-	PX_INLINE PxConvexMeshGeometry(PxConvexMesh* mesh, 
-								   const PxMeshScale& scaling = PxMeshScale()) :
-		PxGeometry(PxGeometryType::eCONVEXMESH),
-		scale(scaling),
-		convexMesh(mesh)
-	{}
+	/**
+	\brief Copy constructor.
+
+	\param[in] that		Other object
+	*/
+	PX_INLINE PxConvexMeshGeometry(const PxConvexMeshGeometry& that) :
+		PxGeometry	(that),
+		scale		(that.scale),
+		convexMesh	(that.convexMesh),
+		meshFlags	(that.meshFlags)
+	{
+	}
+
+	/**
+	\brief Assignment operator
+	*/
+	PX_INLINE void operator=(const PxConvexMeshGeometry& that)
+	{
+		mType = that.mType;
+		scale = that.scale;
+		convexMesh = that.convexMesh;
+		meshFlags = that.meshFlags;
+	}
 
 	/**
 	\brief Returns true if the geometry is valid.
 
 	\return True if the current settings are valid for shape creation.
+
+	\note A valid convex mesh has a positive scale value in each direction (scale.x > 0, scale.y > 0, scale.z > 0).
+	It is illegal to call PxRigidActor::createShape and PxPhysics::createShape with a convex that has zero extent in any direction.
+
+	\see PxRigidActor::createShape, PxPhysics::createShape
 	*/
 	PX_INLINE bool isValid() const;
 
 public:
-	
-	/**
-	\brief Scale factor that transforms from vertex space to shape space.
-	*/
-	PxMeshScale		scale;	
-	/**
-	\brief The mesh data in vertex space.
-	*/
-	PxConvexMesh*	convexMesh;
+	PxMeshScale					scale;				//!< The scaling transformation (from vertex space to shape space).
+	PxConvexMesh*				convexMesh;			//!< A reference to the convex mesh object.
+	PxConvexMeshGeometryFlags	meshFlags;			//!< Mesh flags.
+	PxPadding<3>				paddingFromFlags;	//!< padding for mesh flags
 };
 
 
 PX_INLINE bool PxConvexMeshGeometry::isValid() const
 {
-	if (mType != PxGeometryType::eCONVEXMESH)
+	if(mType != PxGeometryType::eCONVEXMESH)
 		return false;
-	if (!scale.scale.isFinite() || !scale.rotation.isUnit())
+	if(!scale.scale.isFinite() || !scale.rotation.isUnit())
 		return false;
-	if (scale.scale.x <= 0.0f || scale.scale.y <= 0.0f || scale.scale.z <= 0.0f)
+	if(!scale.isValidForConvexMesh())
 		return false;
-	if (!convexMesh)
+	if(!convexMesh)
 		return false;
-
+	
 	return true;
 }
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

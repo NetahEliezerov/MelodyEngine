@@ -48,19 +48,20 @@ public:
         
         wall.Init(        { "Wall", "assets/meshes/cube.obj", {"assets/textures/Wall/pngtree-wood-grain-texture-wooden-flooring-design-with-wooden-floor-textures-image_13051712.jpg"}, glm::vec3(6, 3, 6), glm::vec3(0, -1, 0), glm::vec3(0,0,0) }, this);
         targetCube.Init(  { "Hand", "assets/meshes/hand.obj", {"assets/textures/aga.jpg"}, glm::vec3(0.2, 0.2, 0.2), glm::vec3(0, -3.5, -1), glm::vec3(87, 165,98) }, this);
-        targetCube2.Init( { "Target Cube 1", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, glm::vec3(0.004, 0.004, 0.004), glm::vec3(4, -1.5, -5.1), glm::vec3(0,327,270) }, this);
+        targetCube2.Init( { "Target Cube 1", "assets/meshes/Shotgun/Shotgun.fbx", {"assets/meshes/Shotgun/Shotgun_DefaultMaterial_BaseColor.png"}, glm::vec3(0.004, 0.004, 0.004), glm::vec3(3, -1.5, -5.1), glm::vec3(0,327,270) }, this);
+        box.Init({ "Box", "assets/meshes/Box/box.fbx", {"assets/meshes/Box/box_BaseColor.png"}, glm::vec3(1, 1, 1), glm::vec3(-3, -4, -1), glm::vec3(270,0,56) }, this);
         table.Init(       { "Target Cube 2", "assets/meshes/Table/MechanicalTable.fbx", {"assets/meshes/Table/BaseColor.png"}, glm::vec3(0.007, 0.012, 0.009), glm::vec3(1.5, -4, -5.2), glm::vec3(0,0,0) }, this);
-        light.Init(       { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(-0.3, 0, 1) });
+        light.Init(       { "assets/meshes/cube.obj", "assets/textures/zizim.jpg", glm::vec4(1, 0.78, 0.6, 1.f), glm::vec3(0.15, 0.15, 0.15), glm::vec3(0, 0, 0), true });
 
         Game::state.currentMission = 0;
         Game::state.currentSubMission = 0;
         Game::state.currentObjective = "Investigate";
 
         letter.Init({ "Noah", std::string("Hey. Find me in the factory.") }, this, timeScale, [this]() { NoahLetterOpen(); });
-        ObjectSettings doorSettings = { "Door Key", "assets/meshes/Key/Key2.obj", {"assets/meshes/Key/Albedo.jpg"}, glm::vec3(0.003, 0.003, 0.003), glm::vec3(4.3, -1.45, -5), glm::vec3(90, 0, -27) };
+        ObjectSettings doorSettings = { "Door Key", "assets/meshes/Key/Key2.obj", {"assets/meshes/Key/Albedo.jpg"}, glm::vec3(0.003, 0.003, 0.003), glm::vec3(4, -1.53, -5), glm::vec3(90, 0, -27) };
         doorKey.Init(doorSettings, 0, this, timeScale);
 
-        triggerBox.Init(this, glm::vec3(-4.f, 0.0f, 4.f), glm::vec3(2.0f, 8.0f, 2.0f), [this]() { OnRoomExit(); }, character, true, true);
+        triggerBox.Init(this, glm::vec3(-6.f, 0.0f, 4.f), glm::vec3(0.4f, 8.0f, 2.0f), [this]() { OnRoomExit(); }, character, true, true);
 
     };
 
@@ -70,6 +71,9 @@ public:
         {
             FlickLight(deltaTime);
         }
+        light.spotLightPos = character->movement.position - character->movement.lookingAngle - glm::vec3(0,1,0);
+        light.transform = character->movement.position - character->movement.lookingAngle - glm::vec3(0,1,0);
+        light.spotLightDir = character->movement.lookingAngle;
 
         targetCube.rotation.z += 7.5 * deltaTime;
     };
@@ -103,6 +107,7 @@ private:
     Model3D targetCube2;
 
     Model3D table;
+    Model3D box;
     Letter letter;
     DoorKey doorKey;
 

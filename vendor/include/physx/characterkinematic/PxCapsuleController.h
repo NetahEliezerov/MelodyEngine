@@ -1,43 +1,37 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
+#ifndef PX_CAPSULE_CONTROLLER_H
+#define PX_CAPSULE_CONTROLLER_H
 
-#ifndef PX_PHYSICS_CCT_CAPSULE_CONTROLLER
-#define PX_PHYSICS_CCT_CAPSULE_CONTROLLER
-/** \addtogroup character
-  @{
-*/
-
-#include "characterkinematic/PxCharacter.h"
 #include "characterkinematic/PxController.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
@@ -56,7 +50,7 @@ struct PxCapsuleClimbingMode
 /**
 \brief A descriptor for a capsule character controller.
 
-@see PxCapsuleController PxControllerDesc
+\see PxCapsuleController PxControllerDesc
 */
 class PxCapsuleControllerDesc : public PxControllerDesc
 {
@@ -64,8 +58,18 @@ public:
 	/**
 	\brief constructor sets to default.
 	*/
-	PX_INLINE								PxCapsuleControllerDesc ();
-	PX_INLINE virtual						~PxCapsuleControllerDesc ();
+	PX_INLINE									PxCapsuleControllerDesc ();
+	PX_INLINE virtual							~PxCapsuleControllerDesc () {}
+
+	/**
+	\brief copy constructor.
+	*/
+	PX_INLINE									PxCapsuleControllerDesc(const PxCapsuleControllerDesc&);
+
+	/**
+	\brief assignment operator.
+	*/
+	PX_INLINE PxCapsuleControllerDesc&			operator=(const PxCapsuleControllerDesc&);
 
 	/**
 	\brief (re)sets the structure to the default.
@@ -83,7 +87,7 @@ public:
 
 	<b>Default:</b> 0.0
 
-	@see PxCapsuleController
+	\see PxCapsuleController
 	*/
 	PxF32				radius;
 
@@ -92,7 +96,7 @@ public:
 
 	<b>Default:</b> 0.0
 
-	@see PxCapsuleController
+	\see PxCapsuleController
 	*/
 	PxF32				height;
 
@@ -101,9 +105,12 @@ public:
 
 	<b>Default:</b> PxCapsuleClimbingMode::eEASY
 
-	@see PxCapsuleController
+	\see PxCapsuleController
 	*/
 	PxCapsuleClimbingMode::Enum		climbingMode;
+	
+protected:
+	PX_INLINE void								copy(const PxCapsuleControllerDesc&);
 };
 
 PX_INLINE PxCapsuleControllerDesc::PxCapsuleControllerDesc () : PxControllerDesc(PxControllerShapeType::eCAPSULE)
@@ -112,8 +119,23 @@ PX_INLINE PxCapsuleControllerDesc::PxCapsuleControllerDesc () : PxControllerDesc
 	climbingMode = PxCapsuleClimbingMode::eEASY;
 }
 
-PX_INLINE PxCapsuleControllerDesc::~PxCapsuleControllerDesc()
+PX_INLINE PxCapsuleControllerDesc::PxCapsuleControllerDesc(const PxCapsuleControllerDesc& other) : PxControllerDesc(other)
 {
+	copy(other);
+}
+
+PX_INLINE PxCapsuleControllerDesc& PxCapsuleControllerDesc::operator=(const PxCapsuleControllerDesc& other)
+{
+	PxControllerDesc::operator=(other);
+	copy(other);
+	return *this;
+}
+
+PX_INLINE void PxCapsuleControllerDesc::copy(const PxCapsuleControllerDesc& other)
+{
+	radius			= other.radius;
+	height			= other.height;
+	climbingMode	= other.climbingMode;
 }
 
 PX_INLINE void PxCapsuleControllerDesc::setToDefault()
@@ -148,10 +170,6 @@ bottom capsule point = p.y - h*0.5 - r<br>
 */
 class PxCapsuleController : public PxController
 {
-protected:
-	PX_INLINE					PxCapsuleController()	{}
-	virtual						~PxCapsuleController()	{}
-
 public:
 
 	/**
@@ -159,7 +177,7 @@ public:
 
 	\return The radius of the controller.
 
-	@see PxCapsuleControllerDesc.radius setRadius()
+	\see PxCapsuleControllerDesc.radius setRadius()
 	*/
 	virtual		PxF32			getRadius() const = 0;
 
@@ -171,7 +189,7 @@ public:
 	\param[in] radius The new radius for the controller.
 	\return Currently always true.
 
-	@see PxCapsuleControllerDesc.radius getRadius()
+	\see PxCapsuleControllerDesc.radius getRadius()
 	*/
 	virtual		bool			setRadius(PxF32 radius) = 0;
 
@@ -180,7 +198,7 @@ public:
 
 	\return The height of the capsule controller.
 
-	@see PxCapsuleControllerDesc.height setHeight()
+	\see PxCapsuleControllerDesc.height setHeight()
 	*/
 	virtual		PxF32			getHeight() const = 0;
 
@@ -192,7 +210,7 @@ public:
 	\param[in] height The new height for the controller.
 	\return Currently always true.
 
-	@see PxCapsuleControllerDesc.height getHeight()
+	\see PxCapsuleControllerDesc.height getHeight()
 	*/
 	virtual		bool			setHeight(PxF32 height) = 0;
 
@@ -201,7 +219,7 @@ public:
 
 	\return The capsule controller's climbing mode.
 
-	@see PxCapsuleControllerDesc.climbingMode setClimbingMode()
+	\see PxCapsuleControllerDesc.climbingMode setClimbingMode()
 	*/
 	virtual		PxCapsuleClimbingMode::Enum		getClimbingMode()	const	= 0;
 
@@ -210,14 +228,17 @@ public:
 
 	\param[in] mode The capsule controller's climbing mode.
 
-	@see PxCapsuleControllerDesc.climbingMode getClimbingMode()
+	\see PxCapsuleControllerDesc.climbingMode getClimbingMode()
 	*/
 	virtual		bool			setClimbingMode(PxCapsuleClimbingMode::Enum mode)	= 0;
+	
+protected:
+	PX_INLINE					PxCapsuleController()	{}
+	virtual						~PxCapsuleController()	{}
 };
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

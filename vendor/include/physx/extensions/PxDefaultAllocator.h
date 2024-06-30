@@ -1,92 +1,111 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
-// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
-
+// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
 
 #ifndef PX_DEFAULT_ALLOCATOR_H
 #define PX_DEFAULT_ALLOCATOR_H
-/** \addtogroup extensions
-  @{
-*/
 
 #include "foundation/PxAllocatorCallback.h"
-#include "common/PxPhysXCommon.h"
 #include "foundation/PxAssert.h"
+#include "foundation/PxMemory.h"
+#include "common/PxPhysXCommonConfig.h"
+
 #include <stdlib.h>
 
-#ifndef PX_DOXYGEN
+#if PX_WINDOWS_FAMILY || PX_LINUX_FAMILY || PX_SWITCH
+#include <malloc.h>
+#endif
+
+#if !PX_DOXYGEN
 namespace physx
 {
+#endif
+
+#if PX_WINDOWS_FAMILY
+// on win32 we only have 8-byte alignment guaranteed, but the CRT provides special aligned allocation fns
+PX_FORCE_INLINE void* platformAlignedAlloc(size_t size)
+{
+	return _aligned_malloc(size, 16);
+}
+
+PX_FORCE_INLINE void platformAlignedFree(void* ptr)
+{
+	_aligned_free(ptr);
+}
+#elif PX_LINUX_FAMILY || PX_SWITCH
+PX_FORCE_INLINE void* platformAlignedAlloc(size_t size)
+{
+	return ::memalign(16, size);
+}
+
+PX_FORCE_INLINE void platformAlignedFree(void* ptr)
+{
+	::free(ptr);
+}
+#else
+// on all other platforms we get 16-byte alignment by default
+PX_FORCE_INLINE void* platformAlignedAlloc(size_t size)
+{
+	return ::malloc(size);
+}
+
+PX_FORCE_INLINE void platformAlignedFree(void* ptr)
+{
+	::free(ptr);
+}
 #endif
 
 /**
 \brief default implementation of the allocator interface required by the SDK
 */
-
-#if defined(WIN32) || defined (ANDROID)
-#include <malloc.h>
-#endif
-
 class PxDefaultAllocator : public PxAllocatorCallback
 {
 public:
-	void* allocate(size_t size, const char*, const char*, int)
+	virtual void* allocate(size_t size, const char*, const char*, int)
 	{
-#if defined(WIN32)
-		// on win32 we only have 8-byte alignment guaranteed, but the CRT provides special aligned allocation
-		return _aligned_malloc(size, 16);	
-#elif defined (ANDROID)
-		void *ptr = memalign(16, size);
-		PX_ASSERT((reinterpret_cast<size_t>(ptr) & 15)==0);
-		return ptr;
-#else
-		// on PS3, XBox and Win64 we get 16-byte alignment by default
-		void *ptr = ::malloc(size);	
-		PX_ASSERT((reinterpret_cast<size_t>(ptr) & 15)==0);
-		return ptr;
+		void* ptr = platformAlignedAlloc(size);
+		PX_ASSERT((size_t(ptr) & 15)==0);
+#if PX_STOMP_ALLOCATED_MEMORY
+		if(ptr != NULL)
+		{
+			PxMemSet(ptr, PxI32(0xcd), PxU32(size));
+		}
 #endif
+		return ptr;
 	}
 
-	void deallocate(void* ptr)
+	virtual void deallocate(void* ptr)
 	{
-#if defined(WIN32)
-		_aligned_free(ptr);
-#elif defined (ANDROID)
-		free(ptr);
-#else
-		::free(ptr);			
-#endif
+		platformAlignedFree(ptr);
 	}
 };
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

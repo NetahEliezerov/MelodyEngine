@@ -33,16 +33,48 @@ void RenderModelTree(const char* label, int idx, Model3D* modelLocation, bool* o
     } else
         modelLocation->isSelected = false;
 }
-
+static const char* items[]{ "Specular","Spotlight" };
+static int Selecteditem = 1;
+static bool firstTimeSelecting = true;
 void RenderLightTree(const char* label, int idx, LightPoint* modelLocation, bool* opened = nullptr, ImGuiTreeNodeFlags flags = 0)
 {
     if (ImGui::TreeNodeEx(label, flags))
     {
+        bool check = ImGui::Combo("Light Type", &Selecteditem, items, IM_ARRAYSIZE(items));
+        
+        if (firstTimeSelecting)
+        {
+            modelLocation->isSpotlight ? Selecteditem = 1 : Selecteditem = 0;
+            firstTimeSelecting = false;
+        }
+
+        if (Selecteditem == 0)
+        {
+            modelLocation->isSpotlight = false;
+        } else
+        {
+            modelLocation->isSpotlight = true;
+        }
 
         ImGui::Text("Transform");
         ImGui::DragFloat(("X ##" + std::to_string(idx)).c_str(), &modelLocation->transform.x);
-        ImGui::DragFloat(("y ##" + std::to_string(idx)).c_str(), &modelLocation->transform.y);
-        ImGui::DragFloat(("z ##" + std::to_string(idx)).c_str(), &modelLocation->transform.z);
+        ImGui::DragFloat(("Y ##" + std::to_string(idx)).c_str(), &modelLocation->transform.y);
+        ImGui::DragFloat(("Z ##" + std::to_string(idx)).c_str(), &modelLocation->transform.z);
+
+        if (modelLocation->isSpotlight)
+        {
+            ImGui::Text("Light Transform");
+            ImGui::DragFloat(("Spotlight X ##" + std::to_string(idx)).c_str(), &modelLocation->spotLightPos.x);
+            ImGui::DragFloat(("Spotlight Y ##" + std::to_string(idx)).c_str(), &modelLocation->spotLightPos.y);
+            ImGui::DragFloat(("Spotlight Z ##" + std::to_string(idx)).c_str(), &modelLocation->spotLightPos.z);
+            ImGui::Text("Light Direction");
+            ImGui::DragFloat(("Direction X ##" + std::to_string(idx)).c_str(), &modelLocation->spotLightDir.x);
+            ImGui::DragFloat(("Direction Y ##" + std::to_string(idx)).c_str(), &modelLocation->spotLightDir.y);
+            ImGui::DragFloat(("Direction Z ##" + std::to_string(idx)).c_str(), &modelLocation->spotLightDir.z);
+            ImGui::Text("Light Cutoff");
+            ImGui::DragFloat(("Inner Cutoff ##" + std::to_string(idx)).c_str(), &modelLocation->spotLightCutoff);
+            ImGui::DragFloat(("Outer Cutoff Y ##" + std::to_string(idx)).c_str(), &modelLocation->spotLightOuterCutoff);
+        }
 
         ImGui::TreePop();
     }

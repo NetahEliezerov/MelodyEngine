@@ -1,43 +1,38 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
-// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
+// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
 
-
-#ifndef PX_FOUNDATION_PX_MAT33_H
-#define PX_FOUNDATION_PX_MAT33_H
-/** \addtogroup foundation
-@{
-*/
+#ifndef PX_MAT33_H
+#define PX_MAT33_H
 
 #include "foundation/PxVec3.h"
 #include "foundation/PxQuat.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
@@ -53,12 +48,12 @@ Short:
 
 Long:
 Given three base vectors a, b and c the matrix is stored as
-         
+
 |a.x b.x c.x|
 |a.y b.y c.y|
 |a.z b.z c.z|
 
-Vectors are treated as columns, so the vector v is 
+Vectors are treated as columns, so the vector v is
 
 |x|
 |y|
@@ -84,66 +79,99 @@ index = column*3 + row
 
 which in C++ translates to M[column][row]
 
-The mathematical indexing is M_row,column and this is what is used for _-notation 
+The mathematical indexing is M_row,column and this is what is used for _-notation
 so _12 is 1st row, second column and operator(row, column)!
-
 */
-class PxMat33
+
+template<class Type>
+class PxMat33T
 {
-public:
+	public:
 	//! Default constructor
-	PX_CUDA_CALLABLE PX_INLINE PxMat33()
-	{}
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxMat33T()
+	{
+	}
+
+	//! identity constructor
+	PX_CUDA_CALLABLE PX_INLINE PxMat33T(PxIDENTITY) :
+		column0(Type(1.0), Type(0.0), Type(0.0)),
+		column1(Type(0.0), Type(1.0), Type(0.0)),
+		column2(Type(0.0), Type(0.0), Type(1.0))
+	{
+	}
+
+	//! zero constructor
+	PX_CUDA_CALLABLE PX_INLINE PxMat33T(PxZERO) :
+		column0(Type(0.0)),
+		column1(Type(0.0)),
+		column2(Type(0.0))
+	{
+	}
 
 	//! Construct from three base vectors
-	PX_CUDA_CALLABLE PxMat33(const PxVec3& col0, const PxVec3& col1, const PxVec3& col2)
-		: column0(col0), column1(col1), column2(col2)
-	{}
+	PX_CUDA_CALLABLE PxMat33T(const PxVec3T<Type>& col0, const PxVec3T<Type>& col1, const PxVec3T<Type>& col2) :
+		column0(col0),
+		column1(col1),
+		column2(col2)
+	{
+	}
 
-	//! Construct from float[9]
-	PX_CUDA_CALLABLE explicit PX_INLINE PxMat33(PxReal values[]):
-		column0(values[0],values[1],values[2]),
-		column1(values[3],values[4],values[5]),
-		column2(values[6],values[7],values[8])
+	//! constructor from a scalar, which generates a multiple of the identity matrix
+	explicit PX_CUDA_CALLABLE PX_INLINE PxMat33T(Type r) :
+		column0(r, Type(0.0), Type(0.0)),
+		column1(Type(0.0), r, Type(0.0)),
+		column2(Type(0.0), Type(0.0), r)
+	{
+	}
+
+	//! Construct from Type[9]
+	explicit PX_CUDA_CALLABLE PX_INLINE PxMat33T(Type values[]) :
+		column0(values[0], values[1], values[2]),
+		column1(values[3], values[4], values[5]),
+		column2(values[6], values[7], values[8])
 	{
 	}
 
 	//! Construct from a quaternion
-	PX_CUDA_CALLABLE explicit PX_FORCE_INLINE PxMat33(const PxQuat& q)
+	explicit PX_CUDA_CALLABLE PX_FORCE_INLINE PxMat33T(const PxQuatT<Type>& q)
 	{
-		const PxReal x = q.x;
-		const PxReal y = q.y;
-		const PxReal z = q.z;
-		const PxReal w = q.w;
+		// PT: TODO: PX-566
+		const Type x = q.x;
+		const Type y = q.y;
+		const Type z = q.z;
+		const Type w = q.w;
 
-		const PxReal x2 = x + x;
-		const PxReal y2 = y + y;
-		const PxReal z2 = z + z;
+		const Type x2 = x + x;
+		const Type y2 = y + y;
+		const Type z2 = z + z;
 
-		const PxReal xx = x2*x;
-		const PxReal yy = y2*y;
-		const PxReal zz = z2*z;
+		const Type xx = x2 * x;
+		const Type yy = y2 * y;
+		const Type zz = z2 * z;
 
-		const PxReal xy = x2*y;
-		const PxReal xz = x2*z;
-		const PxReal xw = x2*w;
+		const Type xy = x2 * y;
+		const Type xz = x2 * z;
+		const Type xw = x2 * w;
 
-		const PxReal yz = y2*z;
-		const PxReal yw = y2*w;
-		const PxReal zw = z2*w;
+		const Type yz = y2 * z;
+		const Type yw = y2 * w;
+		const Type zw = z2 * w;
 
-		column0 = PxVec3(1.0f - yy - zz, xy + zw, xz - yw);
-		column1 = PxVec3(xy - zw, 1.0f - xx - zz, yz + xw);
-		column2 = PxVec3(xz + yw, yz - xw, 1.0f - xx - yy);
+		column0 = PxVec3T<Type>(Type(1.0) - yy - zz, xy + zw, xz - yw);
+		column1 = PxVec3T<Type>(xy - zw, Type(1.0) - xx - zz, yz + xw);
+		column2 = PxVec3T<Type>(xz + yw, yz - xw, Type(1.0) - xx - yy);
 	}
 
 	//! Copy constructor
-	PX_CUDA_CALLABLE PX_INLINE PxMat33(const PxMat33& other)
-		: column0(other.column0), column1(other.column1), column2(other.column2)
-	{}
+	PX_CUDA_CALLABLE PX_INLINE PxMat33T(const PxMat33T& other) :
+		column0(other.column0),
+		column1(other.column1),
+		column2(other.column2)
+	{
+	}
 
 	//! Assignment operator
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxMat33& operator=(const PxMat33& other)
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxMat33T& operator=(const PxMat33T& other)
 	{
 		column0 = other.column0;
 		column1 = other.column1;
@@ -151,119 +179,121 @@ public:
 		return *this;
 	}
 
-	//! Set to identity matrix
-	PX_CUDA_CALLABLE PX_INLINE static PxMat33 createIdentity()
-	{
-		return PxMat33(PxVec3(1,0,0), PxVec3(0,1,0), PxVec3(0,0,1));
-	}
-
-	//! Set to zero matrix
-	PX_CUDA_CALLABLE PX_INLINE static PxMat33 createZero()
-	{
-		return PxMat33(PxVec3(0.0f), PxVec3(0.0f), PxVec3(0.0f));
-	}
-
 	//! Construct from diagonal, off-diagonals are zero.
-	PX_CUDA_CALLABLE PX_INLINE static PxMat33 createDiagonal(const PxVec3& d)
+	PX_CUDA_CALLABLE PX_INLINE static const PxMat33T createDiagonal(const PxVec3T<Type>& d)
 	{
-		return PxMat33(PxVec3(d.x,0.0f,0.0f), PxVec3(0.0f,d.y,0.0f), PxVec3(0.0f,0.0f,d.z));
+		return PxMat33T(PxVec3T<Type>(d.x, Type(0.0), Type(0.0)),
+						PxVec3T<Type>(Type(0.0), d.y, Type(0.0)),
+						PxVec3T<Type>(Type(0.0), Type(0.0), d.z));
 	}
 
+	//! Computes the outer product of two vectors
+	PX_CUDA_CALLABLE PX_INLINE static const PxMat33T outer(const PxVec3T<Type>& a, const PxVec3T<Type>& b)
+	{
+		return PxMat33T(a * b.x, a * b.y, a * b.z);
+	}
+
+	/**
+	\brief returns true if the two matrices are exactly equal
+	*/
+	PX_CUDA_CALLABLE PX_INLINE bool operator==(const PxMat33T& m) const
+	{
+		return column0 == m.column0 && column1 == m.column1 && column2 == m.column2;
+	}
 
 	//! Get transposed matrix
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxMat33 getTranspose() const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE const PxMat33T getTranspose() const
 	{
-		const PxVec3 v0(column0.x, column1.x, column2.x);
-		const PxVec3 v1(column0.y, column1.y, column2.y);
-		const PxVec3 v2(column0.z, column1.z, column2.z);
+		const PxVec3T<Type> v0(column0.x, column1.x, column2.x);
+		const PxVec3T<Type> v1(column0.y, column1.y, column2.y);
+		const PxVec3T<Type> v2(column0.z, column1.z, column2.z);
 
-		return PxMat33(v0,v1,v2);   
+		return PxMat33T(v0, v1, v2);
 	}
 
 	//! Get the real inverse
-	PX_CUDA_CALLABLE PX_INLINE PxMat33 getInverse() const
+	PX_CUDA_CALLABLE PX_INLINE const PxMat33T getInverse() const
 	{
-		const PxReal det = getDeterminant();
-		PxMat33 inverse;
+		const Type det = getDeterminant();
+		PxMat33T inverse;
 
-		if(det != 0)
+		if(det != Type(0.0))
 		{
-			const PxReal invDet = 1.0f/det;
+			const Type invDet = Type(1.0) / det;
 
-			inverse.column0[0] = invDet * (column1[1]*column2[2] - column2[1]*column1[2]);							
-			inverse.column0[1] = invDet *-(column0[1]*column2[2] - column2[1]*column0[2]);
-			inverse.column0[2] = invDet * (column0[1]*column1[2] - column0[2]*column1[1]);
+			inverse.column0.x = invDet * (column1.y * column2.z - column2.y * column1.z);
+			inverse.column0.y = invDet * -(column0.y * column2.z - column2.y * column0.z);
+			inverse.column0.z = invDet * (column0.y * column1.z - column0.z * column1.y);
 
-			inverse.column1[0] = invDet *-(column1[0]*column2[2] - column1[2]*column2[0]);
-			inverse.column1[1] = invDet * (column0[0]*column2[2] - column0[2]*column2[0]);
-			inverse.column1[2] = invDet *-(column0[0]*column1[2] - column0[2]*column1[0]);
+			inverse.column1.x = invDet * -(column1.x * column2.z - column1.z * column2.x);
+			inverse.column1.y = invDet * (column0.x * column2.z - column0.z * column2.x);
+			inverse.column1.z = invDet * -(column0.x * column1.z - column0.z * column1.x);
 
-			inverse.column2[0] = invDet * (column1[0]*column2[1] - column1[1]*column2[0]);
-			inverse.column2[1] = invDet *-(column0[0]*column2[1] - column0[1]*column2[0]);
-			inverse.column2[2] = invDet * (column0[0]*column1[1] - column1[0]*column0[1]);
+			inverse.column2.x = invDet * (column1.x * column2.y - column1.y * column2.x);
+			inverse.column2.y = invDet * -(column0.x * column2.y - column0.y * column2.x);
+			inverse.column2.z = invDet * (column0.x * column1.y - column1.x * column0.y);
 
 			return inverse;
 		}
 		else
 		{
-			return createIdentity();
+			return PxMat33T(PxIdentity);
 		}
 	}
 
 	//! Get determinant
-	PX_CUDA_CALLABLE PX_INLINE PxReal getDeterminant() const
+	PX_CUDA_CALLABLE PX_INLINE Type getDeterminant() const
 	{
 		return column0.dot(column1.cross(column2));
 	}
 
 	//! Unary minus
-	PX_CUDA_CALLABLE PX_INLINE PxMat33 operator-() const
+	PX_CUDA_CALLABLE PX_INLINE const PxMat33T operator-() const
 	{
-		return PxMat33(-column0, -column1, -column2);
+		return PxMat33T(-column0, -column1, -column2);
 	}
 
 	//! Add
-	PX_CUDA_CALLABLE PX_INLINE PxMat33 operator+(const PxMat33& other) const
+	PX_CUDA_CALLABLE PX_INLINE const PxMat33T operator+(const PxMat33T& other) const
 	{
-		return PxMat33( column0+other.column0,
-					  column1+other.column1,
-					  column2+other.column2);
+		return PxMat33T(column0 + other.column0, column1 + other.column1, column2 + other.column2);
 	}
 
 	//! Subtract
-	PX_CUDA_CALLABLE PX_INLINE PxMat33 operator-(const PxMat33& other) const
+	PX_CUDA_CALLABLE PX_INLINE const PxMat33T operator-(const PxMat33T& other) const
 	{
-		return PxMat33( column0-other.column0,
-					  column1-other.column1,
-					  column2-other.column2);
+		return PxMat33T(column0 - other.column0, column1 - other.column1, column2 - other.column2);
 	}
 
 	//! Scalar multiplication
-	PX_CUDA_CALLABLE PX_INLINE PxMat33 operator*(PxReal scalar) const
+	PX_CUDA_CALLABLE PX_INLINE const PxMat33T operator*(Type scalar) const
 	{
-		return PxMat33(column0*scalar, column1*scalar, column2*scalar);
+		return PxMat33T(column0 * scalar, column1 * scalar, column2 * scalar);
 	}
 
-	friend PxMat33 operator*(PxReal, const PxMat33&);
+	template<class Type2>
+	PX_CUDA_CALLABLE PX_INLINE friend PxMat33T<Type2> operator*(Type2, const PxMat33T<Type2>&);
 
 	//! Matrix vector multiplication (returns 'this->transform(vec)')
-	PX_CUDA_CALLABLE PX_INLINE PxVec3 operator*(const PxVec3& vec) const
+	PX_CUDA_CALLABLE PX_INLINE const PxVec3T<Type> operator*(const PxVec3T<Type>& vec) const
 	{
 		return transform(vec);
 	}
 
-	//! Matrix multiplication
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxMat33 operator*(const PxMat33& other) const
-	{
-		//Rows from this <dot> columns from other
-		//column0 = transform(other.column0) etc
-		return PxMat33(transform(other.column0), transform(other.column1), transform(other.column2));
-	}
-
 	// a <op>= b operators
 
+	//! Matrix multiplication
+	PX_CUDA_CALLABLE PX_FORCE_INLINE const PxMat33T operator*(const PxMat33T& other) const
+	{
+		// Rows from this <dot> columns from other
+		// column0 = transform(other.column0) etc
+		return PxMat33T(transform(other.column0),
+						transform(other.column1),
+						transform(other.column2));
+	}
+
 	//! Equals-add
-	PX_CUDA_CALLABLE PX_INLINE PxMat33& operator+=(const PxMat33& other)
+	PX_CUDA_CALLABLE PX_INLINE PxMat33T& operator+=(const PxMat33T& other)
 	{
 		column0 += other.column0;
 		column1 += other.column1;
@@ -272,7 +302,7 @@ public:
 	}
 
 	//! Equals-sub
-	PX_CUDA_CALLABLE PX_INLINE PxMat33& operator-=(const PxMat33& other)
+	PX_CUDA_CALLABLE PX_INLINE PxMat33T& operator-=(const PxMat33T& other)
 	{
 		column0 -= other.column0;
 		column1 -= other.column1;
@@ -281,7 +311,7 @@ public:
 	}
 
 	//! Equals scalar multiplication
-	PX_CUDA_CALLABLE PX_INLINE PxMat33& operator*=(PxReal scalar)
+	PX_CUDA_CALLABLE PX_INLINE PxMat33T& operator*=(Type scalar)
 	{
 		column0 *= scalar;
 		column1 *= scalar;
@@ -289,107 +319,190 @@ public:
 		return *this;
 	}
 
+	//! Equals matrix multiplication
+	PX_CUDA_CALLABLE PX_INLINE PxMat33T& operator*=(const PxMat33T& other)
+	{
+		*this = *this * other;
+		return *this;
+	}
+
 	//! Element access, mathematical way!
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxReal operator()(unsigned int row, unsigned int col) const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE Type operator()(PxU32 row, PxU32 col) const
 	{
 		return (*this)[col][row];
 	}
 
 	//! Element access, mathematical way!
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxReal& operator()(unsigned int row, unsigned int col)
+	PX_CUDA_CALLABLE PX_FORCE_INLINE Type& operator()(PxU32 row, PxU32 col)
 	{
 		return (*this)[col][row];
 	}
 
 	// Transform etc
-	
+
 	//! Transform vector by matrix, equal to v' = M*v
-	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3 transform(const PxVec3& other) const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE const PxVec3T<Type> transform(const PxVec3T<Type>& other) const
 	{
-		return column0*other.x + column1*other.y + column2*other.z;
+		return column0 * other.x + column1 * other.y + column2 * other.z;
 	}
 
 	//! Transform vector by matrix transpose, v' = M^t*v
-	PX_CUDA_CALLABLE PX_INLINE PxVec3 transformTranspose(const PxVec3& other) const
+	PX_CUDA_CALLABLE PX_INLINE const PxVec3T<Type> transformTranspose(const PxVec3T<Type>& other) const
 	{
-		return PxVec3(	column0.dot(other),
-						column1.dot(other),
-						column2.dot(other));
+		return PxVec3T<Type>(column0.dot(other), column1.dot(other), column2.dot(other));
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE const PxReal* front() const
+	PX_CUDA_CALLABLE PX_FORCE_INLINE const Type* front() const
 	{
 		return &column0.x;
 	}
 
-	PX_CUDA_CALLABLE PX_FORCE_INLINE			PxVec3& operator[](int num)			{return (&column0)[num];}
-	PX_CUDA_CALLABLE PX_FORCE_INLINE const	PxVec3& operator[](int num) const	{return (&column0)[num];}
+	PX_CUDA_CALLABLE PX_FORCE_INLINE PxVec3T<Type>& operator[](PxU32 num)
+	{
+		return (&column0)[num];
+	}
 
-	//Data, see above for format!
+	PX_CUDA_CALLABLE PX_FORCE_INLINE const PxVec3T<Type>& operator[](PxU32 num) const
+	{
+		return (&column0)[num];
+	}
 
-	PxVec3 column0, column1, column2; //the three base vectors
+	// Data, see above for format!
+
+	PxVec3T<Type>	column0, column1, column2; // the three base vectors
 };
 
-// implementation from PxQuat.h
-PX_CUDA_CALLABLE PX_INLINE PxQuat::PxQuat(const PxMat33& m)
+template<class Type>
+PX_CUDA_CALLABLE PX_INLINE PxMat33T<Type> operator*(Type scalar, const PxMat33T<Type>& m)
 {
-	PxReal tr = m(0,0) + m(1,1) + m(2,2), h;
-	if(tr >= 0)
-	{
-		h = PxSqrt(tr +1);
-		w = PxReal(0.5) * h;
-		h = PxReal(0.5) / h;
+	return PxMat33T<Type>(scalar * m.column0, scalar * m.column1, scalar * m.column2);
+}
 
-		x = (m(2,1) - m(1,2)) * h;
-		y = (m(0,2) - m(2,0)) * h;
-		z = (m(1,0) - m(0,1)) * h;
+// implementation from PxQuat.h
+template<class Type>
+PX_CUDA_CALLABLE PX_INLINE PxQuatT<Type>::PxQuatT(const PxMat33T<Type>& m)
+{
+	if(m.column2.z < Type(0))
+	{
+		if(m.column0.x > m.column1.y)
+		{
+			const Type t = Type(1.0) + m.column0.x - m.column1.y - m.column2.z;
+			*this = PxQuatT<Type>(t, m.column0.y + m.column1.x, m.column2.x + m.column0.z, m.column1.z - m.column2.y) * (Type(0.5) / PxSqrt(t));
+		}
+		else
+		{
+			const Type t = Type(1.0) - m.column0.x + m.column1.y - m.column2.z;
+			*this = PxQuatT<Type>(m.column0.y + m.column1.x, t, m.column1.z + m.column2.y, m.column2.x - m.column0.z) * (Type(0.5) / PxSqrt(t));
+		}
 	}
 	else
 	{
-		int i = 0; 
-		if (m(1,1) > m(0,0))
-			i = 1; 
-		if (m(2,2) > m(i,i))
-			i = 2; 
-		switch (i)
+		if(m.column0.x < -m.column1.y)
 		{
-		case 0:
-			h = PxSqrt((m(0,0) - (m(1,1) + m(2,2))) + 1);
-			x = PxReal(0.5) * h;
-			h = PxReal(0.5) / h;
-
-			y = (m(0,1) + m(1,0)) * h; 
-			z = (m(2,0) + m(0,2)) * h;
-			w = (m(2,1) - m(1,2)) * h;
-			break;
-		case 1:
-			h = PxSqrt((m(1,1) - (m(2,2) + m(0,0))) + 1);
-			y = PxReal(0.5) * h;
-			h = PxReal(0.5) / h;
-
-			z = (m(1,2) + m(2,1)) * h;
-			x = (m(0,1) + m(1,0)) * h;
-			w = (m(0,2) - m(2,0)) * h;
-			break;
-		case 2:
-			h = PxSqrt((m(2,2) - (m(0,0) + m(1,1))) + 1);
-			z = PxReal(0.5) * h;
-			h = PxReal(0.5) / h;
-
-			x = (m(2,0) + m(0,2)) * h;
-			y = (m(1,2) + m(2,1)) * h;
-			w = (m(1,0) - m(0,1)) * h;
-			break;
-		default: // Make compiler happy
-			x = y = z = w = 0;
-			break;
+			const Type t = Type(1.0) - m.column0.x - m.column1.y + m.column2.z;
+			*this = PxQuatT<Type>(m.column2.x + m.column0.z, m.column1.z + m.column2.y, t, m.column0.y - m.column1.x) * (Type(0.5) / PxSqrt(t));
+		}
+		else
+		{
+			const Type t = Type(1.0) + m.column0.x + m.column1.y + m.column2.z;
+			*this = PxQuatT<Type>(m.column1.z - m.column2.y, m.column2.x - m.column0.z, m.column0.y - m.column1.x, t) * (Type(0.5) / PxSqrt(t));
 		}
 	}
 }
 
-#ifndef PX_DOXYGEN
+typedef PxMat33T<float>		PxMat33;
+typedef PxMat33T<double>	PxMat33d;
+
+	/**
+	\brief Sets a rotation matrix around the X axis.
+	\param m		[out] output rotation matrix
+	\param angle	[in] desired angle
+	*/
+	PX_INLINE	void PxSetRotX(PxMat33& m, PxReal angle)
+	{
+		m = PxMat33(PxIdentity);
+
+		PxReal sin, cos;
+		PxSinCos(angle, sin, cos);
+
+		m[1][1] = m[2][2] = cos;
+		m[1][2] = sin;
+		m[2][1] = -sin;
+	}
+
+	/**
+	\brief Sets a rotation matrix around the Y axis.
+	\param m		[out] output rotation matrix
+	\param angle	[in] desired angle
+	*/
+	PX_INLINE	void PxSetRotY(PxMat33& m, PxReal angle)
+	{
+		m = PxMat33(PxIdentity);
+
+		PxReal sin, cos;
+		PxSinCos(angle, sin, cos);
+
+		m[0][0] = m[2][2] = cos;
+		m[0][2] = -sin;
+		m[2][0] = sin;
+	}
+
+	/**
+	\brief Sets a rotation matrix around the Z axis.
+	\param m		[out] output rotation matrix
+	\param angle	[in] desired angle
+	*/
+	PX_INLINE	void PxSetRotZ(PxMat33& m, PxReal angle)
+	{
+		m = PxMat33(PxIdentity);
+
+		PxReal sin, cos;
+		PxSinCos(angle, sin, cos);
+
+		m[0][0] = m[1][1] = cos;
+		m[0][1] = sin;
+		m[1][0] = -sin;
+	}
+
+	/**
+	\brief Returns a rotation quaternion around the X axis.
+	\param angle	[in] desired angle
+	\return Quaternion that rotates around the desired axis
+	*/
+	PX_INLINE	PxQuat PxGetRotXQuat(float angle)
+	{
+		PxMat33 m;
+		PxSetRotX(m, angle);
+		return PxQuat(m);
+	}
+
+	/**
+	\brief Returns a rotation quaternion around the Y axis.
+	\param angle	[in] desired angle
+	\return Quaternion that rotates around the desired axis
+	*/
+	PX_INLINE	PxQuat PxGetRotYQuat(float angle)
+	{
+		PxMat33 m;
+		PxSetRotY(m, angle);
+		return PxQuat(m);
+	}
+
+	/**
+	\brief Returns a rotation quaternion around the Z axis.
+	\param angle	[in] desired angle
+	\return Quaternion that rotates around the desired axis
+	*/
+	PX_INLINE	PxQuat PxGetRotZQuat(float angle)
+	{
+		PxMat33 m;
+		PxSetRotZ(m, angle);
+		return PxQuat(m);
+	}
+
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
-#endif // PX_FOUNDATION_PX_MAT33_H
+#endif
+

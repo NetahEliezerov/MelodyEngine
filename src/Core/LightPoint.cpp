@@ -13,6 +13,7 @@ void LightPoint::Init(LightSettings settings)
 {
     transform = settings.recTransform;
     color = settings.recColor;
+    isSpotlight = settings.isSpotlight;
     if (Game::state.character->level != nullptr)
     {
         Game::state.character->level->sceneHierarchy.push_back(this);

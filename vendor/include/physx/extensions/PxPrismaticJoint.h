@@ -1,43 +1,38 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-
-#ifndef PX_PRISMATICJOINT_H
-#define PX_PRISMATICJOINT_H
-/** \addtogroup extensions
-  @{
-*/
+#ifndef PX_PRISMATIC_JOINT_H
+#define PX_PRISMATIC_JOINT_H
 
 #include "extensions/PxJoint.h"
 #include "extensions/PxJointLimit.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
@@ -47,37 +42,32 @@ class PxPrismaticJoint;
 /**
 \brief Create a prismatic joint.
 
- \param[in] physics the physics SDK
- \param[in] actor0 an actor to which the joint is attached. NULL may be used to attach the joint to a specific point in the world frame
- \param[in] localFrame0 the position and orientation of the joint relative to actor0
- \param[in] actor1 an actor to which the joint is attached. NULL may be used to attach the joint to a specific point in the world frame
- \param[in] localFrame1 the position and orientation of the joint relative to actor1 
+ \param[in] physics		The physics SDK
+ \param[in] actor0		An actor to which the joint is attached. NULL may be used to attach the joint to a specific point in the world frame
+ \param[in] localFrame0	The position and orientation of the joint relative to actor0
+ \param[in] actor1		An actor to which the joint is attached. NULL may be used to attach the joint to a specific point in the world frame
+ \param[in] localFrame1	The position and orientation of the joint relative to actor1 
 
-@see PxPrismaticJoint
+\see PxPrismaticJoint
 */
-
-PxPrismaticJoint*	PxPrismaticJointCreate(PxPhysics& physics, 
-										   PxRigidActor* actor0, const PxTransform& localFrame0, 
-										   PxRigidActor* actor1, const PxTransform& localFrame1);
+PxPrismaticJoint*	PxPrismaticJointCreate(PxPhysics& physics, PxRigidActor* actor0, const PxTransform& localFrame0, PxRigidActor* actor1, const PxTransform& localFrame1);
 
 
 /**
 \brief Flags specific to the prismatic joint.
 
-@see PxPrismaticJoint
+\see PxPrismaticJoint
 */
-
 struct PxPrismaticJointFlag
 {
 	enum Enum
 	{
-		eLIMIT_ENABLED	= 1<<1,
+		eLIMIT_ENABLED	= 1<<1
 	};
 };
 
 typedef PxFlags<PxPrismaticJointFlag::Enum, PxU16> PxPrismaticJointFlags;
-PX_FLAGS_OPERATORS(PxPrismaticJointFlag::Enum, PxU16);
-
+PX_FLAGS_OPERATORS(PxPrismaticJointFlag::Enum, PxU16)
 
 /**
  \brief A prismatic joint permits relative translational movement between two bodies along
@@ -88,31 +78,38 @@ PX_FLAGS_OPERATORS(PxPrismaticJointFlag::Enum, PxU16);
 
  \image html prismJoint.png
 
- @see PxPrismaticJointCreate() PxJoint
+ \see PxPrismaticJointCreate() PxJoint
 */
-
-class PxPrismaticJoint: public PxJoint
+class PxPrismaticJoint : public PxJoint
 {
 public:
-	static const PxJointType::Enum Type = PxJointType::ePRISMATIC;
+	
+	/** 
+	\brief returns the displacement of the joint along its axis.
+	*/
+	virtual PxReal			getPosition()	const	= 0;
 
+	/** 
+	\brief returns the velocity of the joint along its axis
+	*/
+	virtual PxReal			getVelocity()	const	= 0;
 
 	/**
-	\brief sets the joint upper limit  parameters.
+	\brief sets the joint limit  parameters.
 
-	The limit range is [-PX_MAX_F32, PX_MAX_F32]
+	The limit range is [-PX_MAX_F32, PX_MAX_F32], but note that the width of the limit (upper-lower) must also be
+	a valid float.
 
-	@see PxJointLimit getLimit()
+	\see PxJointLinearLimitPair getLimit()
 	*/
-	virtual void			setLimit(const PxJointLimitPair&)			= 0;
+	virtual void			setLimit(const PxJointLinearLimitPair&)		= 0;
 
 	/**
-	\brief gets the joint upper limit  parameters.
+	\brief gets the joint limit  parameters.
 
-	@see PxJointLimit getLimit()
+	\see PxJointLinearLimit getLimit()
 	*/
-	virtual PxJointLimitPair getLimit()					const			= 0;
-
+	virtual PxJointLinearLimitPair getLimit()	const	= 0;
 
 	/**
 	\brief Set the flags specific to the Prismatic Joint.
@@ -121,20 +118,18 @@ public:
 
 	\param[in] flags The joint flags.
 
-	@see PxPrismaticJointFlag setFlag() getFlags()
+	\see PxPrismaticJointFlag setFlag() getFlags()
 	*/
-
 	virtual void					setPrismaticJointFlags(PxPrismaticJointFlags flags) = 0;
 
 	/**
 	\brief Set a single flag specific to a Prismatic Joint to true or false.
 
-	\param[in] flag The flag to set or clear.
-	\param[in] value the value to which to set the flag
+	\param[in] flag		The flag to set or clear.
+	\param[in] value	The value to which to set the flag
 
-	@see PxPrismaticJointFlag, getFlags() setFlags()
+	\see PxPrismaticJointFlag, getFlags() setFlags()
 	*/
-
 	virtual void					setPrismaticJointFlag(PxPrismaticJointFlag::Enum flag, bool value) = 0;
 
 	/**
@@ -142,82 +137,38 @@ public:
 
 	\return the joint flags
 
-	@see PxPrismaticJoint::flags, PxPrismaticJointFlag setFlag() setFlags()
+	\see PxPrismaticJoint::flags, PxPrismaticJointFlag setFlag() setFlags()
 	*/
-
-	virtual PxPrismaticJointFlags	getPrismaticJointFlags(void)					const	= 0;
-
-		/**
-	\brief Set the linear tolerance threshold for projection.
-
-	If the joint separates by more than this distance along its locked degrees of freedom, the solver 
-	will move the bodies to close the distance. 
-
-	Setting a very small tolerance may result in simulation jitter or other artifacts.
-
-	Sometimes it is not possible to project (for example when the joints form a cycle).
-
-	This value must be nonnegative.
-
-	<b>Range:</b> [0,inf)<br>
-	<b>Default:</b> 1e10f
-
-	\param[in] tolerance the linear tolerance threshold
-
-	@see getProjectionLinearTolerance()
-	*/
-	virtual void			setProjectionLinearTolerance(PxReal tolerance)					= 0;
+	virtual PxPrismaticJointFlags	getPrismaticJointFlags()	const	= 0;
 
 	/**
-	\brief Get the linear tolerance threshold for projection.
-
-	\return the linear tolerance threshold in radians
-
-	@see setProjectionLinearTolerance()
+	\brief Returns string name of PxPrismaticJoint, used for serialization
 	*/
-
-	virtual PxReal			getProjectionLinearTolerance()			const					= 0;
-
-	/**
-	\brief Set the angular tolerance threshold for projection. Projection is enabled if PxConstraintFlag::ePROJECTION
-	is set for the joint.
-
-	If the joint separates by more than this distance along its locked degrees of freedom, the solver 
-	will move the bodies to close the distance.
-
-	Setting a very small tolerance may result in simulation jitter or other artifacts.
-
-	Sometimes it is not possible to project (for example when the joints form a cycle).
-
-	<b>Range:</b> [0,inf)<br>
-	<b>Default:</b> 1e10f
-
-	\param[in] tolerance the linear tolerance threshold
-
-	@see getProjectionLinearTolerance() PxJoint::setConstraintFlags()
-	*/
-
-	virtual void			setProjectionAngularTolerance(PxReal tolerance)					= 0;
-
-	/**
-	\brief Get the angular tolerance threshold for projection.
-
-	@see getProjectionAngularTolerance()
-	*/
-	virtual PxReal			getProjectionAngularTolerance()			const					= 0;
-
-
-	virtual	const char*		getConcreteTypeName() const				{	return "PxPrismaticJoint"; }
+	virtual	const char*		getConcreteTypeName() const { return "PxPrismaticJoint"; }
 
 protected:
-	PxPrismaticJoint(PxRefResolver& v)	: PxJoint(v)	{}
-	PxPrismaticJoint()									{}
-	virtual	bool			isKindOf(const char* name)	const		{	return !strcmp("PxPrismaticJoint", name) || PxJoint::isKindOf(name); }
+	//serialization
+	
+	/**
+	\brief Constructor
+	*/
+	PX_INLINE				PxPrismaticJoint(PxType concreteType, PxBaseFlags baseFlags) : PxJoint(concreteType, baseFlags) {}
+
+	/**
+	\brief Deserialization constructor
+	*/		
+	PX_INLINE				PxPrismaticJoint(PxBaseFlags baseFlags) : PxJoint(baseFlags) {}
+	
+	/**
+	\brief Returns whether a given type name matches with the type of this instance
+	*/
+	virtual	bool			isKindOf(const char* name) const {	PX_IS_KIND_OF(name, "PxPrismaticJoint", PxJoint); }
+	
+	//~serialization
 };
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

@@ -1,45 +1,40 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
-
-#ifndef PX_JOINTCONSTRAINT_H
-#define PX_JOINTCONSTRAINT_H
-/** \addtogroup extensions
-  @{
-*/
+#ifndef PX_JOINT_H
+#define PX_JOINT_H
 
 #include "foundation/PxTransform.h"
 #include "PxRigidActor.h"
-#include "PxConstraintDesc.h"
-#include "common/PxSerialFramework.h"
+#include "PxConstraint.h"
+#include "common/PxBase.h"
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
@@ -52,27 +47,41 @@ class PxConstraint;
 /**
 \brief an enumeration of PhysX' built-in joint types
 
-@see PxJoint
+\see PxJoint
 */
-
-struct PxJointType
+struct PxJointConcreteType
 {
 	enum Enum
 	{
-		eD6,
-		eDISTANCE,
-		eFIXED,
-		ePRISMATIC,
+		eSPHERICAL = PxConcreteType::eFIRST_PHYSX_EXTENSION,
 		eREVOLUTE,
-		eSPHERICAL
+		ePRISMATIC,
+		eFIXED,
+		eDISTANCE,
+		eD6,
+		eCONTACT,
+		eGEAR,
+		eRACK_AND_PINION,
+		eLast
 	};
 };
+
+PX_DEFINE_TYPEINFO(PxJoint,					PxConcreteType::eUNDEFINED)
+PX_DEFINE_TYPEINFO(PxRackAndPinionJoint,	PxJointConcreteType::eRACK_AND_PINION)
+PX_DEFINE_TYPEINFO(PxGearJoint,				PxJointConcreteType::eGEAR)
+PX_DEFINE_TYPEINFO(PxD6Joint,				PxJointConcreteType::eD6)
+PX_DEFINE_TYPEINFO(PxDistanceJoint,			PxJointConcreteType::eDISTANCE)
+PX_DEFINE_TYPEINFO(PxContactJoint,			PxJointConcreteType::eCONTACT)
+PX_DEFINE_TYPEINFO(PxFixedJoint,			PxJointConcreteType::eFIXED)
+PX_DEFINE_TYPEINFO(PxPrismaticJoint,		PxJointConcreteType::ePRISMATIC)
+PX_DEFINE_TYPEINFO(PxRevoluteJoint,			PxJointConcreteType::eREVOLUTE)
+PX_DEFINE_TYPEINFO(PxSphericalJoint,		PxJointConcreteType::eSPHERICAL)
 
 
 /**
 \brief an enumeration for specifying one or other of the actors referenced by a joint
 
-@see PxJoint
+\see PxJoint
 */
 
 struct PxJointActorIndex
@@ -81,7 +90,7 @@ struct PxJointActorIndex
 	{
 		eACTOR0,
 		eACTOR1,
-		COUNT,
+		COUNT
 	};
 };
 
@@ -89,8 +98,7 @@ struct PxJointActorIndex
 \brief a base interface providing common functionality for PhysX joints
 */
 
-class PxJoint
-	: public PxSerializable
+class PxJoint : public PxBase
 {
 public:
 
@@ -102,10 +110,9 @@ public:
 	\param[in] actor0 the first actor.
 	\param[in] actor1 the second actor
 
-	@see getActors()
+	\see getActors()
 	*/
-
-	virtual void				setActors(PxRigidActor* actor0, PxRigidActor* actor1)			= 0;
+	virtual void				setActors(PxRigidActor* actor0, PxRigidActor* actor1)	= 0;
 
 	/**
 	\brief Get the actors for this joint. 
@@ -113,9 +120,8 @@ public:
 	\param[out] actor0 the first actor.
 	\param[out] actor1 the second actor
 
-	@see setActors()
+	\see setActors()
 	*/
-
 	virtual void				getActors(PxRigidActor*& actor0, PxRigidActor*& actor1)	const	= 0;
 
 	/**
@@ -126,9 +132,8 @@ public:
 	\param[in] actor 0 for the first actor, 1 for the second actor.
 	\param[in] localPose the local pose for the actor this joint
 
-	@see getLocalPose()
+	\see getLocalPose()
 	*/
-
 	virtual void				setLocalPose(PxJointActorIndex::Enum actor, const PxTransform& localPose) = 0;
 
 	/**
@@ -138,10 +143,32 @@ public:
 
 	return the local pose for this joint
 
-	@see setLocalPose()
+	\see setLocalPose()
 	*/
-
 	virtual PxTransform			getLocalPose(PxJointActorIndex::Enum actor) const = 0;
+
+	/**
+	\brief get the relative pose for this joint
+
+	This function returns the pose of the joint frame of actor1 relative to actor0
+
+	*/
+	virtual PxTransform			getRelativeTransform()	const	= 0;
+
+	/**
+	\brief get the relative linear velocity of the joint
+
+	This function returns the linear velocity of the origin of the constraint frame of actor1, relative to the origin of the constraint
+	frame of actor0. The value is returned in the constraint frame of actor0
+	*/
+	virtual PxVec3				getRelativeLinearVelocity()	const	= 0;
+
+	/**
+	\brief get the relative angular velocity of the joint
+
+	This function returns the angular velocity of actor1 relative to actor0. The value is returned in the constraint frame of actor0
+	*/
+	virtual PxVec3				getRelativeAngularVelocity()	const	= 0;
 
 	/**
 	\brief set the break force for this joint. 
@@ -152,11 +179,8 @@ public:
 
 	\param[in] force the maximum force the joint can apply before breaking
 	\param[in] torque the maximum torque the joint can apply before breaking
-
-	@see getBreakForce() PxConstraintFlag::eBREAKABLE
 	*/
-
-	virtual void				setBreakForce(PxReal force, PxReal torque)						= 0;
+	virtual void				setBreakForce(PxReal force, PxReal torque)	= 0;
 
 	/**
 	\brief get the break force for this joint. 
@@ -164,18 +188,18 @@ public:
 	\param[out] force the maximum force the joint can apply before breaking
 	\param[out] torque the maximum torque the joint can apply before breaking
 
-	@see setBreakForce() 
+	\see setBreakForce() 
 	*/
-	virtual void				getBreakForce(PxReal& force, PxReal& torque)			const	= 0;
+	virtual void				getBreakForce(PxReal& force, PxReal& torque)	const	= 0;
 
 	/**
 	\brief set the constraint flags for this joint. 
 	
 	\param[in] flags the constraint flags
 
-	@see PxConstraintFlag
+	\see PxConstraintFlag
 	*/
-	virtual void				setConstraintFlags(PxConstraintFlags flags)						= 0;
+	virtual void				setConstraintFlags(PxConstraintFlags flags)	= 0;
 
 	/**
 	\brief set a constraint flags for this joint to a specified value. 
@@ -183,20 +207,90 @@ public:
 	\param[in] flag the constraint flag
 	\param[in] value the value to which to set the flag
 
-	@see PxConstraintFlag
+	\see PxConstraintFlag
 	*/
-	virtual void				setConstraintFlag(PxConstraintFlag::Type flag, bool value)		= 0;
-
+	virtual void				setConstraintFlag(PxConstraintFlag::Enum flag, bool value)	= 0;
 
 	/**
 	\brief get the constraint flags for this joint. 
 	
 	\return the constraint flags
 
-	@see PxConstraintFlag
+	\see PxConstraintFlag
 	*/
-	virtual PxConstraintFlags	getConstraintFlags()									const	= 0;
+	virtual PxConstraintFlags	getConstraintFlags()	const	= 0;
 
+	/**
+	\brief set the inverse mass scale for actor0.
+
+	\param[in] invMassScale the scale to apply to the inverse mass of actor 0 for resolving this constraint
+
+	\see getInvMassScale0
+	*/
+	virtual void				setInvMassScale0(PxReal invMassScale)	= 0;
+
+	/**
+	\brief get the inverse mass scale for actor0.
+
+	\return inverse mass scale for actor0
+
+	\see setInvMassScale0
+	*/
+	virtual PxReal				getInvMassScale0()	const	= 0;
+
+	/**
+	\brief set the inverse inertia scale for actor0.
+
+	\param[in] invInertiaScale the scale to apply to the inverse inertia of actor0 for resolving this constraint
+
+	\see getInvMassScale0
+	*/
+	virtual void				setInvInertiaScale0(PxReal invInertiaScale)	= 0;
+
+	/**
+	\brief get the inverse inertia scale for actor0.
+
+	\return inverse inertia scale for actor0
+
+	\see setInvInertiaScale0
+	*/
+	virtual PxReal				getInvInertiaScale0()	const	= 0;
+
+	/**
+	\brief set the inverse mass scale for actor1.
+
+	\param[in] invMassScale the scale to apply to the inverse mass of actor 1 for resolving this constraint
+
+	\see getInvMassScale1
+	*/
+	virtual void				setInvMassScale1(PxReal invMassScale)	= 0;
+
+	/**
+	\brief get the inverse mass scale for actor1.
+
+	\return inverse mass scale for actor1
+
+	\see setInvMassScale1
+	*/
+	virtual PxReal				getInvMassScale1()	const	= 0;
+
+	/**
+	\brief set the inverse inertia scale for actor1.
+
+	\param[in] invInertiaScale the scale to apply to the inverse inertia of actor1 for resolving this constraint
+
+	\see getInvInertiaScale1
+	*/
+	virtual void				setInvInertiaScale1(PxReal invInertiaScale)	= 0;
+
+	/**
+	\brief get the inverse inertia scale for actor1.
+
+	\return inverse inertia scale for actor1
+
+	\see setInvInertiaScale1
+	*/
+	virtual PxReal				getInvInertiaScale1()	const	= 0;
 
 	/**
 	\brief Retrieves the PxConstraint corresponding to this joint.
@@ -205,8 +299,7 @@ public:
 
 	\return the constraint
 	*/
-
-	virtual PxConstraint*		getConstraint()											const	= 0;
+	virtual PxConstraint*		getConstraint()	const	= 0;
 
 	/**
 	\brief Sets a name string for the object that can be retrieved with getName().
@@ -216,65 +309,81 @@ public:
 
 	\param[in] name String to set the objects name to.
 
-	@see getName()
+	\see getName()
 	*/
-
-	virtual void				setName(const char* name)										= 0;
+	virtual void				setName(const char* name)	= 0;
 
 	/**
 	\brief Retrieves the name string set with setName().
 
 	\return Name string associated with object.
 
-	@see setName()
+	\see setName()
 	*/
-
-	virtual const char*			getName()												const	= 0;
+	virtual const char*			getName()	const	= 0;
 
 	/**
 	\brief Deletes the joint.
-	*/
 
-	virtual void				release()														= 0;
+	\note This call does not wake up the connected rigid bodies.
+	*/
+	virtual void				release()	= 0;
 
 	/**
 	\brief Retrieves the scene which this joint belongs to.
 
 	\return Owner Scene. NULL if not part of a scene.
 
-	@see PxScene
+	\see PxScene
 	*/
-	virtual PxScene*			getScene()												const	= 0;
-
-	/**
-	\brief Retrieves the type of this joint.
-
-	\return the joint type
-
-	@see PxJointType
-	*/
-
-	virtual PxJointType::Enum	getType()												const	= 0;
+	virtual PxScene*			getScene()	const	= 0;
 
 	void*						userData;	//!< user can assign this to whatever, usually to create a 1:1 relationship with a user object.
 
-								PxJoint(PxRefResolver& v)	: PxSerializable(v)	{}
-	static	void				getMetaData(PxSerialStream& stream);
+	//serialization
 
+	/**
+	\brief Put class meta data in stream, used for serialization
+	*/
+	static	void				getBinaryMetaData(PxOutputStream& stream);
+
+	//~serialization
+					
 protected:
-	virtual	~PxJoint() {}
-	PxJoint() : userData(NULL)						{}
-	virtual	bool				isKindOf(const char* name)	const		{	return !strcmp("PxJoint", name) || PxSerializable::isKindOf(name);			}
+	virtual						~PxJoint() {}
+
+	//serialization
+
+	/**
+	\brief Constructor
+	*/
+	PX_INLINE					PxJoint(PxType concreteType, PxBaseFlags baseFlags) : PxBase(concreteType, baseFlags), userData(NULL) {}
+	
+	/**
+	\brief Deserialization constructor
+	*/
+	PX_INLINE					PxJoint(PxBaseFlags baseFlags)	: PxBase(baseFlags)	{}
+
+	/**
+	\brief Returns whether a given type name matches with the type of this instance
+	*/
+	virtual	bool				isKindOf(const char* name) const { PX_IS_KIND_OF(name, "PxJoint", PxBase); }
+
+	//~serialization
 };
 
-PX_DEFINE_TYPEINFO(PxFixedJoint,		PxConcreteType::eUSER_FIXED_JOINT);
-PX_DEFINE_TYPEINFO(PxRevoluteJoint,		PxConcreteType::eUSER_REVOLUTE_JOINT);
-PX_DEFINE_TYPEINFO(PxPrismaticJoint,	PxConcreteType::eUSER_PRISMATIC_JOINT);
-PX_DEFINE_TYPEINFO(PxSphericalJoint,	PxConcreteType::eUSER_SPHERICAL_JOINT);
-PX_DEFINE_TYPEINFO(PxDistanceJoint,		PxConcreteType::eUSER_DISTANCE_JOINT);
-PX_DEFINE_TYPEINFO(PxD6Joint,			PxConcreteType::eUSER_D6_JOINT);
+class PxSpring
+{
+public:
 
-#ifndef PX_DOXYGEN
+	PxReal	stiffness;	//!< the spring strength of the drive: that is, the force proportional to the position error
+	PxReal	damping;	//!< the damping strength of the drive: that is, the force proportional to the velocity error
+
+	PxSpring(PxReal stiffness_, PxReal damping_): stiffness(stiffness_), damping(damping_) {}
+};
+
+
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
@@ -294,5 +403,4 @@ PX_DEFINE_TYPEINFO(PxD6Joint,			PxConcreteType::eUSER_D6_JOINT);
 
 PX_C_EXPORT void PX_CALL_CONV PxSetJointGlobalFrame(physx::PxJoint& joint, const physx::PxVec3* wsAnchor, const physx::PxVec3* wsAxis);
 
-/** @} */
 #endif

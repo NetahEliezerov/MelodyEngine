@@ -1,53 +1,49 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
+#ifndef PX_TYPE_INFO_H
+#define PX_TYPE_INFO_H
 
-//#ifdef REMOVED
 
-#ifndef PX_PHYSICS_COMMON_PX_TYPEINFO
-#define PX_PHYSICS_COMMON_PX_TYPEINFO
+#include "common/PxPhysXCommonConfig.h"
 
-/** \addtogroup common
-@{
-*/
-
-#include "common/PxPhysXCommon.h"
-
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
 
 /**
-\brief an enumeration of concrete classes inheriting from PxSerializable
+\brief an enumeration of concrete classes inheriting from PxBase
 
-@see PxSerializable
+Enumeration space is reserved for future PhysX core types, PhysXExtensions, 
+PhysXVehicle and Custom application types.
+
+\see PxBase, PxTypeInfo
 */
 
 struct PxConcreteType
@@ -58,40 +54,51 @@ struct PxConcreteType
 
 		eHEIGHTFIELD,
 		eCONVEX_MESH,
-		eTRIANGLE_MESH,
-		eCLOTH_FABRIC,
+		eTRIANGLE_MESH_BVH33 PX_DEPRECATED,	//!< \deprecated Will be removed together with deprecated BVH33.
+		eTRIANGLE_MESH_BVH34,
+		eTETRAHEDRON_MESH,
+		eSOFTBODY_MESH,
 
 		eRIGID_DYNAMIC,
 		eRIGID_STATIC,
 		eSHAPE,
 		eMATERIAL,
+		eSOFTBODY_MATERIAL,
+		eCLOTH_MATERIAL,
+		ePBD_MATERIAL,
 		eCONSTRAINT,
-		eCLOTH,
-		ePARTICLE_SYSTEM,
-		ePARTICLE_FLUID,
 		eAGGREGATE,
-		eARTICULATION,
+		eARTICULATION_REDUCED_COORDINATE,
 		eARTICULATION_LINK,
-		eARTICULATION_JOINT,
-
-		// Bad design here: the following types are "user types" and shouldn't be here in the end
-		eUSER_SPHERICAL_JOINT,
-		eUSER_REVOLUTE_JOINT,
-		eUSER_PRISMATIC_JOINT,
-		eUSER_FIXED_JOINT,
-		eUSER_DISTANCE_JOINT,
-		eUSER_D6_JOINT,
-
-		eUSER_OBSERVER,
-
-		eLAST
+		eARTICULATION_JOINT_REDUCED_COORDINATE,
+		eARTICULATION_SPATIAL_TENDON,
+		eARTICULATION_FIXED_TENDON,
+		eARTICULATION_ATTACHMENT,
+		eARTICULATION_TENDON_JOINT,
+		eARTICULATION_MIMIC_JOINT,
+		ePRUNING_STRUCTURE,
+		eBVH,
+		eSOFT_BODY,
+		eSOFT_BODY_STATE,
+		ePBD_PARTICLESYSTEM,
+		eFEM_CLOTH,
+		eHAIR_SYSTEM,
+		ePARTICLE_BUFFER,
+		ePARTICLE_DIFFUSE_BUFFER,
+		ePARTICLE_CLOTH_BUFFER,
+		ePARTICLE_RIGID_BUFFER,
+		
+		ePHYSX_CORE_COUNT,
+        eFIRST_PHYSX_EXTENSION = 256,
+		eFIRST_VEHICLE_EXTENSION = 512,
+        eFIRST_USER_EXTENSION = 1024
 	};
 };
 
 /** 
-\brief a structure containing per-type information for types inheriting from PxSerializable
+\brief a structure containing per-type information for types inheriting from PxBase
 
-@see PxSerializable
+\see PxBase, PxConcreteType
 */
 
 template<typename T> struct PxTypeInfo {};
@@ -104,36 +111,40 @@ template<typename T> struct PxTypeInfo {};
  * This implies that B has no concrete subclasses or superclasses.
  */
 
-PX_DEFINE_TYPEINFO(PxSerializable,		PxConcreteType::eUNDEFINED);
-PX_DEFINE_TYPEINFO(PxObservable,		PxConcreteType::eUNDEFINED);
-PX_DEFINE_TYPEINFO(PxObserver,			PxConcreteType::eUNDEFINED);
-PX_DEFINE_TYPEINFO(PxMaterial,			PxConcreteType::eMATERIAL);
-PX_DEFINE_TYPEINFO(PxConvexMesh,		PxConcreteType::eCONVEX_MESH);
-PX_DEFINE_TYPEINFO(PxTriangleMesh,		PxConcreteType::eTRIANGLE_MESH);
-PX_DEFINE_TYPEINFO(PxHeightField,		PxConcreteType::eHEIGHTFIELD);
-PX_DEFINE_TYPEINFO(PxActor,				PxConcreteType::eUNDEFINED);
-PX_DEFINE_TYPEINFO(PxRigidActor,		PxConcreteType::eUNDEFINED);
-PX_DEFINE_TYPEINFO(PxRigidBody,			PxConcreteType::eUNDEFINED);
-PX_DEFINE_TYPEINFO(PxRigidDynamic,		PxConcreteType::eRIGID_DYNAMIC);
-PX_DEFINE_TYPEINFO(PxRigidStatic,		PxConcreteType::eRIGID_STATIC);
-PX_DEFINE_TYPEINFO(PxArticulationLink,	PxConcreteType::eARTICULATION_LINK);
-PX_DEFINE_TYPEINFO(PxArticulationJoint, PxConcreteType::eARTICULATION_JOINT);
-PX_DEFINE_TYPEINFO(PxArticulation,		PxConcreteType::eARTICULATION);
-PX_DEFINE_TYPEINFO(PxAggregate,			PxConcreteType::eAGGREGATE);
-PX_DEFINE_TYPEINFO(PxConstraint,		PxConcreteType::eCONSTRAINT);
-PX_DEFINE_TYPEINFO(PxShape,				PxConcreteType::eSHAPE);
-PX_DEFINE_TYPEINFO(PxClothFabric,		PxConcreteType::eCLOTH_FABRIC);
-PX_DEFINE_TYPEINFO(PxCloth,				PxConcreteType::eCLOTH);
-PX_DEFINE_TYPEINFO(PxParticleBase,		PxConcreteType::eUNDEFINED);
-PX_DEFINE_TYPEINFO(PxParticleFluid,		PxConcreteType::ePARTICLE_FLUID);
-PX_DEFINE_TYPEINFO(PxParticleSystem,	PxConcreteType::ePARTICLE_SYSTEM);
+PX_DEFINE_TYPEINFO(PxBase,									PxConcreteType::eUNDEFINED)
+PX_DEFINE_TYPEINFO(PxMaterial,								PxConcreteType::eMATERIAL)
+PX_DEFINE_TYPEINFO(PxFEMSoftBodyMaterial,					PxConcreteType::eSOFTBODY_MATERIAL)
+PX_DEFINE_TYPEINFO(PxFEMClothMaterial,						PxConcreteType::eCLOTH_MATERIAL)
+PX_DEFINE_TYPEINFO(PxPBDMaterial,							PxConcreteType::ePBD_MATERIAL)
+PX_DEFINE_TYPEINFO(PxConvexMesh,							PxConcreteType::eCONVEX_MESH)
+PX_DEFINE_TYPEINFO(PxTriangleMesh,							PxConcreteType::eUNDEFINED)
+PX_DEFINE_TYPEINFO(PxBVH33TriangleMesh,						PxConcreteType::eTRIANGLE_MESH_BVH33)
+PX_DEFINE_TYPEINFO(PxBVH34TriangleMesh,						PxConcreteType::eTRIANGLE_MESH_BVH34)
+PX_DEFINE_TYPEINFO(PxTetrahedronMesh,						PxConcreteType::eTETRAHEDRON_MESH)
+PX_DEFINE_TYPEINFO(PxHeightField,							PxConcreteType::eHEIGHTFIELD)
+PX_DEFINE_TYPEINFO(PxActor,									PxConcreteType::eUNDEFINED)
+PX_DEFINE_TYPEINFO(PxRigidActor,							PxConcreteType::eUNDEFINED)
+PX_DEFINE_TYPEINFO(PxRigidBody,								PxConcreteType::eUNDEFINED)
+PX_DEFINE_TYPEINFO(PxRigidDynamic,							PxConcreteType::eRIGID_DYNAMIC)
+PX_DEFINE_TYPEINFO(PxRigidStatic,							PxConcreteType::eRIGID_STATIC)
+PX_DEFINE_TYPEINFO(PxArticulationLink,						PxConcreteType::eARTICULATION_LINK)
+PX_DEFINE_TYPEINFO(PxArticulationJointReducedCoordinate,	PxConcreteType::eARTICULATION_JOINT_REDUCED_COORDINATE)
+PX_DEFINE_TYPEINFO(PxArticulationReducedCoordinate,			PxConcreteType::eARTICULATION_REDUCED_COORDINATE)
+PX_DEFINE_TYPEINFO(PxAggregate,								PxConcreteType::eAGGREGATE)
+PX_DEFINE_TYPEINFO(PxConstraint,							PxConcreteType::eCONSTRAINT)
+PX_DEFINE_TYPEINFO(PxShape,									PxConcreteType::eSHAPE)
+PX_DEFINE_TYPEINFO(PxPruningStructure,						PxConcreteType::ePRUNING_STRUCTURE)
+PX_DEFINE_TYPEINFO(PxPBDParticleSystem,						PxConcreteType::ePBD_PARTICLESYSTEM)
+PX_DEFINE_TYPEINFO(PxSoftBody,								PxConcreteType::eSOFT_BODY)
+PX_DEFINE_TYPEINFO(PxFEMCloth,								PxConcreteType::eFEM_CLOTH)
+PX_DEFINE_TYPEINFO(PxHairSystem,							PxConcreteType::eHAIR_SYSTEM)
+PX_DEFINE_TYPEINFO(PxParticleBuffer,						PxConcreteType::ePARTICLE_BUFFER)
+PX_DEFINE_TYPEINFO(PxParticleAndDiffuseBuffer,				PxConcreteType::ePARTICLE_DIFFUSE_BUFFER)
+PX_DEFINE_TYPEINFO(PxParticleClothBuffer,					PxConcreteType::ePARTICLE_CLOTH_BUFFER)
+PX_DEFINE_TYPEINFO(PxParticleRigidBuffer,					PxConcreteType::ePARTICLE_RIGID_BUFFER)
 
-template<typename T> struct PxStripConst			{	typedef T Type;		};
-template<typename T> struct PxStripConst<const T>	{	typedef T Type;		};
-
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

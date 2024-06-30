@@ -1,44 +1,40 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
 #ifndef PX_VEHICLE_DRIVE_TANK_H
 #define PX_VEHICLE_DRIVE_TANK_H
-/** \addtogroup vehicle
-  @{
-*/
 
 #include "vehicle/PxVehicleDrive.h"
 #include "vehicle/PxVehicleWheels.h"
 #include "vehicle/PxVehicleComponents.h"
 
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
@@ -46,166 +42,203 @@ namespace physx
 struct PxFilterData;
 class PxGeometry;
 class PxPhysics;
-class PxBatchQuery;
-struct PxRaycastQueryResult;
 class PxVehicleDrivableSurfaceToTireFrictionPairs;
 class PxShape;
 class PxMaterial;
 class PxRigidDynamic;
 
+/**
+\deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+\brief The ordering of the wheels of a PxVehicleDriveTank.
+
+\see PxVehicleWheelsSimData, PxVehicleWheelsDynData
+*/
+struct PX_DEPRECATED PxVehicleDriveTankWheelOrder
+{
+	enum Enum
+	{
+		eFRONT_LEFT=0,
+		eFRONT_RIGHT,
+		e1ST_FROM_FRONT_LEFT,
+		e1ST_FROM_FRONT_RIGHT,
+		e2ND_FROM_FRONT_LEFT,
+		e2ND_FROM_FRONT_RIGHT,
+		e3RD_FROM_FRONT_LEFT,
+		e3RD_FROM_FRONT_RIGHT,
+		e4TH_FROM_FRONT_LEFT,
+		e4TH_FROM_FRONT_RIGHT,
+		e5TH_FROM_FRONT_LEFT,
+		e5TH_FROM_FRONT_RIGHT,
+		e6TH_FROM_FRONT_LEFT,
+		e6TH_FROM_FRONT_RIGHT,
+		e7TH_FROM_FRONT_LEFT,
+		e7TH_FROM_FRONT_RIGHT,
+		e8TH_FROM_FRONT_LEFT,
+		e8TH_FROM_FRONT_RIGHT,
+		e9TH_FROM_FRONT_LEFT,
+		e9TH_FROM_FRONT_RIGHT
+	};
+};
+
 
 /**
+\deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+\brief The control inputs for a PxVehicleDriveTank.
+
+\note The values of eANALOG_INPUT_THRUST_LEFT and eANALOG_INPUT_THRUST_RIGHT determine how much 
+of the total available drive torque is diverted to the left and right wheels.  These entries in the 
+enumerated list represent the state of the left and right control sticks of a tank. The total available 
+drive torque available is controlled by eANALOG_INPUT_ACCEL, which represents the state of the acceleration
+pedal and controls how much torque will be applied to the engine.  
+
+\note To accelerate forwards eANALOG_INPUT_ACCEL must be greater than zero so that torque is applied to drive the 
+engine, while eANALOG_INPUT_THRUST_LEFT and eANALOG_INPUT_THRUST_RIGHT must also be greater than zero
+to divert the available drive torque to the left and wheels. If eANALOG_INPUT_THRUST_LEFT > eANALOG_INPUT_THRUST_RIGHT
+the tank will turn to the right.  If eANALOG_INPUT_THRUST_RIGHT > eANALOG_INPUT_THRUST_LEFT
+the tank will turn to the left.
+
+\see PxVehicleDriveDynData::setAnalogInput, PxVehicleDriveDynData::getAnalogInput
+*/
+
+struct PX_DEPRECATED PxVehicleDriveTankControl
+{
+	enum Enum
+	{
+		eANALOG_INPUT_ACCEL=0,
+		eANALOG_INPUT_BRAKE_LEFT,	
+		eANALOG_INPUT_BRAKE_RIGHT,	
+		eANALOG_INPUT_THRUST_LEFT,	
+		eANALOG_INPUT_THRUST_RIGHT,	
+		eMAX_NB_DRIVETANK_ANALOG_INPUTS
+	};
+};
+
+/**
+\deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
+\brief Two driving models are supported.
+
+\note If eSTANDARD is chosen the left and right wheels are always driven in the same direction.  If the tank is in 
+a forward gear the left and right wheels will all be driven forwards, while in reverse gear the left and right wheels
+will all be driven backwards. With eSTANDARD the legal range of left and right thrust is (0,1).
+
+\note If eSPECIAL is chosen it is possible to drive the left and right wheels in different directions. 
+With eSPECIAL the legal range of left and right thrust is (-1,1).  In forward(reverse) gear negative thrust values drive the wheels 
+backwards(forwards), while positive thrust values drives the wheels forwards(backwards).  
+
+\note A sharp left turn can be achieved in eSTANDARD mode by braking with the left wheels and thrusting forward with the 
+right wheels. A smaller turning circle can theoretically be achieved in eSPECIAL mode by applying negative thrust to the left wheels and positive
+thrust to the right wheels.
+
+\note In both modes the legal ranges of acceleration and left/right brake are all (0,1).
+
+\see PxVehicleDriveTank::setDriveModel
+*/
+struct PX_DEPRECATED PxVehicleDriveTankControlModel
+{
+	enum Enum
+	{
+		eSTANDARD=0,
+		eSPECIAL
+	};
+};
+
+
+/**
+\deprecated This API is deprecated and is replaced by a new API, see the Vehicles section in the 4.0 to 5.1 migration guide.
 \brief Data structure with instanced dynamics data and configuration data of a tank.
 */
-class PxVehicleDriveTank : public PxVehicleDrive
+class PX_DEPRECATED PxVehicleDriveTank : public PxVehicleDrive
 {
 public:
 
 	friend class PxVehicleUpdate;
 
-	/**
-	\brief The ordering of the driven wheels
-	*/
-	enum eWheelOrdering
-	{
-		eTANK_WHEEL_FRONT_LEFT=0,
-		eTANK_WHEEL_FRONT_RIGHT,
-		eTANK_WHEEL_1ST_FROM_FRONT_LEFT,
-		eTANK_WHEEL_1ST_FROM_FRONT_RIGHT,
-		eTANK_WHEEL_2ND_FROM_FRONT_LEFT,
-		eTANK_WHEEL_2ND_FROM_FRONT_RIGHT,
-		eTANK_WHEEL_3RD_FROM_FRONT_LEFT,
-		eTANK_WHEEL_3RD_FROM_FRONT_RIGHT,
-		eTANK_WHEEL_4TH_FROM_FRONT_LEFT,
-		eTANK_WHEEL_4TH_FROM_FRONT_RIGHT,
-		eTANK_WHEEL_5TH_FROM_FRONT_LEFT,
-		eTANK_WHEEL_5TH_FROM_FRONT_RIGHT,
-		eTANK_WHEEL_6TH_FROM_FRONT_LEFT,
-		eTANK_WHEEL_6TH_FROM_FRONT_RIGHT,
-		eTANK_WHEEL_7TH_FROM_FRONT_LEFT,
-		eTANK_WHEEL_7TH_FROM_FRONT_RIGHT,
-		eTANK_WHEEL_8TH_FROM_FRONT_LEFT,
-		eTANK_WHEEL_8TH_FROM_FRONT_RIGHT,
-		eTANK_WHEEL_9TH_FROM_FRONT_LEFT,
-		eTANK_WHEEL_9TH_FROM_FRONT_RIGHT
-	};
 
 	/**
-	@see PxVehicleDrive::setAnalogInput, PxVehicleDrive::getAnalogInput
-	*/
-	enum
-	{
-		eANALOG_INPUT_ACCEL=PxVehicleDriveDynData::eANALOG_INPUT_ACCEL,		
-		eANALOG_INPUT_BRAKE_LEFT,	
-		eANALOG_INPUT_BRAKE_RIGHT,	
-		eANALOG_INPUT_THRUST_LEFT,	
-		eANALOG_INPUT_THRUST_RIGHT,	
-		eMAX_NUM_DRIVETANK_ANALOG_INPUTS
-	};
+	\brief Allocate a PxVehicleTankDrive instance for a tank with nbWheels
 
-	/**
-	\brief Two driving models supported
-	@see setDrivingModel
-	*/
-	enum eDriveModel
-	{
-		eDRIVE_MODEL_STANDARD=0,
-		eDRIVE_MODEL_SPECIAL
-	};
+	\param[in] nbWheels is the number of wheels on the vehicle.
 
-	/**
-	\brief Allocate a PxVehicleTankDrive instance for a tank with numWheels
-	\brief It is assumed that all wheels are driven wheels.
-	@see free, setup
+	\note It is assumed that all wheels are driven wheels.
+
+	\return The instantiated vehicle.
+
+	\see free, setup
 	*/
-	static PxVehicleDriveTank* allocate(const PxU32 numWheels);
+	static PxVehicleDriveTank* allocate(const PxU32 nbWheels);
 
 	/**
 	\brief Deallocate a PxVehicleDriveTank instance.
-	@see allocate
+	\see allocate
 	*/
 	void free();
 
 	/**
-	\brief Set up a tank with 
-	\brief (i)	a PxPhysics instance - needed to setup special vehicle constraints maintained by the vehicle.
-	\brief (ii)	a PxRigidDynamic instance - the rigid body representation of the tank in the physx sdk.
-	\brief (iii)a PxVehicleWheelsSimData instance describing the wheel/suspension/tires - the tank instance takes a copy of this input data.
-	\brief (iv)	a PxVehicleDriveSimData instance describing the drive data - the tank instance takes a copy of this input data.
-	\brief (v)	the number of driven wheels.
-	\brief (vi)	it is assumed that the first numDrivenWheel shapes of vehActor correspond to the wheel shapes of the tank
-	\brief (vii)it is assumed that the even-numbered wheel shapes are the left-hand wheels ordered in sequence from front to back
-	\brief (viii)it is assumed that the odd-numbered wheel shapes are the right-hand wheels ordered in sequence from front to back 
-	\brief (ix)	it is assumed that the N non-driven wheel shapes are shapes 4 -> 4+N-1 of the actor.
-	\brief (x)	it is assumed that the ordering of the wheel shapes in the actor matches the ordering in PxVehicleWheelsSimData.
-	\brief (xi)	to break assumpgions (vi)-(x) see PxVehicleWheels::setWheelShapeMapping
-	@see allocate, free, setToRestState, eWheelOrdering
+	\brief Set up a tank using simulation data for the wheels and drive model.
+	\param[in] physics is a PxPhysics instance that is needed to create special vehicle constraints that are maintained by the vehicle.
+	\param[in] vehActor is a PxRigidDynamic instance that is used to represent the tank in the PhysX SDK.
+	\param[in] wheelsData describes the configuration of all suspension/tires/wheels of the tank. The tank instance takes a copy of this data.
+	\param[in] driveData describes the properties of the tank's drive model (gears/engine/clutch/autobox).  The tank instance takes a copy of this data.
+	\param[in] nbDrivenWheels is the number of wheels on the tank.
+	\note It is assumed that the first shapes of the actor are the wheel shapes, followed by the chassis shapes.  To break this assumption use PxVehicleWheelsSimData::setWheelShapeMapping.
+	\see allocate, free, setToRestState, PxVehicleWheelsSimData::setWheelShapeMapping
+	\note nbDrivenWheels must be an even number
+	\note The wheels must be arranged according to PxVehicleDriveTankWheelOrder; that is, 
+	the even wheels are on the left side of the tank and the odd wheels are on the right side of the tank. 
 	*/
 	void setup
 		(PxPhysics* physics, PxRigidDynamic* vehActor, 
 		 const PxVehicleWheelsSimData& wheelsData, const PxVehicleDriveSimData& driveData,
-		 const PxU32 numDrivenWheels);
+		 const PxU32 nbDrivenWheels);
 
 	/**
-	\brief Create a tank with 
-	\brief (i)	a PxPhysics instance - needed to setup special vehicle constraints maintained by the vehicle.
-	\brief (ii)	a PxRigidDynamic instance - the rigid body representation of the tank in the physx sdk.
-	\brief (iii)a PxVehicleWheelsSimData instance describing the wheel/suspension/tires - the tank instance takes a copy of this input data.
-	\brief (iv)	a PxVehicleDriveSimData instance describing the drive data - the tank instance takes a copy of this input data.
-	\brief (v)	the number of driven wheels (the number of tank wheels)
-	\brief (vi)	it is assumed that the first numDrivenWheel shapes of vehActor correspond to the wheel shapes of the tank
-	\brief (vii)it is assumed that the even-numbered wheel shapes are the left-hand wheels ordered in sequence from front to back
-	\brief (viii)it is assumed that the odd-numbered wheel shapes are the right-hand wheels ordered in sequence from front to back 
-	\brief (ix)	it is assumed that the N non-driven wheel shapes are shapes 4 -> 4+N-1 of the actor.
-	\brief (x)	it is assumed that the ordering of the wheel shapes in the actor matches the ordering in PxVehicleWheelsSimData.
-	\brief (xi)	to break assumptions (vi)-(x) see PxVehicleWheels::setWheelShapeMapping
-	@see free, setToRestState, setup
+	\brief Allocate and set up a tank using simulation data for the wheels and drive model.
+	\param[in] physics is a PxPhysics instance that is needed to create special vehicle constraints that are maintained by the tank.
+	\param[in] vehActor is a PxRigidDynamic instance that is used to represent the tank in the PhysX SDK.
+	\param[in] wheelsData describes the configuration of all suspension/tires/wheels of the tank. The tank instance takes a copy of this data.
+	\param[in] driveData describes the properties of the tank's drive model (gears/engine/clutch/differential/autobox).  The tank instance takes a copy of this data.
+	\param[in] nbDrivenWheels is the number of wheels on the tank.
+	\note It is assumed that the first shapes of the actor are the wheel shapes, followed by the chassis shapes.  To break this assumption use PxVehicleWheelsSimData::setWheelShapeMapping.
+	\return The instantiated vehicle.
+	\see allocate, free, setToRestState, PxVehicleWheelsSimData::setWheelShapeMapping
 	*/
 	static PxVehicleDriveTank* create
 		(PxPhysics* physics, PxRigidDynamic* vehActor, 
 		 const PxVehicleWheelsSimData& wheelsData, const PxVehicleDriveSimData& driveData,
-		 const PxU32 numDrivenWheels);
+		 const PxU32 nbDrivenWheels);
 
 	/**
-	\brief Set driving model
-	\brief eDRIVE_MODEL_STANDARD: turning achieved by braking on one side, accelerating on the other side.
-	\brief eDRIVE_MODEL_SPECIAL: turning achieved by accelerating forwards on one side, accelerating backwards on the other side.
-	\brief default value is eDRIVE_MODEL_STANDARD
+	\brief Set the control model used by the tank.
+	\note eDRIVE_MODEL_STANDARD: turning achieved by braking on one side, accelerating on the other side.
+	\note eDRIVE_MODEL_SPECIAL: turning achieved by accelerating forwards on one side, accelerating backwards on the other side.
+	\note The default value is eDRIVE_MODEL_STANDARD
 	*/
-	void setDriveModel(const eDriveModel driveModel)
+	void setDriveModel(const PxVehicleDriveTankControlModel::Enum driveModel)
 	{
 		mDriveModel=driveModel;
 	}
 
 	/**
-	\brief Return the driving model
+	\brief Return the control model used by the tank.
 	*/
-	eDriveModel getDriveModel() const {return mDriveModel;}
+	PxVehicleDriveTankControlModel::Enum getDriveModel() const {return mDriveModel;}
 
 	/**
-	\brief Set a vehicle to its rest state.
-	\brief Call after setup
-	@see setup
+	\brief Set a vehicle to its rest state.  Aside from the rigid body transform, this will set the vehicle and rigid body 
+	to the state they were in immediately after setup or create.
+	\note Calling setToRestState invalidates the cached raycast hit planes under each wheel meaning that suspension line
+	raycasts need to be performed at least once with PxVehicleSuspensionRaycasts before calling PxVehicleUpdates. 
+	\see setup, create, PxVehicleSuspensionRaycasts, PxVehicleUpdates
 	*/
 	void setToRestState();
 
 	/**
 	\brief Simulation data that models vehicle components
-	@see setup
+	\see setup, create
 	*/
 	PxVehicleDriveSimData mDriveSimData;
 
 private:
-
-	PxVehicleDriveTank()
-		: mDriveModel(eDRIVE_MODEL_STANDARD)
-	{
-	}
-
-	~PxVehicleDriveTank()
-	{
-	}
-
 	/**
 	\brief Test if the instanced dynamics and configuration data has legal values.
 	*/
@@ -213,17 +246,28 @@ private:
 
 	/**
 	\brief Drive model
-	@see setDriveModel, eDriveModel
+	\see setDriveModel, getDriveModel, PxVehicleDriveTankControlModel
 	*/
-	eDriveModel mDriveModel;
+	PxVehicleDriveTankControlModel::Enum mDriveModel;
 
 	PxU32 mPad[3];
+
+//serialization
+public:
+											PxVehicleDriveTank(PxBaseFlags baseFlags) : PxVehicleDrive(baseFlags)			{}
+	static		PxVehicleDriveTank*			createObject(PxU8*& address, PxDeserializationContext& context);
+	static		void						getBinaryMetaData(PxOutputStream& stream);
+	virtual		const char*					getConcreteTypeName()		const	{	return "PxVehicleDriveTank";	}
+	virtual		bool						isKindOf(const char* name)	const	{	PX_IS_KIND_OF(name, "PxVehicleDriveTank", PxVehicleDrive); }
+protected:
+											PxVehicleDriveTank();
+											~PxVehicleDriveTank(){}
+//~serialization
 };
 PX_COMPILE_TIME_ASSERT(0==(sizeof(PxVehicleDriveTank) & 15));
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
-#endif //PX_VEHICLE_DRIVE_TANK_H
+#endif

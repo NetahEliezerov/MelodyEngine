@@ -1,7 +1,5 @@
 #version 440 core
-
 out vec4 FragColor;
-
 in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoord;
@@ -14,17 +12,24 @@ uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
 
-uniform float specularStrength;
 uniform float ambientStrength;
+uniform float specularStrength;
 
 uniform float fogDensity;
 uniform vec3 fogColor;
-
 uniform bool whiteTint;
+
+// Spot light variables
+uniform vec3 spotLightPos;
+uniform vec3 spotLightDir;
+uniform float spotLightCutoff;
+uniform float spotLightOuterCutoff;
 
 // Color grading variables
 uniform vec3 gradingColor;
 uniform float gradingStrength;
+
+uniform bool isSpotlight = false;
 
 float ShadowCalculation(vec4 fragPosLightSpace)
 {
@@ -67,45 +72,50 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     
     return shadow;
 }
-
 void main()
 {
     // Ambient
     vec3 ambient = ambientStrength * vec3(1, 1, 1);
-
     // Diffuse
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
+    // Spot light
 
-    // Specular
+    vec3 spotLightDirection = normalize(spotLightPos - FragPos);
+    float theta = dot(spotLightDirection, normalize(-spotLightDir));
+    float epsilon = spotLightCutoff - spotLightOuterCutoff;
+    float intensity = clamp((theta - spotLightOuterCutoff) / epsilon, 0.0, 1.0);
+    vec3 spotLight = intensity * lightColor;
+
+    // Calculate shadow
+    float shadow = ShadowCalculation(FragPosLightSpace);
+
+    // Specular Light
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2);
     vec3 specular = specularStrength * spec * lightColor;
 
-    // Calculate shadow
-    float shadow = ShadowCalculation(FragPosLightSpace);
-    vec3 lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * texture(texture1, TexCoord).rgb;
-
+    vec3 lighting;
+    if(isSpotlight) {
+        lighting = (ambient + (1.0 - shadow) * (diffuse * spotLight)) * texture(texture1, TexCoord).rgb;
+    } else {
+        lighting = (ambient + (1.0 - shadow) * (diffuse + specular)) * texture(texture1, TexCoord).rgb;
+    }
     // Calculate fog
     float distance = length(viewPos - FragPos);
     float fogFactor = exp(-pow(distance * fogDensity, 2.0));
     fogFactor = clamp(fogFactor, 0.0, 1.0);
-
     vec3 result = mix(fogColor, lighting, fogFactor);
-    
     
     vec3 gradedColor = mix(result, gradingColor, gradingStrength);
     
     float multiplierN = 1.f;
-
     vec4 final = vec4(result, 0.6) * vec4(gradedColor, 0.6) * multiplierN;
-
     if (whiteTint) {
         final = vec4(1.0f, 1.0f, 1.0f, 1.0f);
     }
-
     FragColor = final;
 }

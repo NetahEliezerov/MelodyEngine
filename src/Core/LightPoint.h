@@ -10,6 +10,13 @@ public:
 	void Update(glm::vec3 cameraPos);
 
 	bool flickLight = false;
+	glm::vec3 spotLightPos = glm::vec3(0.0f, 0, 0.0f); // Adjust the position as needed
+	glm::vec3 spotLightDir = glm::vec3(1.0f, 0.0f, -1.0f); // Spot light pointing straight down
+	float spotLightCutoff = 5; // Inner cutoff angle
+	float spotLightOuterCutoff = 14; // Outer cutoff angle
+
+	bool isSpotlight = false;
+
 private:
 	unsigned int modelLoc;
 	unsigned int colorLoc;

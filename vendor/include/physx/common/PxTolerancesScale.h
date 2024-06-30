@@ -1,54 +1,47 @@
-// This code contains NVIDIA Confidential Information and is disclosed to you
-// under a form of NVIDIA software license agreement provided separately to you.
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions
+// are met:
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of NVIDIA CORPORATION nor the names of its
+//    contributors may be used to endorse or promote products derived
+//    from this software without specific prior written permission.
 //
-// Notice
-// NVIDIA Corporation and its licensors retain all intellectual property and
-// proprietary rights in and to this software and related documentation and
-// any modifications thereto. Any use, reproduction, disclosure, or
-// distribution of this software and related documentation without an express
-// license agreement from NVIDIA Corporation is strictly prohibited.
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ''AS IS'' AND ANY
+// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+// OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// ALL NVIDIA DESIGN SPECIFICATIONS, CODE ARE PROVIDED "AS IS.". NVIDIA MAKES
-// NO WARRANTIES, EXPRESSED, IMPLIED, STATUTORY, OR OTHERWISE WITH RESPECT TO
-// THE MATERIALS, AND EXPRESSLY DISCLAIMS ALL IMPLIED WARRANTIES OF NONINFRINGEMENT,
-// MERCHANTABILITY, AND FITNESS FOR A PARTICULAR PURPOSE.
-//
-// Information and code furnished is believed to be accurate and reliable.
-// However, NVIDIA Corporation assumes no responsibility for the consequences of use of such
-// information or for any infringement of patents or other rights of third parties that may
-// result from its use. No license is granted by implication or otherwise under any patent
-// or patent rights of NVIDIA Corporation. Details are subject to change without notice.
-// This code supersedes and replaces all information previously supplied.
-// NVIDIA Corporation products are not authorized for use as critical
-// components in life support devices or systems without express written approval of
-// NVIDIA Corporation.
-//
-// Copyright (c) 2008-2013 NVIDIA Corporation. All rights reserved.
+// Copyright (c) 2008-2024 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
+#ifndef PX_TOLERANCES_SCALE_H
+#define PX_TOLERANCES_SCALE_H
 
-#ifndef PX_SCALE_H
-#define PX_SCALE_H
 
-/** \addtogroup common
-  @{
-*/
+#include "common/PxPhysXCommonConfig.h"
 
-#include "common/PxPhysXCommon.h"
-
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 namespace physx
 {
 #endif
-
-class PxPhysics;
 
 /**
 \brief Class to define the scale at which simulation runs. Most simulation tolerances are
 calculated in terms of the values here. 
 
-\note if you change the simulation scale, you will probablly also wish to change the scene's
+\note if you change the simulation scale, you will probably also wish to change the scene's
 default value of gravity, and stable simulation will probably require changes to the scene's 
 bounceThreshold also.
 */
@@ -57,27 +50,17 @@ class PxTolerancesScale
 {
 public: 
 
-	/** brief
-	The approximate size of objects in the simulation. 
+	/** 
+	\brief The approximate size of objects in the simulation. 
 	
 	For simulating roughly human-sized in metric units, 1 is a good choice.
 	If simulation is done in centimetres, use 100 instead. This is used to
 	estimate certain length-related tolerances.
-
 	*/
-
 	PxReal	length;
 
-
-	/** brief
-	The approximate mass of a length * length * length block.
-	If using metric scale for character sized objects and measuring mass in
-	kilogrammes, 1000 is a good choice.	
-	*/
-	PxReal	mass;
-
-	/** brief
-	The typical magnitude of velocities of objects in simulation. This is used to estimate 
+	/** 
+	\brief The typical magnitude of velocities of objects in simulation. This is used to estimate 
 	whether a contact should be treated as bouncing or resting based on its impact velocity,
 	and a kinetic energy threshold below which the simulation may put objects to sleep.
 
@@ -86,11 +69,13 @@ public:
 	*/
 	PxReal	speed;
 
-
 	/**
 	\brief constructor sets to default 
+
+	\param[in]	defaultLength	Default length
+	\param[in]	defaultSpeed	Default speed
 	*/
-	PX_INLINE PxTolerancesScale();
+	PX_INLINE explicit PxTolerancesScale(float defaultLength=1.0f, float defaultSpeed=10.0f);
 
 	/**
 	\brief Returns true if the descriptor is valid.
@@ -100,21 +85,19 @@ public:
 
 };
 
-PX_INLINE PxTolerancesScale::PxTolerancesScale():
-	length(1),
-	mass(1000),
-	speed(10)
+PX_INLINE PxTolerancesScale::PxTolerancesScale(float defaultLength, float defaultSpeed) :
+	length	(defaultLength),
+	speed	(defaultSpeed)
 	{
 	}
 
 PX_INLINE bool PxTolerancesScale::isValid() const
 {
-	return length>0 && mass>0;
+	return length>0.0f;
 }
 
-#ifndef PX_DOXYGEN
+#if !PX_DOXYGEN
 } // namespace physx
 #endif
 
-/** @} */
 #endif

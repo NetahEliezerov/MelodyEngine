@@ -48,4 +48,5 @@ struct LightSettings
     glm::vec4 recColor;
     glm::vec3 recScale;
     glm::vec3 recTransform;
+    bool isSpotlight;
 };
